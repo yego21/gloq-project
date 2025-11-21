@@ -1,0 +1,264 @@
+<!-- deep_dive/templates/deep_dive/mystical/partials/rhythm_patterns/_cosmic_alignments.html -->
+<!-- Cosmic Alignments Section - Cross-Referenced Mystical Insights -->
+
+{% if not insights.cosmic_alignments.has_data %}
+    <!-- No Data State -->
+    <div class="text-center py-8">
+        <div class="text-5xl mb-4">🔮</div>
+        <p class="text-slate-400 text-sm">
+            {{ insights.cosmic_alignments.message }}
+        </p>
+    </div>
+
+{% else %}
+    <div class="space-y-6">
+
+        <!-- Key Insights Summary -->
+        {% if insights.cosmic_alignments.insights %}
+        <div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700/30 rounded-lg p-4">
+            <div class="flex items-start gap-3 mb-3">
+                <i class="fas fa-sparkles text-purple-400 text-lg mt-0.5"></i>
+                <div class="flex-1">
+                    <h5 class="text-sm font-semibold text-purple-300 mb-2">Mystical Patterns Discovered</h5>
+                    <div class="space-y-2">
+                        {% for insight in insights.cosmic_alignments.insights %}
+                        <div class="text-xs text-slate-300 flex items-start gap-2">
+                            <i class="fas fa-star text-purple-400 text-xs mt-0.5"></i>
+                            <span>{{ insight }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        <!-- REMOVED THE EXTRA {% endif %} HERE -->
+
+        <!-- Tarot-Journal Synchronicity -->
+        {% if insights.cosmic_alignments.tarot_journal_sync.has_tarot %}
+        <div>
+            <h5 class="text-xs font-semibold text-pink-300 mb-3 flex items-center">
+                <i class="fas fa-cards mr-2"></i>
+                Tarot-Journal Harmony
+            </h5>
+            
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <!-- Tarot Draws -->
+                <div class="cosmic-card rounded-lg p-3 text-center">
+                    <div class="text-xl font-bold text-pink-400 mb-1">
+                        {{ insights.cosmic_alignments.tarot_journal_sync.total_draws }}
+                    </div>
+                    <div class="text-xs text-slate-400">Tarot Draws</div>
+                </div>
+                
+                <!-- Sync Rate -->
+                <div class="cosmic-card rounded-lg p-3 text-center">
+                    <div class="text-xl font-bold text-pink-400 mb-1">
+                        {{ insights.cosmic_alignments.tarot_journal_sync.sync_percentage|default:"0" }}%
+                    </div>
+                    <div class="text-xs text-slate-400">Same Day Sync</div>
+                </div>
+            </div>
+
+            <!-- Sync Description -->
+            {% with sync_data=insights.cosmic_alignments.tarot_journal_sync %}
+            <div class="text-xs text-center text-slate-400 italic mb-3 px-2">
+                {{ sync_data.sync_days|default:"0" }} of {{ sync_data.total_draws|default:"0" }} tarot draws happened on journal days
+            </div>
+            {% endwith %}
+
+            <!-- All Cards Drawn (shows everything) -->
+            {% if insights.cosmic_alignments.tarot_journal_sync.all_card_distribution %}
+            <div class="bg-slate-800/30 rounded-lg p-3 mb-3">
+                <div class="text-xs text-slate-400 font-semibold mb-2">All Cards Drawn:</div>
+                <div class="flex flex-wrap gap-2">
+                    {% for card_type, data in insights.cosmic_alignments.tarot_journal_sync.all_card_distribution.items %}
+                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-700/50 border border-slate-600/50 text-xs text-slate-300">
+                        <span>{{ data.emoji }}</span>
+                        <span>
+                            {% if card_type == 'major_arcana' %}
+                                Major Arcana
+                            {% elif card_type == 'cups' %}
+                                Cups
+                            {% elif card_type == 'wands' %}
+                                Wands
+                            {% elif card_type == 'swords' %}
+                                Swords
+                            {% elif card_type == 'pentacles' %}
+                                Pentacles
+                            {% else %}
+                                {{ card_type|title }}
+                            {% endif %}
+                        </span>
+                        <span class="text-slate-500">×{{ data.count }}</span>
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Card-Sentiment Correlation (only cards with journals) -->
+            {% if insights.cosmic_alignments.tarot_journal_sync.card_sentiment %}
+            <div class="bg-slate-800/30 rounded-lg p-3">
+                <div class="text-xs text-slate-400 font-semibold mb-2">
+                    Card-Sentiment Resonance:
+                    <span class="text-slate-500 ml-1">(only cards drawn on journal days)</span>
+                </div>
+                <div class="space-y-2">
+                    {% for card_type, data in insights.cosmic_alignments.tarot_journal_sync.card_sentiment.items %}
+                    {% if data.count > 0 %}
+                    <div class="flex items-center justify-between text-xs {% if not data.has_meaningful_data %}opacity-50{% endif %}">
+                        <span class="text-slate-300">
+                            {% if card_type == 'major_arcana' %}
+                                🎴 Major Arcana
+                            {% elif card_type == 'cups' %}
+                                💧 Cups
+                            {% elif card_type == 'wands' %}
+                                🔥 Wands
+                            {% elif card_type == 'swords' %}
+                                ⚔️ Swords
+                            {% elif card_type == 'pentacles' %}
+                                🪙 Pentacles
+                            {% endif %}
+                            {% if not data.has_meaningful_data %}
+                                <span class="text-slate-500 text-xs ml-1">(need 3+ with journals)</span>
+                            {% endif %}
+                        </span>
+                        <span class="font-semibold {% if data.avg_sentiment > 0.2 %}text-green-400{% elif data.avg_sentiment < -0.2 %}text-red-400{% else %}text-slate-400{% endif %}">
+                            {% if data.avg_sentiment > 0 %}+{% endif %}{{ data.avg_sentiment|floatformat:2 }}
+                            <span class="text-xs text-slate-500">({{ data.count }})</span>
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="mt-2 text-xs text-slate-500 italic">
+                    Sentiment scale: -0.9 (very negative) to +0.9 (very positive)
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Archetype Distribution -->
+            {% if insights.cosmic_alignments.tarot_journal_sync.archetype_distribution %}
+            <div class="mt-3 grid grid-cols-2 gap-2">
+                <div class="text-xs p-2 rounded bg-indigo-900/20 border border-indigo-700/30">
+                    <div class="text-indigo-300 font-semibold mb-1">Major Arcana</div>
+                    <div class="text-slate-300">
+                        {{ insights.cosmic_alignments.tarot_journal_sync.archetype_distribution.major_arcana.percentage|floatformat:0 }}%
+                        <span class="text-slate-500">({{ insights.cosmic_alignments.tarot_journal_sync.archetype_distribution.major_arcana.count }})</span>
+                    </div>
+                </div>
+                <div class="text-xs p-2 rounded bg-purple-900/20 border border-purple-700/30">
+                    <div class="text-purple-300 font-semibold mb-1">Minor Arcana</div>
+                    <div class="text-slate-300">
+                        {{ insights.cosmic_alignments.tarot_journal_sync.archetype_distribution.minor_arcana.percentage|floatformat:0 }}%
+                        <span class="text-slate-500">({{ insights.cosmic_alignments.tarot_journal_sync.archetype_distribution.minor_arcana.count }})</span>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Sentiment-Cosmic Patterns -->
+        {% if insights.cosmic_alignments.sentiment_cosmic_patterns.has_data %}
+        <div>
+            <h5 class="text-xs font-semibold text-blue-300 mb-3 flex items-center">
+                <i class="fas fa-heart-pulse mr-2"></i>
+                Emotional Cosmic Patterns
+            </h5>
+            
+            <!-- Overall Sentiment -->
+            <div class="bg-gradient-to-r from-blue-900/20 to-cyan-900/20 border border-blue-700/30 rounded-lg p-3 mb-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Overall Emotional Tone:</span>
+                    <span class="text-sm font-semibold {% if insights.cosmic_alignments.sentiment_cosmic_patterns.overall_sentiment > 0.2 %}text-green-400{% elif insights.cosmic_alignments.sentiment_cosmic_patterns.overall_sentiment < -0.2 %}text-red-400{% else %}text-slate-300{% endif %}">
+                        {{ insights.cosmic_alignments.sentiment_cosmic_patterns.sentiment_label }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Element-Sentiment Breakdown -->
+            {% if insights.cosmic_alignments.sentiment_cosmic_patterns.element_sentiment %}
+            <div class="bg-slate-800/30 rounded-lg p-3">
+                <div class="text-xs text-slate-400 font-semibold mb-3">
+                    Sentiment by Element Energy:
+                    <span class="text-slate-500 ml-1">(requires 3+ entries per element)</span>
+                </div>
+                <div class="space-y-2">
+                    {% for element, data in insights.cosmic_alignments.sentiment_cosmic_patterns.element_sentiment.items %}
+                    <div class="flex items-center justify-between {% if not data.has_meaningful_data %}opacity-50{% endif %}">
+                        <div class="flex items-center gap-2">
+                            <span class="text-lg">{{ data.emoji }}</span>
+                            <span class="text-xs text-slate-300">
+                                {{ element|title }} days
+                                {% if not data.has_meaningful_data %}
+                                    <span class="text-slate-500 text-xs ml-1">(need more data)</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 text-right">
+                                <span class="text-sm font-semibold {% if data.avg > 0.2 %}text-green-400{% elif data.avg < -0.2 %}text-red-400{% else %}text-slate-400{% endif %}">
+                                    {% if data.avg > 0 %}+{% endif %}{{ data.avg|floatformat:2 }}
+                                </span>
+                            </div>
+                            <span class="text-xs text-slate-500 w-12 text-right">({{ data.count }})</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-2 text-xs text-slate-500 italic">
+                    Sentiment scale: -0.9 (very negative) to +0.9 (very positive)
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Cross-Correlations (Moon + Planets) -->
+        {% if insights.cosmic_alignments.cross_correlations.has_data %}
+        <div>
+            <h5 class="text-xs font-semibold text-orange-300 mb-3 flex items-center">
+                <i class="fas fa-exchange-alt mr-2"></i>
+                Celestial Synergies
+            </h5>
+            
+            <div class="space-y-2">
+                {% for combo in insights.cosmic_alignments.cross_correlations.top_combinations %}
+                <div class="flex items-center justify-between p-3 rounded-lg bg-gradient-to-r from-orange-900/20 to-red-900/20 border border-orange-700/30">
+                    <div class="flex-1">
+                        <span class="text-xs text-slate-300">
+                            <span class="font-semibold text-orange-300">{{ combo.moon_phase }}</span>
+                            <span class="text-slate-500 mx-1">+</span>
+                            <span class="font-semibold text-red-300">{{ combo.element }}</span>
+                            <span class="text-slate-500">energy</span>
+                        </span>
+                    </div>
+                    <span class="text-sm font-bold text-orange-400">{{ combo.count }}×</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Sacred Milestones -->
+        {% if insights.cosmic_alignments.sacred_milestones %}
+        <div>
+            <h5 class="text-xs font-semibold text-yellow-300 mb-3 flex items-center">
+                <i class="fas fa-award mr-2"></i>
+                Sacred Milestones
+            </h5>
+            
+            <div class="space-y-2">
+                {% for milestone in insights.cosmic_alignments.sacred_milestones %}
+                <div class="flex items-start gap-2 text-xs text-slate-300 bg-yellow-900/10 border border-yellow-700/20 rounded-lg p-3">
+                    <i class="fas fa-star text-yellow-400 mt-0.5"></i>
+                    <span>{{ milestone }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>

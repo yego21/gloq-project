@@ -1,0 +1,59 @@
+dashboard.html
+│
+├─ Header (Logo + Mode Selector)
+│   └─ Mode dropdown → HTMX → switch_mode_dynamic → updates session & fires JS event
+│
+├─ #mode-features  (dynamic zone)
+│   └─ HTMX POST _mode_features → mode_features.html
+│
+├─ Journal Entry Card
+│   └─ journal_form.html  (HTMX POST new_journal_entry)
+│
+├─ Mode Features / AI Insights Panel
+│   └─ toggleAIInsights() swaps between:
+│         → mode_features.html (cached)
+│         → AI insights partial (from load_insight_panel)
+│
+└─ Sidebar
+    ├─ Quick Actions (links to mode_explorer, search, etc.)
+    ├─ Quick Stats
+    └─ Daily Quote
+
+
+
+mode_explorer.html
+│
+├─ Loops through modes
+│   ├─ Activate Mode → set_selected_mode
+│   └─ Set Preferred → set_preferred_mode
+│
+└─ Highlights active mode if matches active_mode
+
+
+
+journal_form.html
+│
+├─ HTMX POST new_journal_entry
+│   └─ On success:
+│         → Reset form
+│         → Refresh same_day_entries (entries.html)
+│
+entries.html
+│   └─ Displays latest or same-day entries
+│
+check_entries.html
+│   └─ Displays entries for specific date (filtered)
+│
+entryfilter.html
+│   ├─ Date picker
+│   └─ #filtered-entry-list → replaced by check_entries.html
+
+
+synthesize_buttons.html
+│
+├─ Reflect   → hx-get synthesize_entries?type=reflect
+├─ Digest    → hx-get synthesize_entries?type=digest
+├─ Roast     → hx-get synthesize_entries?type=roast
+└─ Suggest   → hx-get synthesize_entries?type=suggest
+
+→ All results replace #synthesis-results with synthesis.html

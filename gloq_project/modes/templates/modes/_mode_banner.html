@@ -1,0 +1,136 @@
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+    @keyframes cosmic-pulse {
+        0%, 100% { 
+            box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4),
+                       0 0 20px rgba(168, 85, 247, 0.1);
+        }
+        50% { 
+            box-shadow: 0 0 0 10px rgba(168, 85, 247, 0),
+                       0 0 30px rgba(168, 85, 247, 0.2);
+        }
+    }
+
+    @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1) rotate(180deg); }
+    }
+
+    @keyframes deep-dive {
+        0% { transform: scale(1) rotate(0deg); }
+        25% { transform: scale(1.1) rotate(90deg); }
+        50% { transform: scale(0.9) rotate(180deg); }
+        75% { transform: scale(1.05) rotate(270deg); }
+        100% { transform: scale(1) rotate(360deg); }
+    }
+
+    @keyframes tooltip-fade {
+        0% { opacity: 0; transform: translateY(-5px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes page-transition {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(0.95); }
+        100% { opacity: 0; transform: scale(0.9); }
+    }
+
+    .cosmic-pulse {
+        animation: cosmic-pulse 2s infinite;
+    }
+
+    .sparkle {
+        animation: sparkle 1.5s ease-in-out infinite;
+    }
+
+    .deep-dive-active {
+        animation: deep-dive 0.8s ease-in-out;
+    }
+
+    .tooltip {
+        animation: tooltip-fade 0.3s ease-out;
+    }
+
+    .page-transition {
+        animation: page-transition 0.8s ease-in-out forwards;
+    }
+</style>
+
+<div class="flex justify-center mb-auto">
+    <div class="flex items-center space-x-4 max-w-md">
+        <a 
+            id="deepDiveBtn"
+            href="{% url 'deep_dive:'|add:active_mode.slug %}"
+            class="w-12 h-12 bg-gradient-to-br from-green-500 to-purple-600 rounded-2xl flex items-center justify-center cosmic-pulse hover:scale-110 transition-all duration-300 cursor-pointer group relative overflow-hidden shadow-lg hover:shadow-xl"
+            onclick="handleDeepDive(event)">
+            
+            <!-- Third Eye Icon -->
+            <svg class="w-6 h-6 text-white group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path d="M12 4.5C7.5 4.5 3.6 7.5 1.5 12c2.1 4.5 6 7.5 10.5 7.5s8.4-3 10.5-7.5c-2.1-4.5-6-7.5-10.5-7.5z"/>
+                <circle cx="12" cy="12" r="3"/>
+                <circle cx="12" cy="12" r="1"/>
+            </svg>
+            
+            <!-- Sparkles -->
+            <div class="absolute top-1 right-1 w-1 h-1 bg-white rounded-full sparkle opacity-0 group-hover:opacity-100"></div>
+            <div class="absolute bottom-2 left-2 w-1 h-1 bg-white rounded-full sparkle opacity-0 group-hover:opacity-100" style="animation-delay: 0.3s;"></div>
+            
+            <!-- Tooltip -->
+            <div class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 tooltip whitespace-nowrap pointer-events-none">
+                Deep Dive Analysis
+                <div class="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+            </div>
+        </a>
+       
+        {% if mode_header %} 
+        <div class="flex-1">
+            <div class="flex items-center space-x-2 mb-1">
+                <h3 class="text-2xl font-bold text-gray-900">{{ mode_header.title }}</h3>
+                <span class="text-xl">{{ mode_header.icon }}</span>
+            </div>
+            <p class="text-sm text-gray-600">{{ mode_header.description }}</p>
+        </div>
+        {% else %}
+        <div class="flex-1">
+            <div class="flex items-center space-x-2 mb-1">
+                <h3 class="text-2xl font-bold text-gray-900">Select Mode</h3>
+                <span class="text-xl">{{ mode_header.icon }}</span>
+            </div>
+            <p class="text-sm text-gray-600">Mode Description</p>
+        </div>
+        {% endif %}       
+    </div>    
+</div>
+
+<!-- JavaScript for Animation -->
+<script>
+function handleDeepDive(event) {
+    // Prevent immediate navigation
+    event.preventDefault();
+    
+    const button = event.currentTarget;
+    const targetUrl = button.href;
+    
+    // Play animation first
+    button.classList.add('deep-dive-active');
+    
+    // Add page transition effect to entire page or main content
+    const mainContent = document.getElementById('main-content') || document.body;
+    mainContent.classList.add('page-transition');
+    
+    // After animation completes, navigate to the URL
+    setTimeout(() => {
+        window.location.href = targetUrl;
+    }, 800); // Match your deep-dive animation duration
+}
+
+// Optional: Add smooth transition when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    document.body.style.opacity = '0';
+    document.body.style.transition = 'opacity 0.5s ease-in-out';
+    
+    setTimeout(() => {
+        document.body.style.opacity = '1';
+    }, 100);
+});
+</script>

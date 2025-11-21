@@ -1,0 +1,649 @@
+<!-- Interactive Mystical Elements Partial -->
+<!-- deep_dive/partials/_interactive_mystical.html -->
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Cosmic Tarot Card - Takes 1 column -->
+    <div class="cosmic-border">
+        <div class="cosmic-card rounded-2xl p-6 text-center">
+            <h3 class="font-bold mb-4 flex items-center justify-center">
+                <i class="fas fa-cards text-indigo-300 mr-2"></i>
+                Cosmic Tarot Reading                
+            </h3>
+            
+            <!-- Card Display -->
+            <div class="relative w-40 h-60 mx-auto mb-6 cursor-pointer perspective-1000" id="tarot-card-container">
+                <div class="tarot-card preserve-3d {% if has_drawn_today %}flipped{% endif %}" id="tarot-card">
+                    <!-- Card Back (Initially visible) -->
+                    <div class="tarot-face tarot-back rounded-xl shadow-2xl"
+                         style="background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #1e1b4b 100%);
+                                border: 3px solid #6366f1;">
+                        <div class="h-full flex flex-col items-center justify-center p-4">
+                            <div class="relative">
+                                <i class="fas fa-moon text-5xl text-indigo-300 mb-2"></i>
+                                <div class="absolute inset-0 animate-ping opacity-20">
+                                    <i class="fas fa-moon text-5xl text-indigo-300"></i>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-xs text-indigo-200 tracking-widest">COSMIC TAROT</div>
+                            <div class="mt-2 w-16 h-px bg-gradient-to-r from-transparent via-indigo-400 to-transparent"></div>
+                            <p class="text-xs text-indigo-300 mt-2">Tap to Reveal</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Card Front (Hidden initially, or shown if drawn today) -->
+                    <div class="tarot-face tarot-front rounded-xl shadow-2xl"
+                         style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                                border: 3px solid #a855f7;">
+                        <div class="h-full flex flex-col p-4">
+                            <div class="text-xs font-bold text-purple-900 tracking-wider mb-2" id="tarot-number">
+                                {{ card_number|default:'0 - THE FOOL' }}
+                            </div>
+                            
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-6xl mb-2" id="tarot-emoji">{{ card_emoji|default:'🌙' }}</div>
+                                    <div class="text-sm font-bold text-slate-800 tracking-wide" id="tarot-title">
+                                        {{ card_title|default:'THE MOON' }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-xs text-purple-800 text-center leading-tight border-t-2 border-purple-300 pt-2" 
+                                 id="tarot-keywords">
+                                {{ card_keywords|default:'Intuition • Mystery • Dreams' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Interpretation -->
+            <div class="mb-4 px-2">
+                <p class="text-slate-300 text-sm leading-relaxed mb-3" id="tarot-interpretation">
+                    {% if has_drawn_today %}
+                        {{ card_interpretation }}
+                    {% else %}
+                        Draw your daily tarot card for cosmic guidance aligned with your natal chart and current planetary transits.
+                    {% endif %}
+                </p>
+                
+                <div class="text-xs text-indigo-300 bg-indigo-950/30 rounded-lg p-3 {% if not card_astro_context %}hidden{% endif %}" id="tarot-astro-context">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-star mt-0.5"></i>
+                        <div class="text-left">
+                            <div class="font-semibold mb-1">Cosmic Alignment</div>
+                            <div class="text-indigo-200" id="astro-context-text">
+                                {{ card_astro_context|default:'Mars transiting your 3rd house resonates with The Chariot\'s energy' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-xs text-purple-300 bg-purple-950/30 rounded-lg p-3 mt-2 {% if not card_natal_insight %}hidden{% endif %}" id="tarot-natal-insight">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-circle-notch mt-0.5"></i>
+                        <div class="text-left">
+                            <div class="font-semibold mb-1">Your Birth Chart Says</div>
+                            <div class="text-purple-200" id="natal-insight-text">
+                                {{ card_natal_insight|default:'With your Sun in Aries, this card speaks to your pioneering spirit' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Draw Button or Status -->
+            {% if has_drawn_today %}
+                <div class="text-center">
+                    <div class="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-700/50">
+                        <i class="fas fa-check-circle text-indigo-400"></i>
+                        <span class="text-sm font-semibold text-indigo-200">Card Drawn</span>
+                    </div>
+                    <div class="mt-2 text-xs text-slate-400">
+                        <i class="fas fa-clock mr-1"></i>
+                        {{ drawn_time_ago }} ago
+                    </div>
+                </div>
+            {% else %}
+                <button 
+                    class="mystical-btn px-6 py-2 rounded-full text-sm font-semibold inline-flex items-center gap-2 transition-all hover:scale-105"
+                    hx-post="{% url 'deep_dive:draw_tarot_card' %}"
+                    hx-trigger="click"
+                    hx-swap="none"
+                    hx-on::after-request="handleTarotCardDraw(event)"
+                    id="draw-tarot-btn">
+                    <i class="fas fa-hand-sparkles"></i>
+                    <span>Draw Daily Card</span>
+                </button>
+            {% endif %}
+
+            <!-- Additional Actions -->
+            <div class="mt-4 flex items-center justify-center gap-4 text-xs">
+                <button 
+                    class="text-slate-400 hover:text-indigo-300 transition-colors"
+                    onclick="toggleCardHistory()">
+                    <i class="fas fa-history mr-1"></i>
+                    Card History
+                </button>
+                <button 
+                    class="text-slate-400 hover:text-indigo-300 transition-colors"
+                    onclick="toggleSpreadReading()">
+                    <i class="fas fa-layer-group mr-1"></i>
+                    3-Card Spread
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Rhythm Preview Card -->
+    <div class="lg:col-span-2 cosmic-border">
+        <div class="mystical-card rounded-2xl p-6">
+            <div class="flex items-start justify-between mb-4">
+                <div class="flex-1">
+                    <h3 class="font-bold mb-2 flex items-center">
+                        <i class="fas fa-chart-line text-indigo-300 mr-2"></i>
+                        Personal Rhythm Patterns
+                    </h3>
+                    <p class="text-slate-400 text-sm mb-4">
+                        Discover patterns in your journaling journey through cosmic and personal cycles
+                    </p>
+                </div>
+                
+                <!-- Data Level Badge -->
+                <div class="flex flex-col items-end gap-2">
+                    <div class="text-4xl opacity-20">📊</div>
+                    <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-700/50">
+                        <i class="fas fa-layer-group text-indigo-400 text-xs"></i>
+                        <span class="text-xs font-semibold text-indigo-200">{{ meta.level_name }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Preview Stats -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+                <!-- Total Entries -->
+                <div class="cosmic-card rounded-lg p-3 text-center hover:scale-105 transition-transform">
+                    <div class="text-2xl font-bold text-indigo-400 mb-1">{{ insights.journal_count }}</div>
+                    <div class="text-xs text-slate-400">Entries</div>
+                </div>
+                
+                <!-- Smart Stat 2: Changes based on data level -->
+                <div class="cosmic-card rounded-lg p-3 text-center hover:scale-105 transition-transform">
+                    {% if insights.data_level == 'minimal' %}
+                        <!-- Show moon phase for minimal users -->
+                        <div class="text-2xl mb-1">{{ insights.cosmic_rhythm.visual_markers.moon_emoji }}</div>
+                        <div class="text-xs text-slate-400">{{ insights.cosmic_rhythm.moon.phase }}</div>
+                    {% elif insights.data_level == 'emerging' and insights.journal_rhythm.top_tags %}
+                        <!-- Show top theme for emerging users -->
+                        <div class="text-sm font-bold text-purple-400 mb-1 truncate">
+                            {{ insights.journal_rhythm.top_tags.0.0|title }}
+                        </div>
+                        <div class="text-xs text-slate-400">Top Theme</div>
+                    {% elif insights.journal_rhythm.weekly_average %}
+                        <!-- Show weekly average for established+ users -->
+                        <div class="text-2xl font-bold text-blue-400 mb-1">{{ insights.journal_rhythm.weekly_average|floatformat:1 }}</div>
+                        <div class="text-xs text-slate-400">Per Week</div>
+                    {% else %}
+                        <!-- Fallback to moon phase -->
+                        <div class="text-2xl mb-1">{{ insights.cosmic_rhythm.visual_markers.moon_emoji }}</div>
+                        <div class="text-xs text-slate-400">{{ insights.cosmic_rhythm.moon.phase }}</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Smart Stat 3: Changes based on data level -->
+                <div class="cosmic-card rounded-lg p-3 text-center hover:scale-105 transition-transform">
+                    {% if insights.data_level == 'minimal' %}
+                        <!-- Show dominant element for minimal users -->
+                        <div class="text-2xl mb-1">{{ insights.cosmic_rhythm.visual_markers.dominant_element_emoji }}</div>
+                        <div class="text-xs text-slate-400">
+                            {% if insights.cosmic_rhythm.dominant_elements.dominant %}
+                                {{ insights.cosmic_rhythm.dominant_elements.dominant.0|title }}
+                            {% else %}
+                                Balanced
+                            {% endif %}
+                        </div>
+                    {% elif insights.journal_rhythm.top_tags %}
+                        <!-- Show number of themes for users with data -->
+                        <div class="text-2xl font-bold text-purple-400 mb-1">{{ insights.journal_rhythm.top_tags|length }}</div>
+                        <div class="text-xs text-slate-400">Themes</div>
+                    {% else %}
+                        <!-- Fallback to dominant element -->
+                        <div class="text-2xl mb-1">{{ insights.cosmic_rhythm.visual_markers.dominant_element_emoji }}</div>
+                        <div class="text-xs text-slate-400">
+                            {% if insights.cosmic_rhythm.dominant_elements.dominant %}
+                                {{ insights.cosmic_rhythm.dominant_elements.dominant.0|title }}
+                            {% else %}
+                                Balanced
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Smart Insight Preview (Progressively shows best available insight) -->
+            <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border border-indigo-700/30 rounded-lg p-4 mb-4">
+                {% if insights.data_level == 'minimal' %}
+                    <!-- Minimal: Show cosmic rhythm -->
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-sparkles text-indigo-400 text-lg mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-indigo-300 mb-1">Current Cosmic Energy</div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                {{ insights.cosmic_rhythm.energy_summary }}
+                            </p>
+                        </div>
+                    </div>
+                
+                {% elif insights.data_level == 'emerging' %}
+                    <!-- Emerging: Show first pattern -->
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-seedling text-green-400 text-lg mt-0.5"></i>
+                        <div class="flex-1">
+                            <div class="text-sm font-semibold text-green-300 mb-1">Pattern Emerging</div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                {{ insights.journal_rhythm.insights.0 }}
+                            </p>
+                        </div>
+                    </div>
+                
+                {% elif insights.data_level == 'established' %}
+                    <!-- Established: Show moon or consistency insight -->
+                    <div class="flex items-start gap-3">
+                        {% if insights.moon_correlation.has_data and insights.moon_correlation.insights %}
+                            <i class="fas fa-moon text-indigo-400 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-indigo-300 mb-1">Lunar Pattern</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    {{ insights.moon_correlation.insights.0 }}
+                                </p>
+                            </div>
+                        {% else %}
+                            <i class="fas fa-chart-bar text-blue-400 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-blue-300 mb-1">Your Rhythm</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    {{ insights.journal_rhythm.insights.0 }}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                
+                {% elif insights.data_level == 'rich' %}
+                    <!-- Rich: Show planetary or deepest insight -->
+                    <div class="flex items-start gap-3">
+                        {% if insights.planetary_emotions.has_data and insights.planetary_emotions.insights %}
+                            <i class="fas fa-planet-ringed text-purple-400 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-purple-300 mb-1">Planetary Pattern</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    {{ insights.planetary_emotions.insights.0 }}
+                                </p>
+                            </div>
+                        {% elif insights.moon_correlation.has_data and insights.moon_correlation.insights %}
+                            <i class="fas fa-moon text-indigo-400 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-indigo-300 mb-1">Lunar Pattern</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    {{ insights.moon_correlation.insights.0 }}
+                                </p>
+                            </div>
+                        {% else %}
+                            <i class="fas fa-gem text-purple-400 text-lg mt-0.5"></i>
+                            <div class="flex-1">
+                                <div class="text-sm font-semibold text-purple-300 mb-1">Deep Insight</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">
+                                    {{ insights.journal_rhythm.insights.0 }}
+                                </p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Features Available Grid -->
+            <div class="bg-gradient-to-r from-slate-900/40 to-indigo-900/20 border border-slate-700/30 rounded-lg p-4 mb-4">
+                <div class="text-xs text-slate-400 font-semibold mb-3">Available Insights:</div>
+                <div class="grid grid-cols-2 gap-3 text-sm">
+                    <!-- Always available -->
+                    <div class="flex items-center gap-2 text-slate-300">
+                        <i class="fas fa-check-circle text-green-400 text-xs"></i>
+                        <span>Cosmic rhythm</span>
+                    </div>
+                    
+                    <!-- Moon patterns (≥3 entries) -->
+                    <div class="flex items-center gap-2 {% if insights.journal_count < 3 %}text-slate-500 opacity-50{% else %}text-slate-300{% endif %}">
+                        <i class="fas fa-{% if insights.journal_count >= 3 %}check-circle text-green-400{% else %}lock text-slate-500{% endif %} text-xs"></i>
+                        <span>Lunar patterns</span>
+                    </div>
+                    
+                    <!-- Theme tracking (≥3 entries) -->
+                    <div class="flex items-center gap-2 {% if insights.journal_count < 3 %}text-slate-500 opacity-50{% else %}text-slate-300{% endif %}">
+                        <i class="fas fa-{% if insights.journal_count >= 3 %}check-circle text-green-400{% else %}lock text-slate-500{% endif %} text-xs"></i>
+                        <span>Theme tracking</span>
+                    </div>
+                    
+                    <!-- Planetary insights (≥5 entries) -->
+                    <div class="flex items-center gap-2 {% if insights.journal_count < 5 %}text-slate-500 opacity-50{% else %}text-slate-300{% endif %}">
+                        <i class="fas fa-{% if insights.journal_count >= 5 %}check-circle text-green-400{% else %}lock text-slate-500{% endif %} text-xs"></i>
+                        <span>Planetary insights</span>
+                    </div>
+                    
+                    <!-- Advanced analytics (≥10 entries) -->
+                    <div class="flex items-center gap-2 {% if insights.journal_count < 10 %}text-slate-500 opacity-50{% else %}text-slate-300{% endif %}">
+                        <i class="fas fa-{% if insights.journal_count >= 10 %}check-circle text-green-400{% else %}lock text-slate-500{% endif %} text-xs"></i>
+                        <span>Frequency charts</span>
+                    </div>
+                    
+                    <!-- Deep analytics (≥30 entries) -->
+                    <div class="flex items-center gap-2 {% if insights.journal_count < 30 %}text-slate-500 opacity-50{% else %}text-slate-300{% endif %}">
+                        <i class="fas fa-{% if insights.journal_count >= 30 %}check-circle text-green-400{% else %}lock text-slate-500{% endif %} text-xs"></i>
+                        <span>Deep analytics</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA Button -->
+            <div class="text-center">
+                <button 
+                    onclick="toggleRhythmModal()"
+                    class="mystical-btn px-6 py-3 rounded-full text-sm font-semibold inline-flex items-center gap-2 transition-all hover:scale-105">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Explore Your Rhythm</span>
+                    <i class="fas fa-arrow-right text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Next Milestone -->
+            {% if meta.next_milestone %}
+            <div class="mt-4 pt-4 border-t border-slate-700/50">
+                <div class="flex items-center justify-center gap-2 text-xs text-slate-400">
+                    <i class="fas fa-arrow-up text-purple-400"></i>
+                    <span class="text-purple-300 font-semibold">Next:</span>
+                    <span>{{ meta.next_milestone.message }}</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+<!-- Rhythm Dashboard Modal -->
+<div class="modal-overlay" id="rhythm-dashboard-modal">
+    <div class="modal-content cosmic-border w-11/12 max-w-7xl max-h-[90vh] overflow-y-auto">
+        <div 
+            id="rhythm-dashboard-content"
+            hx-get="{% url 'deep_dive:rhythm_dashboard' %}"
+            hx-trigger="revealed"
+            hx-swap="innerHTML"
+            hx-on::after-swap="initRhythmDashboard()">
+            <div class="text-center py-12 text-slate-400">
+                <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                <p>Loading your rhythm dashboard...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card History Modal -->
+<div class="modal-overlay" id="card-history-modal">
+    <div class="modal-content cosmic-border w-11/12 max-w-4xl">
+        <div class="mystical-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-history text-indigo-400 mr-2"></i>
+                    Your Tarot Journey
+                </h3>
+                <button class="text-slate-400 hover:text-white transition-colors" onclick="toggleCardHistory()">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div 
+                id="card-history-content"
+                hx-get="{% url 'deep_dive:tarot_card_history' %}"
+                hx-trigger="revealed"
+                hx-swap="innerHTML">
+                <div class="text-center py-8 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Loading your tarot history...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 3-Card Spread Modal -->
+<div class="modal-overlay" id="spread-modal">
+    <div class="modal-content cosmic-border w-11/12 max-w-5xl">
+        <div class="mystical-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold flex items-center">
+                    <i class="fas fa-layer-group text-indigo-400 mr-2"></i>
+                    Three Card Spread
+                </h3>
+                <button class="text-slate-400 hover:text-white transition-colors" onclick="toggleSpreadReading()">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <p class="text-slate-300 text-sm mb-6 text-center">
+                Past • Present • Future aligned with your cosmic energies
+            </p>
+
+            <div 
+                id="spread-content"
+                hx-post="{% url 'deep_dive:draw_tarot_spread' %}"
+                hx-trigger="revealed"
+                hx-swap="innerHTML">
+                <div class="text-center py-8 text-slate-400">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>Drawing your three cards...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .preserve-3d {
+        transform-style: preserve-3d;
+        -webkit-transform-style: preserve-3d;
+    }
+
+    .perspective-1000 {
+        perspective: 1000px;
+        -webkit-perspective: 1000px;
+    }
+
+    .backface-hidden {
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+
+    .rotate-y-180 {
+        transform: rotateY(180deg);
+        -webkit-transform: rotateY(180deg);
+    }
+
+    .tarot-card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        -webkit-transform-style: preserve-3d;
+        transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    .tarot-card.flipped {
+        transform: rotateY(180deg);
+        -webkit-transform: rotateY(180deg);
+    }
+
+    .tarot-face {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+
+    .tarot-back {
+        z-index: 2;
+        transform: rotateY(0deg);
+        -webkit-transform: rotateY(0deg);
+    }
+
+    .tarot-front {
+        z-index: 1;
+        transform: rotateY(180deg);
+        -webkit-transform: rotateY(180deg);
+    }
+</style>
+
+<script>
+// ===================================
+// COSMIC TAROT CARD FUNCTIONALITY
+// ===================================
+
+document.addEventListener('DOMContentLoaded', function() {   
+    setupTarotCardClick();
+});
+
+function handleTarotCardDraw(event) {
+    const xhr = event.detail.xhr;
+    
+    if (xhr.status === 200) {
+        const data = JSON.parse(xhr.responseText);
+        
+        const card = document.getElementById('tarot-card');
+        card.classList.add('flipped');
+        
+        setTimeout(() => {
+            document.getElementById('tarot-number').textContent = data.card_number;
+            document.getElementById('tarot-emoji').textContent = data.emoji;
+            document.getElementById('tarot-title').textContent = data.title;
+            document.getElementById('tarot-keywords').textContent = data.keywords;
+            document.getElementById('tarot-interpretation').textContent = data.interpretation;
+            
+            if (data.astro_context) {
+                document.getElementById('astro-context-text').textContent = data.astro_context;
+                document.getElementById('tarot-astro-context').classList.remove('hidden');
+            }
+            
+            if (data.natal_insight) {
+                document.getElementById('natal-insight-text').textContent = data.natal_insight;
+                document.getElementById('tarot-natal-insight').classList.remove('hidden');
+            }
+            
+            const btn = document.getElementById('draw-tarot-btn');
+            btn.querySelector('span').textContent = 'Drawn for Today';
+            btn.disabled = true;
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            card.style.animation = 'pulse 0.5s ease-in-out';
+            
+        }, 300);
+        
+    } else {
+        try {
+            const error = JSON.parse(xhr.responseText);
+            alert(error.error || 'Unable to draw card. Please try again.');
+        } catch(e) {
+            alert('Unable to draw card. Please try again.');
+        }
+    }
+}
+
+function setupTarotCardClick() {
+    const cardContainer = document.getElementById('tarot-card-container');
+    const card = document.getElementById('tarot-card');
+    const drawBtn = document.getElementById('draw-tarot-btn');
+    
+    if (cardContainer && card) {
+        cardContainer.addEventListener('click', function(e) {
+            if (drawBtn && e.target.closest('#draw-tarot-btn')) {
+                return;
+            }
+            
+            const hasBeenDrawn = card.classList.contains('flipped') || !drawBtn;
+            if (hasBeenDrawn) {
+                card.classList.toggle('flipped');
+            }
+        });
+    }
+}
+
+function toggleCardHistory() {
+    const modal = document.getElementById('card-history-modal');
+    modal.classList.toggle('active');
+    
+    if (modal.classList.contains('active')) {
+        htmx.trigger('#card-history-content', 'revealed');
+    }
+}
+
+function toggleSpreadReading() {
+    const modal = document.getElementById('spread-modal');
+    modal.classList.toggle('active');
+    
+    if (modal.classList.contains('active')) {
+        htmx.trigger('#spread-content', 'revealed');
+    }
+}
+
+function toggleRhythmModal() {
+    const modal = document.getElementById('rhythm-dashboard-modal');
+    modal.classList.toggle('active');
+    
+    if (modal.classList.contains('active')) {
+        htmx.trigger('#rhythm-dashboard-content', 'revealed');
+    }
+}
+
+function initRhythmDashboard() {
+    console.log('Rhythm dashboard loaded');
+    setTimeout(function() {
+        if (typeof initializeAdvancedInsightsChart === 'function') {
+            initializeAdvancedInsightsChart();
+        }
+    }, 200);
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    const historyModal = document.getElementById('card-history-modal');
+    const spreadModal = document.getElementById('spread-modal');
+    const rhythmModal = document.getElementById('rhythm-dashboard-modal');
+    
+    if (event.target === historyModal) {
+        toggleCardHistory();
+    }
+    if (event.target === spreadModal) {
+        toggleSpreadReading();
+    }
+    if (event.target === rhythmModal) {
+        toggleRhythmModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        const historyModal = document.getElementById('card-history-modal');
+        const spreadModal = document.getElementById('spread-modal');
+        const rhythmModal = document.getElementById('rhythm-dashboard-modal');
+        
+        if (historyModal.classList.contains('active')) {
+            toggleCardHistory();
+        }
+        if (spreadModal.classList.contains('active')) {
+            toggleSpreadReading();
+        }
+        if (rhythmModal.classList.contains('active')) {
+            toggleRhythmModal();
+        }
+    }
+});
+</script>

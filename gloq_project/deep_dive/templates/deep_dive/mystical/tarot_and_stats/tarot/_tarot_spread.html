@@ -1,0 +1,219 @@
+<!-- deep_dive/partials/_tarot_spread.html -->
+
+<div class="space-y-6">
+    <!-- Overall Reading Summary -->
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-2 text-indigo-300 bg-indigo-950/40 px-4 py-2 rounded-full text-sm mb-4">
+            <i class="fas fa-book-open"></i>
+            <span>Past • Present • Future Reading</span>
+        </div>
+        <p class="text-slate-300 text-sm leading-relaxed max-w-2xl mx-auto">
+            {{ reading_summary }}
+        </p>
+    </div>
+
+    <div class="mystical-divider"></div>
+
+    <!-- Three Card Display -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- PAST CARD -->
+        <div class="space-y-3">
+            <!-- Position Label -->
+            <div class="text-center">
+                <div class="text-xs text-purple-400 font-semibold tracking-widest mb-1">
+                    {{ spread.past.position|upper }}
+                </div>
+                <div class="text-xs text-slate-400 italic">
+                    {{ spread.past.position_desc }}
+                </div>
+            </div>
+
+            <!-- Card Visual -->
+            <div class="relative w-full aspect-[2/3] max-w-[200px] mx-auto">
+                <div class="absolute inset-0 rounded-xl shadow-2xl"
+                     style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                            border: 3px solid #a855f7;">
+                    <div class="h-full flex flex-col p-4">
+                        <!-- Card Number -->
+                        <div class="text-xs font-bold text-purple-900 tracking-wider mb-2">
+                            {{ spread.past.card_number }}
+                        </div>
+                        
+                        <!-- Main Symbol -->
+                        <div class="flex-1 flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-5xl mb-2">{{ spread.past.emoji }}</div>
+                                <div class="text-sm font-bold text-slate-800 tracking-wide">
+                                    {{ spread.past.title }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Keywords -->
+                        <div class="text-xs text-purple-800 text-center leading-tight border-t-2 border-purple-300 pt-2">
+                            {{ spread.past.keywords }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interpretation -->
+            <div class="bg-gradient-to-br from-purple-900/20 to-indigo-900/10 border border-purple-700/30 rounded-lg p-4">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    {{ spread.past.interpretation }}
+                </p>
+            </div>
+        </div>
+
+        <!-- PRESENT CARD -->
+        <div class="space-y-3">
+            <!-- Position Label -->
+            <div class="text-center">
+                <div class="text-xs text-indigo-400 font-semibold tracking-widest mb-1">
+                    {{ spread.present.position|upper }}
+                </div>
+                <div class="text-xs text-slate-400 italic">
+                    {{ spread.present.position_desc }}
+                </div>
+            </div>
+
+            <!-- Card Visual -->
+            <div class="relative w-full aspect-[2/3] max-w-[200px] mx-auto">
+                <div class="absolute inset-0 rounded-xl shadow-2xl"
+                     style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                            border: 3px solid #6366f1;">
+                    <div class="h-full flex flex-col p-4">
+                        <!-- Card Number -->
+                        <div class="text-xs font-bold text-indigo-900 tracking-wider mb-2">
+                            {{ spread.present.card_number }}
+                        </div>
+                        
+                        <!-- Main Symbol -->
+                        <div class="flex-1 flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-5xl mb-2">{{ spread.present.emoji }}</div>
+                                <div class="text-sm font-bold text-slate-800 tracking-wide">
+                                    {{ spread.present.title }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Keywords -->
+                        <div class="text-xs text-indigo-800 text-center leading-tight border-t-2 border-indigo-300 pt-2">
+                            {{ spread.present.keywords }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interpretation -->
+            <div class="bg-gradient-to-br from-indigo-900/20 to-blue-900/10 border border-indigo-700/30 rounded-lg p-4">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    {{ spread.present.interpretation }}
+                </p>
+            </div>
+        </div>
+
+        <!-- FUTURE CARD -->
+        <div class="space-y-3">
+            <!-- Position Label -->
+            <div class="text-center">
+                <div class="text-xs text-pink-400 font-semibold tracking-widest mb-1">
+                    {{ spread.future.position|upper }}
+                </div>
+                <div class="text-xs text-slate-400 italic">
+                    {{ spread.future.position_desc }}
+                </div>
+            </div>
+
+            <!-- Card Visual -->
+            <div class="relative w-full aspect-[2/3] max-w-[200px] mx-auto">
+                <div class="absolute inset-0 rounded-xl shadow-2xl"
+                     style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                            border: 3px solid #ec4899;">
+                    <div class="h-full flex flex-col p-4">
+                        <!-- Card Number -->
+                        <div class="text-xs font-bold text-pink-900 tracking-wider mb-2">
+                            {{ spread.future.card_number }}
+                        </div>
+                        
+                        <!-- Main Symbol -->
+                        <div class="flex-1 flex items-center justify-center">
+                            <div class="text-center">
+                                <div class="text-5xl mb-2">{{ spread.future.emoji }}</div>
+                                <div class="text-sm font-bold text-slate-800 tracking-wide">
+                                    {{ spread.future.title }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Keywords -->
+                        <div class="text-xs text-pink-800 text-center leading-tight border-t-2 border-pink-300 pt-2">
+                            {{ spread.future.keywords }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interpretation -->
+            <div class="bg-gradient-to-br from-pink-900/20 to-purple-900/10 border border-pink-700/30 rounded-lg p-4">
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    {{ spread.future.interpretation }}
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Integration Message -->
+    <div class="mt-8 p-6 rounded-xl bg-gradient-to-r from-indigo-900/30 via-purple-900/30 to-pink-900/30 border border-indigo-700/30">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-lightbulb text-yellow-400 text-xl mt-1"></i>
+            <div>
+                <h4 class="text-sm font-semibold text-slate-200 mb-2">Integration Guidance</h4>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    Reflect on how these three energies weave together in your journey. 
+                    The past has shaped you, the present is where you have power, and the future 
+                    shows potential waiting to unfold. Journal about the connections you see between 
+                    these cards and your current life circumstances.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-center gap-4 pt-4">
+        <button 
+            class="text-sm text-slate-400 hover:text-indigo-300 transition-colors"
+            onclick="toggleSpreadReading()">
+            <i class="fas fa-times mr-2"></i>
+            Close Reading
+        </button>
+        <button 
+            class="mystical-btn px-6 py-2 rounded-full text-sm font-semibold"
+            onclick="window.print()">
+            <i class="fas fa-download mr-2"></i>
+            Save Reading
+        </button>
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* Hide close/save buttons when printing */
+        .flex.items-center.justify-center.gap-4 {
+            display: none;
+        }
+        
+        /* Optimize for print */
+        body {
+            background: white !important;
+        }
+        
+        .mystical-card {
+            background: white !important;
+            border: 1px solid #ccc !important;
+        }
+    }
+</style>

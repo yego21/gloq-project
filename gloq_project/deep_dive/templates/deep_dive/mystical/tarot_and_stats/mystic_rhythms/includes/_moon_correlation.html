@@ -1,0 +1,243 @@
+<!-- deep_dive/templates/deep_dive/mystical/partials/_moon_correlation.html -->
+<!-- Moon Phase Correlation Component - Shows lunar journaling patterns -->
+
+{% if insights.moon_correlation and insights.moon_correlation.has_data %}
+<div class="cosmic-border mb-6">
+    <div class="mystical-card rounded-2xl p-6">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold flex items-center text-indigo-300">
+                <i class="fas fa-moon mr-2"></i>
+                Lunar Rhythm Pattern
+            </h3>
+            <div class="text-xs text-slate-400">
+                <i class="fas fa-chart-pie mr-1"></i>
+                {{ insights.moon_correlation.total_entries }} entries analyzed
+            </div>
+        </div>
+
+        <div class="mystical-divider mb-4"></div>
+
+        <!-- Description -->
+        <p class="text-sm text-slate-400 mb-6 leading-relaxed">
+            Your journaling patterns across the lunar cycle reveal how cosmic rhythms influence your inner world.
+        </p>
+
+        <!-- Dominant Phases Display -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {% for phase_data in insights.moon_correlation.dominant_phases|slice:":3" %}
+            <div class="cosmic-card rounded-lg p-4 border-2 {% if forloop.first %}border-indigo-500/50{% else %}border-slate-700/30{% endif %}">
+                <!-- Moon Emoji -->
+                <div class="text-center mb-3">
+                    <div class="text-5xl mb-2">{{ phase_data.1.emoji }}</div>
+                    <div class="text-sm font-semibold text-slate-200">{{ phase_data.1.name }}</div>
+                </div>
+
+                <!-- Stats -->
+                <div class="text-center mb-3">
+                    <div class="text-2xl font-bold text-indigo-400 mb-1">{{ phase_data.1.entry_count }}</div>
+                    <div class="text-xs text-slate-400">entries ({{ phase_data.1.percentage|floatformat:0 }}%)</div>
+                </div>
+
+                <!-- Top Moods -->
+                {% if phase_data.1.top_tags %}
+                <div class="border-t border-slate-700/50 pt-3">
+                    <div class="text-xs text-slate-500 mb-2 text-center">Top Themes</div>
+                    <div class="flex flex-wrap gap-1 justify-center">
+                        {% for tag, count in phase_data.1.top_tags|slice:":2" %}
+                        <span class="px-2 py-1 rounded-full bg-indigo-900/30 border border-indigo-700/50 text-xs text-indigo-200">
+                            {{ tag }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Phase Energy Description -->
+                <div class="mt-3 text-xs text-slate-400 text-center leading-relaxed italic">
+                    "{{ phase_data.1.energy }}"
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Moon Phase Circular Chart -->
+        <div class="mb-6" style="height: 280px;">
+            <canvas id="moonPhaseChart"></canvas>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border border-indigo-700/30 rounded-lg p-4">
+            <div class="flex items-start gap-3 mb-3">
+                <i class="fas fa-lightbulb text-yellow-400 text-lg mt-0.5"></i>
+                <div class="flex-1">
+                    <div class="text-sm font-semibold text-indigo-300 mb-2">Your Lunar Insights</div>
+                    <div class="space-y-2">
+                        {% for insight in insights.moon_correlation.insights %}
+                        <div class="flex items-start gap-2 text-sm text-slate-300">
+                            <i class="fas fa-star text-indigo-400 text-xs mt-1"></i>
+                            <span>{{ insight }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Phases Breakdown (Collapsible) -->
+        <div class="mt-4">
+            <button 
+                onclick="toggleMoonPhasesBreakdown()"
+                class="text-xs text-slate-400 hover:text-indigo-300 transition-colors flex items-center gap-2">
+                <i class="fas fa-chevron-down" id="moon-phases-chevron"></i>
+                <span>View All Moon Phases</span>
+            </button>
+
+            <div id="moon-phases-breakdown" class="hidden mt-4 space-y-2">
+                {% for phase_key, phase_data in insights.moon_correlation.phase_statistics.items %}
+                    {% if phase_data.entry_count > 0 %}
+                    <div class="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30">
+                        <div class="text-2xl">{{ phase_data.emoji }}</div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-semibold text-slate-300">{{ phase_data.name }}</span>
+                                <span class="text-xs text-slate-400">{{ phase_data.entry_count }} entries</span>
+                            </div>
+                            <!-- Progress bar -->
+                            <div class="w-full bg-slate-700/30 rounded-full h-1.5">
+                                <div class="bg-gradient-to-r {{ phase_data.color }} h-1.5 rounded-full" 
+                                     style="width: {{ phase_data.percentage }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+// ===================================
+// MOON PHASE CORRELATION CHART
+// ===================================
+
+(function() {
+    const moonData = {{ insights.moon_correlation.visualization_data|safe }};
+    
+    setTimeout(function() {
+        const ctx = document.getElementById('moonPhaseChart');
+        if (!ctx || !moonData) return;
+        
+        new Chart(ctx, {
+            type: 'polarArea',
+            data: {
+                labels: moonData.labels,
+                datasets: [{
+                    label: 'Entries',
+                    data: moonData.data,
+                    backgroundColor: moonData.colors,
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            color: '#94a3b8',
+                            font: { size: 10 },
+                            padding: 10,
+                            usePointStyle: true
+                        }
+                    },
+                    title: {
+                        display: true,
+                        text: 'Journaling Activity by Moon Phase',
+                        color: '#a5b4fc',
+                        font: { size: 14, weight: 'bold' },
+                        padding: { bottom: 20 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        titleColor: '#a5b4fc',
+                        bodyColor: '#e2e8f0',
+                        borderColor: 'rgba(99, 102, 241, 0.5)',
+                        borderWidth: 1,
+                        padding: 12,
+                        callbacks: {
+                            label: function(context) {
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const value = context.parsed.r;
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${value} entries (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: '#64748b',
+                            font: { size: 10 },
+                            stepSize: 1,
+                            backdropColor: 'transparent'
+                        },
+                        grid: {
+                            color: 'rgba(148, 163, 184, 0.1)'
+                        },
+                        angleLines: {
+                            color: 'rgba(148, 163, 184, 0.1)'
+                        }
+                    }
+                }
+            }
+        });
+    }, 100);
+})();
+
+// Toggle all phases breakdown
+function toggleMoonPhasesBreakdown() {
+    const breakdown = document.getElementById('moon-phases-breakdown');
+    const chevron = document.getElementById('moon-phases-chevron');
+    
+    breakdown.classList.toggle('hidden');
+    
+    if (breakdown.classList.contains('hidden')) {
+        chevron.classList.remove('fa-chevron-up');
+        chevron.classList.add('fa-chevron-down');
+    } else {
+        chevron.classList.remove('fa-chevron-down');
+        chevron.classList.add('fa-chevron-up');
+    }
+}
+</script>
+
+{% else %}
+<!-- Not enough data state -->
+<div class="cosmic-border mb-6">
+    <div class="mystical-card rounded-2xl p-6">
+        <h3 class="font-bold flex items-center text-slate-400 mb-4">
+            <i class="fas fa-moon mr-2"></i>
+            Lunar Rhythm Pattern
+        </h3>
+        <div class="text-center py-8">
+            <div class="text-5xl mb-3 opacity-30">🌙</div>
+            <p class="text-slate-400 text-sm mb-2">
+                {% if insights.moon_correlation %}
+                    {{ insights.moon_correlation.message }}
+                {% else %}
+                    Write 3+ entries to discover your lunar patterns
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endif %}

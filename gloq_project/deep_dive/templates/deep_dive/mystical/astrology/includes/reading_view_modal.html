@@ -1,0 +1,156 @@
+<!-- deep_dive/templates/deep_dive/partials/reading_view_modal.html -->
+<style>
+    #reading-view-modal {
+    display: none;
+}
+
+#reading-view-modal.active {
+    display: flex;
+}
+</style>
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+     id="reading-modal-backdrop">
+    <div class="bg-slate-900 rounded-2xl border border-indigo-500/30 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+         id="reading-modal-content">
+        
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-slate-700/50">
+            <div class="flex items-center space-x-3">
+                {% if reading.reading_type == 'daily_overview' %}
+                    <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                        <i class="fas fa-calendar-day"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Daily Overview</h3>
+                        <p class="text-xs text-slate-400">Your cosmic guidance for today</p>
+                    </div>
+                {% elif reading.reading_type == 'transit_focus' %}
+                    <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                        <i class="fas fa-arrows-rotate"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Transit Focus</h3>
+                        <p class="text-xs text-slate-400">Major planetary influence</p>
+                    </div>
+                {% elif reading.reading_type == 'element_wisdom' %}
+                    <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                        <i class="fas fa-atom"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold">Element Wisdom</h3>
+                        <p class="text-xs text-slate-400">Elemental balance guidance</p>
+                    </div>
+                {% endif %}
+            </div>
+            <button onclick="document.getElementById('reading-view-modal').classList.remove('active')"
+                    class="text-slate-400 hover:text-white transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <!-- Modal Content (Scrollable) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+            
+            <!-- Metadata Bar -->
+            <div class="flex items-center justify-between text-xs pb-4 border-b border-slate-700/30">
+                <div class="flex items-center space-x-4 text-slate-400">
+                    {% if reading.generated_at %}
+                        <span class="flex items-center">
+                            <i class="fas fa-clock mr-1.5"></i>
+                            {{ reading.generated_at|date:"M j, Y - g:i A" }}
+                        </span>
+                    {% endif %}
+                    {% if reading.moon_phase %}
+                        <span class="flex items-center">
+                            <i class="fas fa-moon mr-1.5"></i>
+                            {{ reading.moon_phase }}
+                        </span>
+                    {% endif %}
+                    {% if reading.transits_analyzed > 0 %}
+                        <span class="flex items-center">
+                            <i class="fas fa-chart-line mr-1.5"></i>
+                            {{ reading.transits_analyzed }} transit{{ reading.transits_analyzed|pluralize }}
+                        </span>
+                    {% endif %}
+                </div>
+                {% if from_cache %}
+                    <span class="px-2 py-1 rounded-full bg-green-600/20 border border-green-500/30 text-green-400">
+                        <i class="fas fa-check-circle mr-1"></i>Cached
+                    </span>
+                {% else %}
+                    <span class="px-2 py-1 rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
+                        <i class="fas fa-sync-alt mr-1"></i>Fresh
+                    </span>
+                {% endif %}
+            </div>
+
+            <!-- Reading Text -->
+            {% if reading.reading_text %}
+            <div class="bg-slate-800/30 rounded-xl p-5 border border-slate-700/30">
+                <div class="text-sm text-slate-200 leading-relaxed whitespace-pre-line" id="reading-text-content">
+                    {{ reading.reading_text }}
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-slate-800/30 rounded-xl p-5 text-center border border-slate-700/30">
+                <p class="text-slate-400 text-sm">No reading text available</p>
+            </div>
+            {% endif %}
+
+            <!-- Top Transits (Collapsible) -->
+            {% if reading.top_transits %}
+            <details class="bg-slate-800/20 rounded-xl border border-slate-700/30">
+                <summary class="cursor-pointer p-4 text-sm font-semibold text-slate-300 hover:text-indigo-300 transition-colors flex items-center justify-between">
+                    <span>
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Transit Details ({{ reading.top_transits|length }})
+                    </span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                </summary>
+                <div class="px-4 pb-4 space-y-2">
+                    {% for transit in reading.top_transits %}
+                    <div class="bg-slate-700/30 rounded-lg p-3 text-sm">
+                        <span class="font-semibold text-indigo-300">{{ transit.transit_planet }}</span> 
+                        <span class="text-slate-400">{{ transit.aspect_type }}</span>
+                        <span class="font-semibold text-purple-300">{{ transit.natal_planet }}</span>
+                        <span class="text-slate-500 text-xs ml-2">({{ transit.orb }}° orb)</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </details>
+            {% endif %}
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="p-6 border-t border-slate-700/50 bg-slate-800/30">
+            <div class="flex items-center justify-between">
+                 <button onclick="document.getElementById('reading-view-modal').classList.remove('active')"
+                        class="text-sm px-4 py-2 rounded-full bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </button>
+                
+                <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"
+                      hx-target="#reading-view-modal"  
+                      hx-swap="innerHTML"  
+                      hx-indicator="#regenerate-loading"
+                      class="flex items-center gap-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="reading_type" value="{{ reading.reading_type }}">
+                    <input type="hidden" name="force_refresh" value="true">
+                    <input type="hidden" name="modal_view" value="true">  <!-- Important: tell view this is a modal request -->
+                    <button type="submit"
+                            class="text-sm px-4 py-2 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 transition-all">
+                        <i class="fas fa-sync-alt mr-2"></i>Regenerate Reading
+                    </button>
+                    <div id="regenerate-loading" class="htmx-indicator text-xs text-slate-400">
+                        <i class="fas fa-spinner fa-spin mr-1"></i>Regenerating...
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+

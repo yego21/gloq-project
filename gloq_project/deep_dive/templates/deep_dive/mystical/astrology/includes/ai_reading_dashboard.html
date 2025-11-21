@@ -1,0 +1,461 @@
+<!-- deep_dive/templates/deep_dive/partials/ai_reading_dashboard.html -->
+<!-- Replaces the dynamic ai-reading-content area with a stable dashboard -->
+
+<div class="space-y-4"> 
+    <!-- Generate All Button -->
+    <div class="bg-gradient-to-r from-indigo-900/10 to-violet-900/10 rounded-xl p-4 border border-indigo-500/20">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                    <i class="fas fa-stars"></i>
+                </div>
+                <div>
+                    <h5 class="text-sm font-semibold text-indigo-300">Generate All Readings</h5>
+                    <p class="text-xs text-slate-400">Generate all available today's readings at once</p>
+                </div>
+            </div>
+            <button onclick="confirmGenerateAll()"
+                    class="text-xs px-4 py-2 rounded-full bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 transition-all text-indigo-300 font-medium">
+                <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate All
+            </button>
+        </div>
+    </div>
+
+    <!-- Reading Cards Grid -->
+    <div class="space-y-3">
+        
+        <!-- Daily Overview Card -->
+        <div id="ai_reading_dashboard">
+            <div class="bg-gradient-to-r from-yellow-900/10 to-amber-900/10 rounded-xl p-4 border border-yellow-500/20 hover:border-yellow-500/40 transition-all {% if daily_reading and daily_reading.is_today %}ring-2 ring-green-500/20{% elif daily_reading and not daily_reading.is_today %}ring-2 ring-amber-500/30{% endif %}">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-semibold text-yellow-300">Daily Overview</h5>
+                            <p class="text-xs text-slate-400">Today's cosmic guidance</p>
+                        </div>
+                    </div>
+                    {% if daily_reading %}
+                        {% if daily_reading.is_today %}
+                            <span class="px-2 py-1 rounded-full bg-green-600/20 border border-green-500/30 text-green-400 text-xs">
+                                <i class="fas fa-check-circle mr-1"></i>Today's Reading
+                            </span>
+                        {% else %}
+                            <span class="px-2 py-1 rounded-full bg-amber-600/20 border border-amber-500/30 text-amber-400 text-xs animate-pulse">
+                                <i class="fas fa-clock-rotate-left mr-1"></i>Outdated
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="px-2 py-1 rounded-full bg-slate-600/20 border border-slate-500/30 text-slate-400 text-xs">
+                            Not generated
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if daily_reading %}
+                    <!-- Preview Snippet -->
+                    <div class="bg-slate-800/30 rounded-lg p-3 mb-3 border border-slate-700/30">
+                        <p class="text-xs text-slate-300 line-clamp-2">
+                            {{ daily_reading.reading_text|truncatewords:20 }}
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500">
+                            {{ daily_reading.generated_at|date:"M j, g:i A" }}
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <button class="text-xs px-3 py-1.5 rounded-full bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/30 transition-all"
+                                    hx-get="{% url 'deep_dive:view_reading' 'daily_overview' %}"
+                                    hx-target="#reading-view-modal"
+                                    hx-swap="innerHTML"
+                                    hx-on::after-request="document.getElementById('reading-view-modal').classList.add('active')">
+                                <i class="fas fa-book-open mr-1"></i>View Reading
+                            </button>
+                            {% if not daily_reading.is_today %}
+                                <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"
+                                      hx-target="#ai_reading_dashboard"
+                                      hx-swap="innerHTML"
+                                      hx-indicator="#daily-loading"
+                                      class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="reading_type" value="daily_overview">
+                                    <input type="hidden" name="force_refresh" value="true">
+                                    <button type="submit" 
+                                            class="text-xs px-3 py-1.5 rounded-full bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/40 transition-all text-amber-300 font-medium">
+                                        <i class="fas fa-refresh mr-1"></i>Generate Today's
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"
+                          hx-target="#ai_reading_dashboard"
+                          hx-swap="innerHTML"
+                          hx-indicator="#daily-loading">
+                        {% csrf_token %}
+                        <input type="hidden" name="reading_type" value="daily_overview">
+                        <button type="submit" 
+                                class="w-full text-xs px-3 py-2 rounded-full bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/30 transition-all">
+                            <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate Daily Reading
+                        </button>                  
+                    </form>
+                {% endif %}
+                <div id="daily-loading" class="htmx-indicator mt-2 text-center text-xs text-slate-400">
+                    <i class="fas fa-spinner fa-spin mr-1"></i>Generating...
+                </div>
+            </div>
+
+            <!-- Transit Focus Card -->
+            <div class="bg-gradient-to-r from-purple-900/10 to-pink-900/10 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all {% if transit_reading and transit_reading.is_today %}ring-2 ring-green-500/20{% elif transit_reading and not transit_reading.is_today %}ring-2 ring-amber-500/30{% endif %}">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400">
+                            <i class="fas fa-arrows-rotate"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-semibold text-purple-300">Transit Focus</h5>
+                            <p class="text-xs text-slate-400">Major transit analysis</p>
+                        </div>
+                    </div>
+                    {% if transit_reading %}
+                        {% if transit_reading.is_today %}
+                            <span class="px-2 py-1 rounded-full bg-green-600/20 border border-green-500/30 text-green-400 text-xs">
+                                <i class="fas fa-check-circle mr-1"></i>Today's Reading
+                            </span>
+                        {% else %}
+                            <span class="px-2 py-1 rounded-full bg-amber-600/20 border border-amber-500/30 text-amber-400 text-xs animate-pulse">
+                                <i class="fas fa-clock-rotate-left mr-1"></i>Outdated
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="px-2 py-1 rounded-full bg-slate-600/20 border border-slate-500/30 text-slate-400 text-xs">
+                            Not generated
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if transit_reading %}
+                    <div class="bg-slate-800/30 rounded-lg p-3 mb-3 border border-slate-700/30">
+                        <p class="text-xs text-slate-300 line-clamp-2">
+                            {{ transit_reading.reading_text|truncatewords:20 }}
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500">
+                            {{ transit_reading.generated_at|date:"M j, g:i A" }}
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <button class="text-xs px-3 py-1.5 rounded-full bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 transition-all"
+                                    hx-get="{% url 'deep_dive:view_reading' 'transit_focus' %}"
+                                    hx-target="#reading-view-modal"
+                                    hx-swap="innerHTML"
+                                    hx-on::after-request="document.getElementById('reading-view-modal').classList.add('active')">
+                                <i class="fas fa-book-open mr-1"></i>View Reading
+                            </button>
+                            {% if not transit_reading.is_today %}
+                                <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"  
+                                      hx-target="#ai_reading_dashboard"                   
+                                      hx-swap="innerHTML"
+                                      hx-indicator="#transit-loading"
+                                      class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="reading_type" value="transit_focus">
+                                    <input type="hidden" name="force_refresh" value="true">
+                                    <button type="submit"
+                                            class="text-xs px-3 py-1.5 rounded-full bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/40 transition-all text-amber-300 font-medium">
+                                        <i class="fas fa-refresh mr-1"></i>Generate Today's
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"  
+                          hx-target="#ai_reading_dashboard"                   
+                          hx-swap="innerHTML"
+                          hx-indicator="#transit-loading">
+                        {% csrf_token %}
+                        <input type="hidden" name="reading_type" value="transit_focus">
+                        <button type="submit"
+                                class="w-full text-xs px-3 py-2 rounded-full bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 transition-all">
+                            <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate Transit Reading
+                        </button>
+                    </form>
+                {% endif %}
+                <div id="transit-loading" class="htmx-indicator mt-2 text-center text-xs text-slate-400">
+                    <i class="fas fa-spinner fa-spin mr-1"></i>Generating...
+                </div>
+            </div>
+
+            <!-- Element Wisdom Card -->
+            <div class="bg-gradient-to-r from-blue-900/10 to-cyan-900/10 rounded-xl p-4 border border-blue-500/20 hover:border-blue-500/40 transition-all {% if element_reading and element_reading.is_today %}ring-2 ring-green-500/20{% elif element_reading and not element_reading.is_today %}ring-2 ring-amber-500/30{% endif %}">
+                <div class="flex items-start justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                            <i class="fas fa-atom"></i>
+                        </div>
+                        <div>
+                            <h5 class="text-sm font-semibold text-blue-300">Element Wisdom</h5>
+                            <p class="text-xs text-slate-400">Elemental balance guide</p>
+                        </div>
+                    </div>
+                    {% if element_reading %}
+                        {% if element_reading.is_today %}
+                            <span class="px-2 py-1 rounded-full bg-green-600/20 border border-green-500/30 text-green-400 text-xs">
+                                <i class="fas fa-check-circle mr-1"></i>Today's Reading
+                            </span>
+                        {% else %}
+                            <span class="px-2 py-1 rounded-full bg-amber-600/20 border border-amber-500/30 text-amber-400 text-xs animate-pulse">
+                                <i class="fas fa-clock-rotate-left mr-1"></i>Outdated
+                            </span>
+                        {% endif %}
+                    {% else %}
+                        <span class="px-2 py-1 rounded-full bg-slate-600/20 border border-slate-500/30 text-slate-400 text-xs">
+                            Not generated
+                        </span>
+                    {% endif %}
+                </div>
+
+                {% if element_reading %}
+                    <div class="bg-slate-800/30 rounded-lg p-3 mb-3 border border-slate-700/30">
+                        <p class="text-xs text-slate-300 line-clamp-2">
+                            {{ element_reading.reading_text|truncatewords:20 }}
+                        </p>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs text-slate-500">
+                            {{ element_reading.generated_at|date:"M j, g:i A" }}
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            <button class="text-xs px-3 py-1.5 rounded-full bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 transition-all"
+                                    hx-get="{% url 'deep_dive:view_reading' 'element_wisdom' %}"
+                                    hx-target="#reading-view-modal"
+                                    hx-swap="innerHTML"
+                                    hx-on::after-request="document.getElementById('reading-view-modal').classList.add('active')">
+                                <i class="fas fa-book-open mr-1"></i>View Reading
+                            </button>
+                            {% if not element_reading.is_today %}
+                                <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"      
+                                      hx-target="#ai_reading_dashboard"                   
+                                      hx-swap="innerHTML"            
+                                      hx-indicator="#element-loading"
+                                      class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="reading_type" value="element_wisdom">
+                                    <input type="hidden" name="force_refresh" value="true">
+                                    <button type="submit"
+                                            class="text-xs px-3 py-1.5 rounded-full bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/40 transition-all text-amber-300 font-medium">
+                                        <i class="fas fa-refresh mr-1"></i>Generate Today's
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"      
+                          hx-target="#ai_reading_dashboard"                   
+                          hx-swap="innerHTML"            
+                          hx-indicator="#element-loading">
+                        {% csrf_token %}
+                        <input type="hidden" name="reading_type" value="element_wisdom">
+                        <button type="submit"
+                                class="w-full text-xs px-3 py-2 rounded-full bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/30 transition-all">
+                            <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate Element Reading
+                        </button>
+                    </form>
+                {% endif %}
+                <div id="element-loading" class="htmx-indicator mt-2 text-center text-xs text-slate-400">
+                    <i class="fas fa-spinner fa-spin mr-1"></i>Generating...
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Info Footer -->
+    <!-- <div class="bg-slate-800/20 rounded-lg p-3 border border-slate-700/30">
+        <div class="flex items-start space-x-2">
+            <i class="fas fa-info-circle text-indigo-400 text-xs mt-0.5"></i>
+            <p class="text-xs text-slate-400 leading-relaxed">
+                Each reading type is cached daily. Outdated readings can be regenerated for today's guidance.
+            </p>
+        </div>
+    </div> -->
+</div>
+
+<!-- Reading View Modal Container -->
+<div id="reading-view-modal" class="modal">
+    <!-- Will be populated by HTMX when viewing a reading -->
+</div>
+
+<!-- Generate All Confirmation Modal -->
+<div id="generate-all-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+    <div class="bg-slate-800 rounded-2xl border border-indigo-500/30 shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-900/30 to-violet-900/30 p-4 border-b border-indigo-500/20">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                    <i class="fas fa-stars"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-indigo-300">Generate All Readings</h3>
+                    <p class="text-xs text-slate-400">Confirm bulk generation</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-5 space-y-4">
+            <p class="text-sm text-slate-300">
+                This will generate <strong class="text-indigo-400" id="readings-to-generate-count">0</strong> reading(s) that are either missing or outdated:
+            </p>
+            
+            <div id="readings-to-generate-list" class="space-y-2">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="bg-amber-900/10 border border-amber-500/20 rounded-lg p-3">
+                <div class="flex items-start space-x-2">
+                    <i class="fas fa-exclamation-triangle text-amber-400 text-xs mt-0.5"></i>
+                    <p class="text-xs text-amber-300/80">
+                        This may take a few moments. Each reading will be generated sequentially.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="p-4 bg-slate-900/30 border-t border-slate-700/30 flex items-center justify-end space-x-3">
+            <button onclick="closeGenerateAllModal()" 
+                    class="text-xs px-4 py-2 rounded-full bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 transition-all text-slate-300">
+                Cancel
+            </button>
+            <button onclick="executeGenerateAll()" 
+                    class="text-xs px-4 py-2 rounded-full bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 transition-all text-indigo-300 font-medium">
+                <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate All
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Generate All functionality
+function confirmGenerateAll() {
+    const readingsToGenerate = [];
+    
+    // Check each reading type by inspecting the actual DOM
+    const cards = document.querySelectorAll('#ai_reading_dashboard > div[class*="bg-gradient"]');
+    
+    cards.forEach(card => {
+        // Check for "Outdated" or "Not generated" badges
+        const badge = card.querySelector('span[class*="rounded-full"]');
+        const badgeText = badge ? badge.textContent.trim() : '';
+        
+        // Determine reading type from icon
+        let readingType = null;
+        let readingName = '';
+        let icon = '';
+        let color = '';
+        
+        if (card.querySelector('.fa-calendar-day')) {
+            readingType = 'daily_overview';
+            readingName = 'Daily Overview';
+            icon = 'fa-calendar-day';
+            color = 'yellow';
+        } else if (card.querySelector('.fa-arrows-rotate')) {
+            readingType = 'transit_focus';
+            readingName = 'Transit Focus';
+            icon = 'fa-arrows-rotate';
+            color = 'purple';
+        } else if (card.querySelector('.fa-atom')) {
+            readingType = 'element_wisdom';
+            readingName = 'Element Wisdom';
+            icon = 'fa-atom';
+            color = 'blue';
+        }
+        
+        // Add to list if outdated or not generated
+        if (readingType && (badgeText.includes('Outdated') || badgeText.includes('Not generated'))) {
+            readingsToGenerate.push({
+                type: readingType,
+                name: readingName,
+                icon: icon,
+                color: color
+            });
+        }
+    });
+    
+    if (readingsToGenerate.length === 0) {
+        alert('All readings are already up to date!');
+        return;
+    }
+    
+    // Update modal content
+    document.getElementById('readings-to-generate-count').textContent = readingsToGenerate.length;
+    
+    const listContainer = document.getElementById('readings-to-generate-list');
+    listContainer.innerHTML = readingsToGenerate.map(reading => `
+        <div class="flex items-center space-x-2 text-xs text-slate-300 bg-slate-800/30 rounded-lg p-2 border border-slate-700/30">
+            <i class="fas ${reading.icon} text-${reading.color}-400"></i>
+            <span>${reading.name}</span>
+        </div>
+    `).join('');
+    
+    // Store for later use
+    window.readingsToGenerate = readingsToGenerate;
+    
+    // Show modal
+    const modal = document.getElementById('generate-all-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeGenerateAllModal() {
+    const modal = document.getElementById('generate-all-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+async function executeGenerateAll() {
+    closeGenerateAllModal();
+    
+    const readings = window.readingsToGenerate || [];
+    
+    for (const reading of readings) {
+        try {
+            const formData = new FormData();
+            formData.append('reading_type', reading.type);
+            formData.append('force_refresh', 'true');
+            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+            
+            const response = await fetch('{% url "deep_dive:generate_ai_reading" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            if (response.ok) {
+                const html = await response.text();
+                document.getElementById('ai_reading_dashboard').innerHTML = html;
+            }
+        } catch (error) {
+            console.error(`Error generating ${reading.name}:`, error);
+        }
+    }
+}
+
+// Close modal on outside click
+document.getElementById('generate-all-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeGenerateAllModal();
+    }
+});
+</script>
+
+
+

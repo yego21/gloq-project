@@ -1,0 +1,221 @@
+<!-- deep_dive/templates/deep_dive/mystical/partials/_planetary_insights.html -->
+<!-- Deep Planetary-Emotion Insights - Content Only (no wrapper when embedded) -->
+
+{% if insights.planetary_emotions and insights.planetary_emotions.has_data %}
+
+<!-- Stats Header (replaces the removed header) -->
+<div class="text-xs text-slate-400 mb-4 flex items-center justify-end">
+    <i class="fas fa-database mr-1"></i>
+    {{ insights.planetary_emotions.total_entries }} entries analyzed
+</div>
+
+<div class="mystical-divider mb-4"></div>
+
+<!-- Key Insights -->
+{% if insights.planetary_emotions.insights %}
+<div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700/30 rounded-lg p-4 mb-6">
+    <div class="flex items-start gap-3 mb-3">
+        <i class="fas fa-sparkles text-yellow-400 text-lg mt-0.5"></i>
+        <div class="flex-1">
+            <div class="text-sm font-semibold text-purple-300 mb-2">Key Patterns Discovered</div>
+            <div class="space-y-2">
+                {% for insight in insights.planetary_emotions.insights %}
+                <div class="flex items-start gap-2 text-sm text-slate-300">
+                    <i class="fas fa-atom text-purple-400 text-xs mt-1"></i>
+                    <span>{{ insight }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Top Correlations Grid -->
+<div class="mb-6">
+    <h4 class="text-sm font-semibold text-purple-300 mb-3 flex items-center">
+        <i class="fas fa-chart-scatter mr-2"></i>
+        Strongest Planet-Element Correlations
+    </h4>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {% for corr in insights.planetary_emotions.top_correlations|slice:":6" %}
+        <div class="cosmic-card rounded-lg p-4 border-2 
+                    {% if corr.sentiment_shift > 0.05 %}border-green-700/50{% elif corr.sentiment_shift < -0.05 %}border-red-700/50{% else %}border-slate-700/30{% endif %}">
+            
+            <!-- Planet + Element Header -->
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">
+                        {% if corr.planet == 'Sun' %}☀️
+                        {% elif corr.planet == 'Moon' %}🌙
+                        {% elif corr.planet == 'Mercury' %}☿️
+                        {% elif corr.planet == 'Venus' %}♀️
+                        {% elif corr.planet == 'Mars' %}♂️
+                        {% elif corr.planet == 'Jupiter' %}♃
+                        {% elif corr.planet == 'Saturn' %}♄
+                        {% elif corr.planet == 'Uranus' %}♅
+                        {% elif corr.planet == 'Neptune' %}♆
+                        {% elif corr.planet == 'Pluto' %}♇
+                        {% endif %}
+                    </span>
+                    <div>
+                        <div class="text-sm font-semibold text-slate-200">{{ corr.planet }}</div>
+                        <div class="text-xs text-slate-400">in {{ corr.element }} signs</div>
+                    </div>
+                </div>
+                
+                <!-- Sentiment Badge -->
+                <div class="px-2 py-1 rounded-full text-xs font-bold
+                            {% if corr.avg_sentiment > 0.2 %}bg-green-900/50 text-green-300
+                            {% elif corr.avg_sentiment > 0 %}bg-blue-900/50 text-blue-300
+                            {% elif corr.avg_sentiment > -0.2 %}bg-yellow-900/50 text-yellow-300
+                            {% else %}bg-red-900/50 text-red-300{% endif %}">
+                    {{ corr.avg_sentiment|floatformat:2 }}
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 gap-2 mb-2">
+                <div class="text-xs">
+                    <span class="text-slate-500">Sample:</span>
+                    <span class="text-slate-300 font-semibold">{{ corr.count }} entries</span>
+                </div>
+                <div class="text-xs">
+                    <span class="text-slate-500">Shift:</span>
+                    <span class="font-semibold
+                                 {% if corr.sentiment_shift > 0 %}text-green-300{% else %}text-red-300{% endif %}">
+                        {{ corr.sentiment_shift|floatformat:2 }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Top Emotion -->
+            <div class="pt-2 border-t border-slate-700/50">
+                <div class="text-xs text-slate-400">Most common theme:</div>
+                <div class="text-sm text-purple-300 font-medium">{{ corr.top_emotion }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Planet Meanings Reference -->
+<div class="bg-gradient-to-r from-indigo-900/10 to-purple-900/10 border border-indigo-700/20 rounded-lg p-4">
+    <button 
+        onclick="togglePlanetMeanings()"
+        class="w-full flex items-center justify-between text-sm text-slate-400 hover:text-indigo-300 transition-colors">
+        <span>
+            <i class="fas fa-book mr-2"></i>
+            What do these planets mean?
+        </span>
+        <i class="fas fa-chevron-down text-xs" id="planet-meanings-chevron"></i>
+    </button>
+    
+    <div id="planet-meanings-content" class="hidden mt-3 space-y-2">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>☀️</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Sun:</span>
+                    <span class="text-slate-400">Identity, vitality, ego</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>🌙</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Moon:</span>
+                    <span class="text-slate-400">Emotions, instincts, subconscious</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>☿️</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Mercury:</span>
+                    <span class="text-slate-400">Communication, thought, processing</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♀️</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Venus:</span>
+                    <span class="text-slate-400">Love, pleasure, values</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♂️</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Mars:</span>
+                    <span class="text-slate-400">Action, desire, frustration</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♃</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Jupiter:</span>
+                    <span class="text-slate-400">Expansion, optimism, growth</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♄</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Saturn:</span>
+                    <span class="text-slate-400">Structure, discipline, limitation</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♅</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Uranus:</span>
+                    <span class="text-slate-400">Change, rebellion, innovation</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♆</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Neptune:</span>
+                    <span class="text-slate-400">Dreams, confusion, spirituality</span>
+                </div>
+            </div>
+            <div class="flex items-start gap-2 p-2 rounded bg-slate-800/30">
+                <span>♇</span>
+                <div>
+                    <span class="font-semibold text-slate-300">Pluto:</span>
+                    <span class="text-slate-400">Transformation, power, depth</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle planet meanings reference
+function togglePlanetMeanings() {
+    const content = document.getElementById('planet-meanings-content');
+    const chevron = document.getElementById('planet-meanings-chevron');
+    
+    content.classList.toggle('hidden');
+    
+    if (content.classList.contains('hidden')) {
+        chevron.classList.remove('fa-chevron-up', 'rotate-180');
+        chevron.classList.add('fa-chevron-down');
+    } else {
+        chevron.classList.remove('fa-chevron-down');
+        chevron.classList.add('fa-chevron-up', 'rotate-180');
+    }
+}
+</script>
+
+{% else %}
+<!-- Not enough data state -->
+<div class="text-center py-6">
+    <div class="text-4xl mb-3 opacity-30">🪐</div>
+    <p class="text-slate-400 text-sm">
+        {% if insights.planetary_emotions %}
+            {{ insights.planetary_emotions.message }}
+        {% else %}
+            Write 5+ entries to unlock planetary-emotion correlations
+        {% endif %}
+    </p>
+</div>
+{% endif %}

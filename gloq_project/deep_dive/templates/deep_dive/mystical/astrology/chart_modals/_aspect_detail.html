@@ -1,0 +1,93 @@
+<!-- _aspect_detail.html -->
+<div class="space-y-4">
+    <!-- Header with Aspect Symbol -->
+    <div class="flex items-center justify-between pb-3 border-b border-indigo-500/30">
+        <div class="flex items-center gap-3">
+            <span
+                class="text-4xl {% if meaning.color == 'green' %}text-green-400{% elif meaning.color == 'red' %}text-red-400{% elif meaning.color == 'orange' %}text-orange-400{% elif meaning.color == 'blue' %}text-blue-400{% else %}text-yellow-400{% endif %}">
+                {{ meaning.symbol }}
+            </span>
+            <div>
+                <h5 class="text-xl font-bold text-white">{{ aspect.aspect_type }}</h5>
+                <p class="text-sm text-slate-400">{{ meaning.nature }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Planets Involved -->
+    <div class="grid grid-cols-2 gap-3">
+        <div class="bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-lg p-3 border border-purple-500/20">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">{{ planet1.symbol }}</span>
+                <span class="font-semibold text-white">{{ planet1.name }}</span>
+            </div>
+            <div class="text-xs space-y-1">
+                <div class="text-indigo-300">{{ planet1.sign }} {{ planet1.degree|floatformat:1 }}°</div>
+                {% if planet1.house %}<div class="text-slate-400">House {{ planet1.house }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-lg p-3 border border-blue-500/20">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-2xl">{{ planet2.symbol }}</span>
+                <span class="font-semibold text-white">{{ planet2.name }}</span>
+            </div>
+            <div class="text-xs space-y-1">
+                <div class="text-indigo-300">{{ planet2.sign }} {{ planet2.degree|floatformat:1 }}°</div>
+                {% if planet2.house %}<div class="text-slate-400">House {{ planet2.house }}</div>{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Orb Information -->
+    <div class="bg-slate-700/30 rounded-lg p-3">
+        <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400">Orb (Exactness)</span>
+            <span class="text-white font-semibold">{{ aspect.orb|floatformat:2 }}°</span>
+        </div>
+        <div class="mt-2 bg-slate-800/50 rounded-full h-2 overflow-hidden">
+            {% widthratio aspect.orb 10 100 as orb_width %}
+            <div class="h-full {% if meaning.color == 'green' %}bg-green-400{% elif meaning.color == 'red' %}bg-red-400{% elif meaning.color == 'orange' %}bg-orange-400{% elif meaning.color == 'blue' %}bg-blue-400{% else %}bg-yellow-400{% endif %}"
+                style="width: {% widthratio 10 aspect.orb 100 %}%"></div>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">
+            {% if aspect.orb < 2 %}Very tight - powerful influence{% elif aspect.orb < 5 %}Moderate - clear influence{% else %}Wide - subtle influence{% endif %} </p>
+    </div>
+
+    <!-- Description -->
+    <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 rounded-lg p-4 border border-indigo-500/20">
+        <h6 class="text-xs font-semibold text-indigo-300 mb-2 uppercase tracking-wide">Description</h6>
+        <p class="text-sm text-slate-200 leading-relaxed">{{ meaning.description }}</p>
+    </div>
+
+    <!-- Keywords -->
+    <div class="bg-slate-800/40 rounded-lg p-3">
+        <h6 class="text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Keywords</h6>
+        <p class="text-sm text-indigo-300">{{ meaning.keywords }}</p>
+    </div>
+
+
+    <!-- Influence -->
+    <div class="bg-gradient-to-r from-purple-900/20 to-pink-900/20 rounded-lg p-3 border border-purple-500/20">
+        <h6 class="text-xs font-semibold text-purple-300 mb-2 uppercase tracking-wide flex items-center">
+            <i class="fas fa-star mr-2"></i>Influence
+        </h6>
+        <p class="text-sm text-slate-200">{{ meaning.influence }}</p>
+    </div>
+
+    <!-- Back Navigation -->
+    <div class="flex gap-2">
+        <button
+            class="flex-1 bg-slate-700/50 hover:bg-slate-700/70 text-slate-300 rounded-lg py-2 px-3 text-sm transition-colors"
+            hx-get="{% url 'deep_dive:planet_detail' planet1.name %}"
+            hx-target="#data-detail-panel-content, " hx-swap="innerHTML">
+            <i class="fas fa-arrow-left mr-2"></i>{{ planet1.name }}
+        </button>
+        <button
+            class="flex-1 bg-slate-700/50 hover:bg-slate-700/70 text-slate-300 rounded-lg py-2 px-3 text-sm transition-colors"
+            hx-get="{% url 'deep_dive:planet_detail' planet2.name %}"
+            hx-target="#data-detail-panel-content, #planet-info-content" hx-swap="innerHTML">
+            <i class="fas fa-arrow-left mr-2"></i>{{ planet2.name }}
+        </button>
+    </div>
+</div>

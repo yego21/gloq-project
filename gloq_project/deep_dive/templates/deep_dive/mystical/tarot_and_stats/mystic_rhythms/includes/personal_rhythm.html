@@ -1,0 +1,678 @@
+<!-- deep_dive/templates/deep_dive/mystical/partials/_personal_rhythm.html -->
+<!-- Personal Rhythm Tracker - Clean 3-Section Structure -->
+
+<div class="cosmic-border">
+    <div class="mystical-card rounded-2xl p-6">
+        
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold flex items-center">
+                <i class="fas fa-heartbeat text-indigo-300 mr-2"></i>
+                Personal Rhythm Tracker
+            </h3>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-indigo-900/40 to-purple-900/40 border border-indigo-700/50">
+                <i class="fas fa-layer-group text-xs text-indigo-400"></i>
+                <span class="text-xs font-semibold text-indigo-200">{{ meta.level_name }}</span>
+            </div>
+        </div>
+
+        <p class="text-slate-400 text-sm mb-6">
+            {{ meta.level_description }}
+        </p>
+
+        <div class="mystical-divider"></div>
+
+        {% if error %}
+            <!-- Error State -->
+            <div class="text-center py-8">
+                <i class="fas fa-exclamation-circle text-red-400 text-3xl mb-3"></i>
+                <p class="text-slate-300">{{ error_message }}</p>
+            </div>
+
+        {% else %}
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- COSMIC SNAPSHOT - Always Visible (NOT expandable) -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div class="mb-6">
+                <h4 class="text-sm font-semibold text-indigo-300 mb-3 flex items-center">
+                    <i class="fas fa-globe-americas mr-2"></i>
+                    Current Cosmic Snapshot
+                </h4>
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <!-- Moon Phase -->
+                    <div class="cosmic-card rounded-lg p-4 text-center hover:scale-105 transition-transform">
+                        <div class="text-4xl mb-2">{{ insights.cosmic_rhythm.moon.emoji }}</div>
+                        <div class="text-xs text-slate-400 mb-1">Moon Phase</div>
+                        <div class="text-sm font-semibold text-slate-200">{{ insights.cosmic_rhythm.moon.phase }}</div>
+                        <div class="text-xs text-indigo-300 mt-1">{{ insights.cosmic_rhythm.moon.illumination|floatformat:0 }}%</div>
+                    </div>
+
+                    <!-- Dominant Element -->
+                    <div class="cosmic-card rounded-lg p-4 text-center hover:scale-105 transition-transform">
+                        <div class="text-4xl mb-2">{{ insights.cosmic_rhythm.visual_markers.dominant_element_emoji }}</div>
+                        <div class="text-xs text-slate-400 mb-1">Dominant Element</div>
+                        <div class="text-sm font-semibold text-slate-200">
+                            {% if insights.cosmic_rhythm.dominant_elements.dominant %}
+                                {{ insights.cosmic_rhythm.dominant_elements.dominant.0|title }}
+                            {% else %}
+                                Balanced
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cosmic Energy Summary -->
+                <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border border-indigo-700/30 rounded-lg p-3">
+                    <div class="flex items-start gap-2 text-sm">
+                        <i class="fas fa-sparkles text-indigo-300 mt-0.5"></i>
+                        <div>
+                            <span class="text-indigo-300 font-semibold">Energy: </span>
+                            <span class="text-slate-300">{{ insights.cosmic_rhythm.energy_summary }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mystical-divider"></div>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- 1. LUNAR CORRELATION - Expandable (≥3 entries) -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            {% if insights.journal_rhythm.entry_count >= 3 %}
+            <div class="mb-4">
+                <button class="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-700/40 hover:border-blue-600/60 transition-all"
+                        onclick="toggleRhythmSection('lunar-correlation')"
+                        id="lunar-correlation-toggle">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                            <i class="fas fa-moon text-blue-300"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="text-sm font-semibold text-slate-200">Lunar Rhythm Connection</h4>
+                            <p class="text-xs text-slate-400">How moon phases affect your journaling</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down text-blue-400 transition-transform" id="lunar-correlation-icon"></i>
+                </button>
+
+                <div class="mt-3 px-4 hidden" id="lunar-correlation-content">
+                    {% include 'deep_dive/mystical/tarot_and_stats/mystic_rhythms/includes/_moon_correlation.html' %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- 2. PLANETARY CORRELATION - Expandable (≥5 entries) -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            {% if insights.journal_rhythm.entry_count >= 5 %}
+            <div class="mb-4">
+                <button class="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-orange-900/30 to-red-900/30 border border-orange-700/40 hover:border-orange-600/60 transition-all"
+                        onclick="toggleRhythmSection('planetary-correlation')"
+                        id="planetary-correlation-toggle">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center">
+                            <i class="fas fa-globe text-orange-300"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="text-sm font-semibold text-slate-200">Planetary Influences</h4>
+                            <p class="text-xs text-slate-400">Deep cosmic patterns in your entries</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down text-orange-400 transition-transform" id="planetary-correlation-icon"></i>
+                </button>
+
+                <div class="mt-3 px-4 hidden" id="planetary-correlation-content">
+                    {% include 'deep_dive/mystical/tarot_and_stats/mystic_rhythms/includes/_planetary_correlation.html' %}
+                </div>
+            </div>
+            {% elif insights.journal_rhythm.entry_count >= 3 %}
+            <!-- Locked Planetary Section (3-4 entries) -->
+            <div class="mb-4">
+                <div class="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-900/30 to-slate-800/30 border border-slate-700/40 opacity-60">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-500/20 flex items-center justify-center">
+                            <i class="fas fa-lock text-slate-400"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="text-sm font-semibold text-slate-300">Planetary Influences</h4>
+                            <p class="text-xs text-slate-500">
+                                {% if insights.journal_rhythm.entry_count == 3 %}
+                                    Unlock at 2 more entries
+                                {% elif insights.journal_rhythm.entry_count == 4 %}
+                                    Unlock at 1 more entry
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-xs text-slate-500 font-semibold px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50">
+                        {{ insights.journal_rhythm.entry_count }}/5
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- 3. ADVANCED INSIGHTS - Expandable (≥3 entries) -->
+            <!-- Combined: Journal Patterns + Advanced Analytics -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            {% if insights.journal_rhythm.entry_count >= 3 %}
+            <div class="mb-4">
+                <button class="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-700/40 hover:border-purple-600/60 transition-all"
+                        onclick="toggleRhythmSection('advanced-insights')"
+                        id="advanced-insights-toggle">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                            <i class="fas fa-brain text-purple-300"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="text-sm font-semibold text-slate-200">Advanced Insights</h4>
+                            <p class="text-xs text-slate-400">
+                                {{ insights.journal_rhythm.entry_count }} entries • {{ insights.journal_rhythm.weekly_average|floatformat:1 }}/week
+                            </p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down text-purple-400 transition-transform" id="advanced-insights-icon"></i>
+                </button>
+
+                <div class="mt-3 px-4 hidden" id="advanced-insights-content">
+                    <div class="space-y-6">
+                        
+                        <!-- Key Stats Grid -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="cosmic-card rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-purple-400 mb-1">{{ insights.journal_rhythm.entry_count }}</div>
+                                <div class="text-xs text-slate-400">Entries</div>
+                            </div>
+                            <div class="cosmic-card rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-purple-400 mb-1">{{ insights.journal_rhythm.weekly_average|floatformat:1 }}</div>
+                                <div class="text-xs text-slate-400">Per Week</div>
+                            </div>
+                            <div class="cosmic-card rounded-lg p-3 text-center">
+                                <div class="text-xl font-bold text-purple-400 mb-1">{{ insights.journal_rhythm.top_tags|length }}</div>
+                                <div class="text-xs text-slate-400">Themes</div>
+                            </div>
+                        </div>
+
+                        <!-- Pattern Insights -->
+                        {% if insights.journal_rhythm.insights %}
+                        <div>
+                            <h5 class="text-xs font-semibold text-purple-300 mb-2 flex items-center">
+                                <i class="fas fa-lightbulb mr-2"></i>
+                                Key Patterns
+                            </h5>
+                            <div class="space-y-2">
+                                {% for insight in insights.journal_rhythm.insights|slice:":5" %}
+                                    <div class="flex items-start gap-2 text-sm text-slate-300 bg-slate-800/30 p-3 rounded-lg">
+                                        <i class="fas fa-star text-purple-400 text-xs mt-1"></i>
+                                        <span>{{ insight }}</span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Top Tags -->
+                        {% if insights.journal_rhythm.top_tags %}
+                        <div>
+                            <h5 class="text-xs font-semibold text-purple-300 mb-2 flex items-center">
+                                <i class="fas fa-tags mr-2"></i>
+                                Most Used Themes
+                            </h5>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag, count in insights.journal_rhythm.top_tags %}
+                                    <span class="px-3 py-1 rounded-full bg-indigo-900/30 border border-indigo-700/50 text-xs text-indigo-200">
+                                        {{ tag }} <span class="text-indigo-400">×{{ count }}</span>
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Chart Section (for established+ users) -->
+                        {% if insights.data_level in 'established,rich' %}
+                        <div>
+                            <h5 class="text-xs font-semibold text-purple-300 mb-3 flex items-center">
+                                <i class="fas fa-chart-line mr-2"></i>
+                                Visual Analytics
+                            </h5>
+                            
+                            <!-- Chart Tabs (only for rich users with full data) -->
+                            {% if insights.data_level == 'rich' %}
+                            <div class="flex gap-2 text-xs border-b border-slate-700/50 pb-2 mb-4">
+                                <button class="rhythm-chart-tab active px-3 py-1.5 rounded-t-lg bg-purple-900/30 text-purple-300 border-t border-x border-purple-700/50 transition-colors" data-chart="frequency">
+                                    <i class="fas fa-chart-line mr-1"></i> Frequency
+                                </button>
+                                <button class="rhythm-chart-tab px-3 py-1.5 rounded-t-lg text-slate-400 hover:bg-slate-800/30 hover:text-slate-300 transition-colors" data-chart="tags">
+                                    <i class="fas fa-tags mr-1"></i> Themes
+                                </button>
+                                <button class="rhythm-chart-tab px-3 py-1.5 rounded-t-lg text-slate-400 hover:bg-slate-800/30 hover:text-slate-300 transition-colors" data-chart="hours">
+                                    <i class="fas fa-clock mr-1"></i> Time of Day
+                                </button>
+                            </div>
+                            {% endif %}
+
+                            <!-- Chart Canvas -->
+                            <div style="height: 220px;">
+                                <canvas id="advancedInsightsChart"></canvas>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Advanced Data (for rich users only) -->
+                        {% if insights.data_level == 'rich' and insights.journal_rhythm.advanced_data %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-700/50">
+                            
+                            <!-- Monthly Distribution -->
+                            {% if insights.journal_rhythm.advanced_data.monthly_distribution %}
+                            <div>
+                                <h5 class="text-xs font-semibold text-pink-300 mb-3 flex items-center">
+                                    <i class="fas fa-calendar mr-2"></i>
+                                    Monthly Activity
+                                </h5>
+                                <div class="space-y-2">
+                                    {% for month, count in insights.journal_rhythm.advanced_data.monthly_distribution.items %}
+                                    <div class="flex items-center justify-between p-2 rounded bg-slate-800/30">
+                                        <span class="text-xs text-slate-400">{{ month }}</span>
+                                        <span class="text-sm font-semibold text-pink-300">{{ count }} entries</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Tag Correlations -->
+                            {% if insights.journal_rhythm.advanced_data.tag_correlations %}
+                            <div>
+                                <h5 class="text-xs font-semibold text-pink-300 mb-3 flex items-center">
+                                    <i class="fas fa-link mr-2"></i>
+                                    Theme Connections
+                                </h5>
+                                <div class="space-y-2">
+                                    {% for tag1, tag2, count in insights.journal_rhythm.advanced_data.tag_correlations %}
+                                    <div class="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700/30">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm text-slate-300">
+                                                <span class="text-purple-300">{{ tag1 }}</span>
+                                                <i class="fas fa-arrows-left-right mx-2 text-xs text-slate-500"></i>
+                                                <span class="text-pink-300">{{ tag2 }}</span>
+                                            </span>
+                                            <span class="text-xs text-slate-400">{{ count }}x</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <!-- Next Milestone -->
+                        {% if meta.next_milestone %}
+                        <div class="p-3 rounded-lg bg-gradient-to-r from-purple-900/20 to-pink-900/20 border border-purple-700/30">
+                            <div class="flex items-center gap-2 text-sm">
+                                <i class="fas fa-arrow-up text-purple-400"></i>
+                                <span class="text-purple-300 font-semibold">Next: </span>
+                                <span class="text-slate-300">{{ meta.next_milestone.message }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- 4. COSMIC ALIGNMENTS - Expandable (≥3 entries) -->
+            <!-- Cross-referenced mystical insights -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            {% if insights.journal_rhythm.entry_count >= 3 %}
+            <div class="mb-4">
+                <button class="w-full flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-700/40 hover:border-purple-600/60 transition-all"
+                        onclick="toggleRhythmSection('cosmic-alignments')"
+                        id="cosmic-alignments-toggle">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+                            <i class="fas fa-sparkles text-purple-300"></i>
+                        </div>
+                        <div class="text-left">
+                            <h4 class="text-sm font-semibold text-slate-200">Cosmic Alignments</h4>
+                            <p class="text-xs text-slate-400">Cross-patterns in your mystical journey</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down text-purple-400 transition-transform" id="cosmic-alignments-icon"></i>
+                </button>
+
+                <div class="mt-3 px-4 hidden" id="cosmic-alignments-content">
+                    {% include 'deep_dive/mystical/tarot_and_stats/mystic_rhythms/includes/_cosmic_alignments.html' %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- No Data State (if < 3 entries) -->
+            {% if insights.journal_rhythm.entry_count < 3 %}
+            <div class="text-center py-8">
+                <div class="text-5xl mb-4">📔</div>
+                <h4 class="text-lg font-semibold text-slate-200 mb-2">Start Your Journey</h4>
+                <p class="text-slate-400 text-sm mb-4">
+                    Journal regularly to unlock personalized insights about your emotional rhythms and cosmic patterns.
+                </p>
+                
+                {% if meta.next_milestone %}
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-900/30 border border-purple-700/50">
+                        <i class="fas fa-bullseye text-purple-400"></i>
+                        <span class="text-sm text-purple-200">{{ meta.next_milestone.message }}</span>
+                    </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// ===================================
+// EXPANDABLE SECTIONS HANDLER
+// ===================================
+
+function toggleRhythmSection(sectionId) {
+    const content = document.getElementById(`${sectionId}-content`);
+    const icon = document.getElementById(`${sectionId}-icon`);
+    const toggle = document.getElementById(`${sectionId}-toggle`);
+    
+    if (!content || !icon || !toggle) return;
+    
+    const isHidden = content.classList.contains('hidden');
+    
+    if (isHidden) {
+        content.classList.remove('hidden');
+        icon.style.transform = 'rotate(180deg)';
+        toggle.classList.add('section-expanded');
+        
+        // Initialize charts or nested content after expansion
+        setTimeout(() => {
+            if (sectionId === 'lunar-correlation') {
+                handleLunarSectionExpand(content);
+            } else if (sectionId === 'planetary-correlation') {
+                handlePlanetarySectionExpand(content);
+            } else if (sectionId === 'advanced-insights') {
+                initializeAdvancedInsightsChart();
+            }
+        }, 100);
+        
+    } else {
+        content.classList.add('hidden');
+        icon.style.transform = 'rotate(0deg)';
+        toggle.classList.remove('section-expanded');
+    }
+}
+
+// Handle nested moon correlation content
+function handleLunarSectionExpand(content) {
+    const nestedWrapper = content.querySelector('.cosmic-border');
+    if (nestedWrapper) {
+        const nestedToggle = nestedWrapper.querySelector('[onclick*="toggleMoonCorrelation"]');
+        if (nestedToggle) nestedToggle.style.display = 'none';
+        
+        const moonContent = nestedWrapper.querySelector('#moon-correlation-content');
+        if (moonContent) {
+            moonContent.classList.remove('hidden');
+            setTimeout(() => {
+                if (typeof initializeMoonChart === 'function') {
+                    initializeMoonChart();
+                }
+            }, 200);
+        }
+    }
+}
+
+// Handle nested planetary correlation content
+function handlePlanetarySectionExpand(content) {
+    const nestedWrapper = content.querySelector('.cosmic-border');
+    if (nestedWrapper) {
+        const nestedToggle = nestedWrapper.querySelector('[onclick*="togglePlanetaryInsights"]');
+        if (nestedToggle) nestedToggle.style.display = 'none';
+        
+        const planetContent = nestedWrapper.querySelector('#planetary-insights-content');
+        if (planetContent) {
+            planetContent.classList.remove('hidden');
+            setTimeout(() => {
+                if (typeof initializePlanetaryChart === 'function') {
+                    initializePlanetaryChart();
+                }
+            }, 200);
+        }
+    }
+}
+
+// ===================================
+// ADVANCED INSIGHTS CHART
+// ===================================
+
+let advancedInsightsChartInstance = null;
+const advancedChartData = {{ chart_data|safe }};
+
+function initializeAdvancedInsightsChart() {
+    const ctx = document.getElementById('advancedInsightsChart');
+    if (!ctx || !advancedChartData) return;
+
+    const dataLevel = '{{ insights.data_level }}';
+
+    // For established users, show frequency chart
+    if (dataLevel === 'established') {
+        renderAdvancedFrequencyChart(ctx, advancedChartData);
+    } 
+    // For rich users, show frequency by default but allow tab switching
+    else if (dataLevel === 'rich') {
+        renderAdvancedFrequencyChart(ctx, advancedChartData.frequency);
+        setupAdvancedChartTabs();
+    }
+}
+
+function renderAdvancedFrequencyChart(ctx, data) {
+    if (advancedInsightsChartInstance) {
+        advancedInsightsChartInstance.destroy();
+    }
+    
+    advancedInsightsChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Entries',
+                data: data.data,
+                borderColor: 'rgba(139, 92, 246, 0.8)',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#a5b4fc',
+                    bodyColor: '#e2e8f0',
+                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                    borderWidth: 1,
+                    padding: 12
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+                    ticks: { color: '#64748b', font: { size: 10 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+                    ticks: { color: '#64748b', font: { size: 10 }, stepSize: 1 }
+                }
+            }
+        }
+    });
+}
+
+function renderAdvancedTagChart(ctx, data) {
+    if (advancedInsightsChartInstance) {
+        advancedInsightsChartInstance.destroy();
+    }
+    
+    advancedInsightsChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Frequency',
+                data: data.data,
+                backgroundColor: 'rgba(168, 85, 247, 0.6)',
+                borderColor: 'rgba(168, 85, 247, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#a5b4fc',
+                    bodyColor: '#e2e8f0',
+                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                    borderWidth: 1,
+                    padding: 12
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+                    ticks: { color: '#64748b', font: { size: 10 }, stepSize: 1 }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#94a3b8', font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+function renderAdvancedHourChart(ctx, data) {
+    if (advancedInsightsChartInstance) {
+        advancedInsightsChartInstance.destroy();
+    }
+    
+    advancedInsightsChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: 'Entries',
+                data: data.data,
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    titleColor: '#a5b4fc',
+                    bodyColor: '#e2e8f0',
+                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                    borderWidth: 1,
+                    padding: 12
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+                    ticks: { color: '#64748b', font: { size: 9 }, maxRotation: 0 }
+                },
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+                    ticks: { color: '#64748b', font: { size: 10 }, stepSize: 1 }
+                }
+            }
+        }
+    });
+}
+
+function setupAdvancedChartTabs() {
+    const tabs = document.querySelectorAll('.rhythm-chart-tab');
+    const ctx = document.getElementById('advancedInsightsChart');
+    
+    if (!tabs.length || !ctx || !advancedChartData) return;
+
+    tabs.forEach(tab => {
+        const newTab = tab.cloneNode(true);
+        tab.parentNode.replaceChild(newTab, tab);
+    });
+    
+    document.querySelectorAll('.rhythm-chart-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.rhythm-chart-tab').forEach(t => {
+                t.classList.remove('active', 'bg-purple-900/30', 'text-purple-300', 'border-t', 'border-x', 'border-purple-700/50');
+                t.classList.add('text-slate-400');
+            });
+            this.classList.add('active', 'bg-purple-900/30', 'text-purple-300', 'border-t', 'border-x', 'border-purple-700/50');
+            this.classList.remove('text-slate-400');
+
+            const chartType = this.dataset.chart;
+            
+            if (chartType === 'frequency') {
+                renderAdvancedFrequencyChart(ctx, advancedChartData.frequency);
+            } else if (chartType === 'tags') {
+                renderAdvancedTagChart(ctx, advancedChartData.tag_distribution);
+            } else if (chartType === 'hours') {
+                renderAdvancedHourChart(ctx, advancedChartData.hour_distribution);
+            }
+        });
+    });
+}
+</script>
+
+<style>
+/* Smooth expand/collapse */
+#lunar-correlation-content,
+#planetary-correlation-content,
+#advanced-insights-content {
+    transition: all 0.3s ease-in-out;
+}
+
+/* Icon rotation */
+i {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Hover effect */
+button[onclick^="toggleRhythmSection"]:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Active section */
+.section-expanded {
+    border-color: rgba(99, 102, 241, 0.6) !important;
+}
+</style>

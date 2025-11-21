@@ -1,0 +1,78 @@
+          <div class="p-6 space-y-4">
+            <!-- Multiple Synthesis Buttons -->
+            <div id="synthesize-button-wrapper">
+              <div class="grid grid-cols-2 gap-3">
+                
+                <!-- Reflect Button -->
+                <button 
+                  class="group relative bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md"
+                  hx-get="{% url 'journal:synthesize_entries' %}"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-target="#synthesis-results"
+                  hx-vals='{"type": "reflect"}'
+                >
+                  <div class="text-blue-600 text-2xl mb-2">🔍</div>
+                  <div class="font-medium text-gray-900 text-sm">Reflect</div>
+                  <div class="text-xs text-gray-600">Deep insights</div>
+                </button>
+
+                <!-- Digest Button -->
+                <button 
+                  class="group relative bg-green-50 hover:bg-green-100 border border-green-200 rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md"
+                  hx-get="{% url 'journal:synthesize_entries' %}"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-target="#synthesis-results"
+                  hx-vals='{"type": "digest"}'
+                >
+                  <div class="text-green-600 text-2xl mb-2">📊</div>
+                  <div class="font-medium text-gray-900 text-sm">Digest</div>
+                  <div class="text-xs text-gray-600">Key patterns</div>
+                </button>
+
+                <!-- Roast Button -->
+                <button 
+                  class="group relative bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md"
+                  hx-get="{% url 'journal:synthesize_entries' %}"
+                  hx-headers '{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-target="#synthesis-results"
+                  hx-vals='{"type": "roast"}'
+                >
+                  <div class="text-orange-600 text-2xl mb-2">🔥</div>
+                  <div class="font-medium text-gray-900 text-sm">Roast</div>
+                  <div class="text-xs text-gray-600">Tough love</div>
+                </button>
+
+                <!-- Suggest Button -->
+                <button 
+                  class="group relative bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl p-4 text-left transition-all duration-200 hover:shadow-md"
+                  hx-get="{% url 'journal:synthesize_entries' %}"
+                  hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                  hx-target="#synthesis-results"
+                  hx-vals='{"type": "suggest"}'
+                >
+                  <div class="text-purple-600 text-2xl mb-2">💡</div>
+                  <div class="font-medium text-gray-900 text-sm">Suggest</div>
+                  <div class="text-xs text-gray-600">Next steps</div>
+                </button>
+                
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+// Open modal when synthesis starts
+document.body.addEventListener('htmx:beforeRequest', function(event) {
+  if (event.target.classList.contains('synthesis-btn')) {
+    openSynthesisModal();
+  }
+});
+
+// Handle synthesis completion
+document.body.addEventListener('htmx:afterRequest', function(event) {
+  if (event.target.classList.contains('synthesis-btn')) {
+    // Modal content is already loaded by HTMX target
+    // Just ensure modal stays open
+  }
+});
+</script>

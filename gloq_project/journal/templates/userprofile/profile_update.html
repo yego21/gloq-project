@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Update Profile</h2>
+    
+    <!-- Display messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+       
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            <!-- Birth Date -->
+            <div class="space-y-2">
+                <label for="{{ form.birth_date.id_for_label }}" class="flex items-center space-x-2 text-sm font-semibold text-gray-900">
+                    <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 002 2z" />
+                    </svg>
+                    <span>Birth Date</span>
+                </label>
+                {{ form.birth_date }}
+                {% if form.birth_date.errors %}
+                    <div class="text-red-600 text-sm mt-1">
+                        {{ form.birth_date.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Birth Time -->
+            <div class="space-y-2">
+                <label for="{{ form.birth_time.id_for_label }}" class="flex items-center space-x-2 text-sm font-semibold text-gray-900">
+                    <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Birth Time</span>
+                </label>
+                {{ form.birth_time }}
+                {% if form.birth_time.errors %}
+                    <div class="text-red-600 text-sm mt-1">
+                        {{ form.birth_time.errors }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Birth Place -->
+        <div class="space-y-2">
+            <label for="{{ form.birth_place.id_for_label }}" class="flex items-center space-x-2 text-sm font-semibold text-gray-900">
+                <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span>Birth Place</span>
+            </label>
+            {{ form.birth_place }}
+            {% if form.birth_place.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                    {{ form.birth_place.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Timezone -->
+        <div class="space-y-2">
+            <label for="{{ form.timezone.id_for_label }}" class="flex items-center space-x-2 text-sm font-semibold text-gray-900">
+                <svg class="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Timezone</span>
+            </label>
+            {{ form.timezone }}
+            {% if form.timezone.errors %}
+                <div class="text-red-600 text-sm mt-1">
+                    {{ form.timezone.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="flex justify-end space-x-3">
+            <a href="{% url 'journal:journal_dashboard' %}" 
+               class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-sm font-medium rounded-xl text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="inline-flex items-center px-6 py-3 border border-transparent text-sm font-medium rounded-xl shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                <svg class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                Save Profile
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

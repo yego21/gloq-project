@@ -1,0 +1,134 @@
+<!-- deep_dive/templates/deep_dive/mystical/rhythm_dashboard.html -->
+<!-- Personal Rhythm Dashboard - Modal Content (loaded via HTMX) -->
+
+<div class="mystical-card rounded-2xl p-6">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-300 mb-1">
+                Personal Rhythm Dashboard
+            </h2>
+            <p class="text-slate-400 text-sm">
+                {% if insights.journal_count > 0 %}
+                    Discover patterns across {{ insights.journal_count }} journal entries
+                {% else %}
+                    Begin your journaling journey to unlock insights
+                {% endif %}
+            </p>
+        </div>
+        <button 
+            onclick="toggleRhythmModal()" 
+            class="text-slate-400 hover:text-white transition-colors">
+            <i class="fas fa-times text-2xl"></i>
+        </button>
+    </div>
+
+    {% if error %}
+        <!-- Error State -->
+        <div class="cosmic-border">
+            <div class="mystical-card rounded-2xl p-8 text-center">
+                <i class="fas fa-exclamation-circle text-red-400 text-4xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-slate-200 mb-2">Unable to Load Rhythm Data</h3>
+                <p class="text-slate-400 mb-6">{{ error_message }}</p>
+                <button onclick="window.location.reload()" class="mystical-btn px-6 py-2 rounded-lg">
+                    <i class="fas fa-redo mr-2"></i>
+                    Try Again
+                </button>
+            </div>
+        </div>
+
+    {% else %}
+        <!-- Quick Stats Overview (Only if user has 3+ entries to match Advanced Insights requirement) -->
+        {% if insights.journal_count >= 3 %}
+        <div class="cosmic-border mb-6">
+            <div class="mystical-card rounded-2xl p-6">
+                <h3 class="font-bold mb-4 flex items-center text-purple-300">
+                    <i class="fas fa-chart-pie mr-2"></i>
+                    Your Journaling Overview
+                </h3>
+                
+                <div class="mystical-divider mb-4"></div>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Total Entries -->
+                    <div class="cosmic-card rounded-lg p-4 text-center hover:scale-105 transition-transform">
+                        <i class="fas fa-book text-purple-400 text-2xl mb-2"></i>
+                        <div class="text-2xl font-bold text-purple-300 mb-1">
+                            {{ insights.journal_count }}
+                        </div>
+                        <div class="text-xs text-slate-400">Total Entries</div>
+                    </div>
+
+                    <!-- Weekly Average (only if established+) -->
+                    {% if insights.data_level in 'established,rich' and insights.journal_rhythm.weekly_average %}
+                    <div class="cosmic-card rounded-lg p-4 text-center hover:scale-105 transition-transform">
+                        <i class="fas fa-calendar-week text-blue-400 text-2xl mb-2"></i>
+                        <div class="text-2xl font-bold text-blue-300 mb-1">
+                            {{ insights.journal_rhythm.weekly_average|floatformat:1 }}
+                        </div>
+                        <div class="text-xs text-slate-400">Per Week</div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Current Moon Phase -->
+                    <div class="cosmic-card rounded-lg p-4 text-center hover:scale-105 transition-transform">
+                        <div class="text-3xl mb-2">{{ insights.cosmic_rhythm.moon.emoji }}</div>
+                        <div class="text-sm font-semibold text-slate-200 mb-1">
+                            {{ insights.cosmic_rhythm.moon.phase }}
+                        </div>
+                        <div class="text-xs text-slate-400">Current Moon</div>
+                    </div>
+
+                    <!-- Dominant Element -->
+                    <div class="cosmic-card rounded-lg p-4 text-center hover:scale-105 transition-transform">
+                        <div class="text-3xl mb-2">
+                            {{ insights.cosmic_rhythm.visual_markers.dominant_element_emoji }}
+                        </div>
+                        <div class="text-sm font-semibold text-slate-200 mb-1">
+                            {% if insights.cosmic_rhythm.dominant_elements.dominant %}
+                                {{ insights.cosmic_rhythm.dominant_elements.dominant.0|title }}
+                            {% else %}
+                                Balanced
+                            {% endif %}
+                        </div>
+                        <div class="text-xs text-slate-400">Energy Type</div>
+                    </div>
+                </div>
+
+                <!-- Top Theme (if available and not minimal) -->
+                {% if insights.journal_rhythm.top_tags and insights.data_level != 'minimal' %}
+                <div class="mt-4 p-3 rounded-lg bg-gradient-to-r from-indigo-900/20 to-purple-900/20 border border-indigo-700/30">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-tag text-indigo-400"></i>
+                            <span class="text-xs text-slate-400">Most Frequent Theme:</span>
+                        </div>
+                        <span class="text-sm font-semibold text-indigo-300">
+                            {{ insights.journal_rhythm.top_tags.0.0 }}
+                            <span class="text-xs text-slate-400 ml-1">({{ insights.journal_rhythm.top_tags.0.1 }}x)</span>
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Main Personal Rhythm Section -->
+        <div class="cosmic-border">
+            <div class="mystical-card rounded-2xl p-6">
+                {% include 'deep_dive/mystical/tarot_and_stats/mystic_rhythms/includes/personal_rhythm.html' %}
+            </div>
+        </div>
+
+    {% endif %}
+
+</div>
+
+<script>
+// Initialize rhythm dashboard after load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Rhythm dashboard loaded');
+});
+</script>

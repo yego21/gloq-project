@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity Deep Dive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .productivity-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .energy-glow {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        .metric-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+        .pulse-ring {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        .progress-bar {
+            transition: width 1s ease;
+        }
+        .pattern-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        .pattern-dot:hover {
+            transform: scale(1.5);
+        }
+        .time-block {
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .time-block:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen p-8">
+    
+    <!-- Header -->
+    <div class="max-w-7xl mx-auto mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">
+                    ⚡ Productivity Intelligence
+                </h1>
+                <p class="text-gray-600">Discover your natural work rhythms through journaling patterns</p>
+            </div>
+            <button class="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg">
+                📊 Export Insights
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        
+        <!-- Productivity Overview Dashboard -->
+        <section>
+            <h2 class="text-2xl font-bold text-gray-900 mb-6">📈 Your Productivity Profile</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                
+                <!-- Peak Performance Time -->
+                <div class="metric-card rounded-2xl p-6 border border-blue-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center">
+                            <span class="text-2xl">🌅</span>
+                        </div>
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Peak Time</span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-1">1-4 PM</h3>
+                    <p class="text-sm text-gray-600">Most productive entries written</p>
+                    <div class="mt-4 flex items-center text-xs text-green-600">
+                        <span class="mr-1">↗</span> 23% above average focus
+                    </div>
+                </div>
+
+                <!-- Focus Streak -->
+                <div class="metric-card rounded-2xl p-6 border border-indigo-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-xl flex items-center justify-center">
+                            <span class="text-2xl">🔥</span>
+                        </div>
+                        <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full">Streak</span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-1">7 Days</h3>
+                    <p class="text-sm text-gray-600">Current momentum</p>
+                    <div class="mt-4 flex items-center text-xs text-indigo-600">
+                        <span class="mr-1">🎯</span> Personal best: 14 days
+                    </div>
+                </div>
+
+                <!-- Deep Work Sessions -->
+                <div class="metric-card rounded-2xl p-6 border border-purple-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center">
+                            <span class="text-2xl">🧠</span>
+                        </div>
+                        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Deep Work</span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-1">12 hrs</h3>
+                    <p class="text-sm text-gray-600">This week</p>
+                    <div class="mt-4 flex items-center text-xs text-purple-600">
+                        <span class="mr-1">📈</span> +3.5 hrs vs last week
+                    </div>
+                </div>
+
+                <!-- Completion Rate -->
+                <div class="metric-card rounded-2xl p-6 border border-green-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center">
+                            <span class="text-2xl">✅</span>
+                        </div>
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Success</span>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-1">78%</h3>
+                    <p class="text-sm text-gray-600">Goal completion rate</p>
+                    <div class="mt-4 flex items-center text-xs text-green-600">
+                        <span class="mr-1">🎊</span> Above your 65% average
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Energy & Focus Patterns -->
+        <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- Weekly Energy Map -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="mr-2">⚡</span>
+                    Your Energy Rhythm
+                </h3>
+                <p class="text-sm text-gray-600 mb-6">Based on your journal entry patterns and sentiment analysis</p>
+                
+                <!-- Heatmap -->
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Mon</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-200" title="6 AM"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-600"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Tue</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-600"></div>
+                            <div class="pattern-dot bg-blue-700"></div>
+                            <div class="pattern-dot bg-blue-600"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Wed</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-700"></div>
+                            <div class="pattern-dot bg-blue-800"></div>
+                            <div class="pattern-dot bg-blue-700"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Thu</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-600"></div>
+                            <div class="pattern-dot bg-blue-700"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Fri</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-500"></div>
+                            <div class="pattern-dot bg-blue-600"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-100"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Sat</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-100"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500 w-12">Sun</span>
+                        <div class="flex space-x-1 flex-1">
+                            <div class="pattern-dot bg-blue-100"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-400"></div>
+                            <div class="pattern-dot bg-blue-300"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-200"></div>
+                            <div class="pattern-dot bg-blue-100"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-blue-200 rounded"></div>
+                        <span class="text-xs text-gray-600">Low</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-blue-500 rounded"></div>
+                        <span class="text-xs text-gray-600">Medium</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 bg-blue-800 rounded"></div>
+                        <span class="text-xs text-gray-600">Peak</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Task Momentum -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="mr-2">🎯</span>
+                    Active Projects
+                </h3>
+                <p class="text-sm text-gray-600 mb-6">Detected from your journal entries</p>
+                
+                <div class="space-y-4">
+                    <!-- Project 1 -->
+                    <div class="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-900">Website Redesign</h4>
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
+                        </div>
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-2 rounded-full progress-bar" style="width: 67%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700">67%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-600">
+                            <span>📝 12 entries</span>
+                            <span>🕐 Last mention: 2 days ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 2 -->
+                    <div class="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-900">Learning React</h4>
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">In Progress</span>
+                        </div>
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full progress-bar" style="width: 34%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700">34%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-600">
+                            <span>📝 8 entries</span>
+                            <span>🕐 Last mention: 5 days ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Project 3 -->
+                    <div class="p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="font-semibold text-gray-900">Fitness Routine</h4>
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Consistent</span>
+                        </div>
+                        <div class="flex items-center space-x-2 mb-2">
+                            <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full progress-bar" style="width: 89%"></div>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-700">89%</span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-gray-600">
+                            <span>📝 24 entries</span>
+                            <span>🕐 Last mention: today</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="mt-4 w-full py-2 text-sm text-blue-600 hover:text-blue-700 font-semibold">
+                    + Add New Project Manually
+                </button>
+            </div>
+
+        </section>
+
+        <!-- AI Productivity Insights -->
+        <section class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <span class="mr-2">🤖</span>
+                AI Productivity Insights
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Insight 1 -->
+                <div class="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200">
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">💡</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 text-sm mb-1">Pattern Detected</h4>
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Ready</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        You consistently journal about breakthroughs on Wednesday mornings. Consider scheduling important problem-solving sessions during this high-clarity window.
+                    </p>
+                    <button class="mt-3 text-xs text-blue-600 hover:text-blue-700 font-semibold">
+                        View Analysis →
+                    </button>
+                </div>
+
+                <!-- Insight 2 -->
+                <div class="p-5 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border border-purple-200">
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">⚠️</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 text-sm mb-1">Energy Dip Alert</h4>
+                            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Warning</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        Your journal sentiment drops significantly after 3 PM on Fridays. This might be a good time for admin work rather than creative tasks.
+                    </p>
+                    <button class="mt-3 text-xs text-purple-600 hover:text-purple-700 font-semibold">
+                        Optimize Schedule →
+                    </button>
+                </div>
+
+                <!-- Insight 3 -->
+                <div class="p-5 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                    <div class="flex items-start space-x-3 mb-3">
+                        <div class="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">🎯</span>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-900 text-sm mb-1">Success Formula</h4>
+                            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Insight</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        When you journal about goals in the morning and review progress in the evening, your completion rate jumps to 92%. Your ritual is working!
+                    </p>
+                    <button class="mt-3 text-xs text-green-600 hover:text-green-700 font-semibold">
+                        Reinforce Habit →
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Focus Time Blocks -->
+        <section class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <span class="mr-2">🕐</span>
+                Your Optimal Time Blocks
+            </h3>
+            <p class="text-sm text-gray-600 mb-6">Based on journal entry quality and sentiment</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                
+                <div class="time-block p-4 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl border-2 border-yellow-300">
+                    <div class="text-2xl mb-2">🌅</div>
+                    <h4 class="font-bold text-gray-900">6-9 AM</h4>
+                    <p class="text-xs text-gray-600 mt-1">Creative Thinking</p>
+                    <div class="mt-2 flex items-center">
+                        <div class="flex-1 bg-yellow-200 rounded-full h-1">
+                            <div class="bg-yellow-500 h-1 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <span class="text-xs ml-2 text-gray-700">85%</span>
+                    </div>
+                </div>
+
+                <div class="time-block p-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl border-2 border-blue-300 energy-glow">
+                    <div class="text-2xl mb-2">☀️</div>
+                    <h4 class="font-bold text-gray-900">9-12 PM</h4>
+                    <p class="text-xs text-gray-600 mt-1">Deep Work Peak</p>
+                    <div class="mt-2 flex items-center">
+                        <div class="flex-1 bg-blue-200 rounded-full h-1">
+                            <div class="bg-blue-600 h-1 rounded-full" style="width: 95%"></div>
+                        </div>
+                        <span class="text-xs ml-2 text-gray-700">95%</span>
+                    </div>
+                </div>
+
+                <div class="time-block p-4 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl border-2 border-green-300">
+                    <div class="text-2xl mb-2">🌤️</div>
+                    <h4 class="font-bold text-gray-900">1-4 PM</h4>
+                    <p class="text-xs text-gray-600 mt-1">Collaborative Work</p>
+                    <div class="mt-2 flex items-center">
+                        <div class="flex-1 bg-green-200 rounded-full h-1">
+                            <div class="bg-green-500 h-1 rounded-full" style="width: 72%"></div>
+                        </div>
+                        <span class="text-xs ml-2 text-gray-700">72%</span>
+                    </div>
+                </div>
+
+                <div class="time-block p-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl border-2 border-purple-300">
+                    <div class="text-2xl mb-2">🌆</div>
+                    <h4 class="font-bold text-gray-900">7-9 PM</h4>
+                    <p class="text-xs text-gray-600 mt-1">Reflection Time</p>
+                    <div class="mt-2 flex items-center">
+                        <div class="flex-1 bg-purple-200 rounded-full h-1">
+                            <div class="bg-purple-500 h-1 rounded-full" style="width: 88%"></div>
+                        </div>
+                        <span class="text-xs ml-2 text-gray-700">88%</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Productivity Mantras -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 text-white shadow-lg">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <span class="mr-2">💪</span>
+                    Your Personal Productivity Mantra
+                </h3>
+                <p class="text-lg italic leading-relaxed mb-4">
+                    "I do my best thinking in the morning quiet. When I protect my 9-11 AM block, I accomplish what matters most."
+                </p>
+                <p class="text-sm opacity-90">
+                    Generated from 47 journal entries analyzing your peak performance patterns
+                </p>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+                <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <span class="mr-2">📊</span>
+                    This Week's Focus
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                        <span class="text-sm font-semibold text-gray-700">Deep Work Sessions</span>
+                        <span class="text-lg font-bold text-blue-600">8/10</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <span class="text-sm font-semibold text-gray-700">Goals Reviewed</span>
+                        <span class="text-lg font-bold text-green-600">5/5</span>
+                    </div>
+                    <div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                        <span class="text-sm font-semibold text-gray-700">Reflections Written</span>
+                        <span class="text-lg font-bold text-purple-600">12/14</span>
+                    </div>
+                </div>
+                <button class="mt-4 w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all">
+                    Review Weekly Performance
+                </button>
+            </div>
+
+        </section>
+
+        <!-- Journal Entry Correlation -->
+        <section class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
+            <h3 class="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                <span class="mr-2">📝</span>
+                Recent Productivity Entries
+            </h3>
+            <p class="text-sm text-gray-600 mb-6">Journal entries tagged with productivity themes</p>
+            
+            <div class="space-y-4">
+                
+                <!-- Entry 1 -->
+                <div class="p-4 border-l-4 border-blue-500 bg-blue-50 rounded-r-xl hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">High Energy</span>
+                            <span class="text-xs text-gray-500">Today, 9:23 AM</span>
+                        </div>
+                        <span class="text-xs text-gray-500">⚡ Peak Time</span>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        "Knocked out three major tasks before lunch. Morning focus sessions are definitely my superpower. Need to protect this time more..."
+                    </p>
+                    <div class="flex items-center space-x-4 mt-3 text-xs text-gray-600">
+                        <span>🏷️ Deep Work</span>
+                        <span>📊 Website Redesign</span>
+                        <span>✅ 3 tasks completed</span>
+                    </div>
+                </div>
+
+                <!-- Entry 2 -->
+                <div class="p-4 border-l-4 border-purple-500 bg-purple-50 rounded-r-xl hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">Reflection</span>
+                            <span class="text-xs text-gray-500">Yesterday, 7:45 PM</span>
+                        </div>
+                        <span class="text-xs text-gray-500">🌙 Evening</span>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        "Reviewing today's wins: finished the homepage mockup, had a productive team sync, and finally tackled that bug. Feeling accomplished..."
+                    </p>
+                    <div class="flex items-center space-x-4 mt-3 text-xs text-gray-600">
+                        <span>🏷️ Wins</span>
+                        <span>📊 Website Redesign</span>
+                        <span>😊 Positive sentiment</span>
+                    </div>
+                </div>
+
+                <!-- Entry 3 -->
+                <div class="p-4 border-l-4 border-yellow-500 bg-yellow-50 rounded-r-xl hover:shadow-md transition-shadow cursor-pointer">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Challenge</span>
+                            <span class="text-xs text-gray-500">2 days ago, 2:15 PM</span>
+                        </div>
+                        <span class="text-xs text-gray-500">⚠️ Low Energy</span>
+                    </div>
+                    <p class="text-sm text-gray-700 leading-relaxed">
+                        "Afternoon slump hit hard today. Struggled to focus on the React components. Maybe I should move this type of work to mornings..."
+                    </p>
+                    <div class="flex items-center space-x-4 mt-3 text-xs text-gray-600">
+                        <span>🏷️ Learning</span>
+                        <span>📊 Learning React</span>
+                        <span>💭 Insight captured</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <button class="mt-4 w-full py-2 text-sm text-blue-600 hover:text-blue-700 font-semibold">
+                View All Productivity Entries →
+            </button>
+        </section>
+
+    </div>
+
+    <script>
+        // Add interactivity
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars on load
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                const width = bar.style.width;
+                bar.style.width = '0%';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 100);
+            });
+
+            // Make time blocks interactive
+            const timeBlocks = document.querySelectorAll('.time-block');
+            timeBlocks.forEach(block => {
+                block.addEventListener('click', function() {
+                    this.classList.toggle('ring-4');
+                    this.classList.toggle('ring-blue-400');
+                });
+            });
+
+            // Pattern dots hover effect
+            const patternDots = document.querySelectorAll('.pattern-dot');
+            patternDots.forEach(dot => {
+                dot.addEventListener('mouseenter', function() {
+                    // Show tooltip or additional info
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'absolute bg-gray-900 text-white text-xs px-2 py-1 rounded shadow-lg';
+                    tooltip.textContent = 'High focus period';
+                    this.appendChild(tooltip);
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>

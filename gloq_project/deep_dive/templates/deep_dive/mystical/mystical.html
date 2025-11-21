@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>Mystical Deep Dive</title>
+    <meta name="csrf-token" content="{{ csrf_token }}"> 
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+document.addEventListener('htmx:configRequest', (event) => {
+    event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+});
+</script>
+
+
+
+    <style>
+        body {
+            background: radial-gradient(ellipse at center, #0c0e2a 0%, #0a0a1f 40%, #050511 100%);
+            color: #e2e8f0;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .cosmic-gradient {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+        }
+
+        .moon-glow {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.15), 0 0 60px rgba(99, 102, 241, 0.1);
+        }
+
+        #chart-tooltip {
+            position: fixed;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+            border: 2px solid rgba(99, 102, 241, 0.5);
+            border-radius: 12px;
+            padding: 12px 16px;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            max-width: 280px;
+            font-size: 13px;
+        }
+
+        #chart-tooltip.visible {
+            opacity: 1;
+        }
+
+        #chart-tooltip .tooltip-header {
+            font-weight: bold;
+            color: #a5b4fc;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #chart-tooltip .tooltip-body {
+            color: #e2e8f0;
+            line-height: 1.5;
+        }
+
+        #chart-tooltip .tooltip-label {
+            color: #94a3b8;
+            font-size: 11px;
+            margin-top: 4px;
+        }
+
+        #chart-tooltip .tooltip-value {
+            color: #fff;
+            font-weight: 600;
+        }
+
+        #chart-tooltip .tooltip-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+            margin: 8px 0;
+        }
+
+        #chart-wheel {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #chart-wheel:hover {
+            transform: scale(1.05);
+        }
+
+        #chart-wheel::after {
+            content: 'Click to enlarge';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: rgba(148, 163, 184, 0.6);
+            white-space: nowrap;
+        }
+
+        #chart-wheel.has-data {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #chart-wheel.has-data:hover {
+            transform: scale(1.05);
+        }
+
+        #chart-wheel.has-data::after {
+            content: 'Click to enlarge';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.75rem;
+            color: rgba(148, 163, 184, 0.6);
+            white-space: nowrap;
+        }
+
+        .mystical-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.3));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-orb {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .pulse-slow {
+            animation: pulse 4s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 0.8;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .constellation {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(226, 232, 240, 0.7);
+            border-radius: 50%;
+            opacity: 0.7;
+            animation: twinkle 3s infinite;
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .cosmic-border {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cosmic-border::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #1e3a8a, #3730a3, #1e40af, #3730a3);
+            background-size: 300% 300%;
+            animation: gradientShift 4s ease infinite;
+            border-radius: inherit;
+            z-index: -1;
+        }
+
+        @keyframes gradientShift {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .chart-orbit {
+            animation: rotate 25s linear infinite;
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .mystical-btn {
+            background: linear-gradient(135deg, #3730a3, #1e40af);
+            color: white;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .mystical-btn:hover {
+            background: linear-gradient(135deg, #1e40af, #3730a3);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .header-glow {
+            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+        }
+
+        .feature-icon {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.4));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .mystical-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
+            margin: 1.5rem 0;
+        }
+
+        .tarot-card {
+            transition: all 0.5s ease;
+            transform-style: preserve-3d;
+        }
+
+        .tarot-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .tarot-front,
+        .tarot-back {
+            backface-visibility: hidden;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 0.75rem;
+        }
+
+        .tarot-back {
+            transform: rotateY(180deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e1b4b, #3730a3);
+        }
+
+        .moon-phase {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: #1e40af;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .moon-shadow {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 50%;
+            height: 100%;
+            background: #0f172a;
+            border-radius: 50%;
+            transition: all 0.5s ease;
+        }
+
+        .cosmic-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(5, 5, 17, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            overflow-y: auto;
+            padding: 2rem 0;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: auto;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .modal-content::-webkit-scrollbar-track {
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.7);
+        }
+
+        .zodiac-sign {
+            transition: all 0.3s ease;
+        }
+
+        .zodiac-sign:hover {
+            transform: scale(1.2);
+            color: #818cf8;
+        }
+
+        .profile-progress {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(30, 41, 59, 0.5);
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #3730a3, #1e40af);
+            transition: width 0.5s ease;
+        }
+
+        .cosmic-card {
+            background: linear-gradient(135deg, #1e1b4b, #3730a3);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .moon-card {
+            background: radial-gradient(circle at 30% 30%, #3730a3, #1e1b4b);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .planet-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-8">
+
+   <!-- Header with Dynamic Moon Phase -->
+<div class="text-center mb-12 relative">
+    <div class="absolute inset-0 overflow-hidden" id="constellation-container"></div>
+
+  
+
+    <!-- Main Header Content -->
+    <div class="relative z-10">
+        <div class="inline-flex items-center justify-center mb-4">
+            <div class="floating-orb">
+                <i class="fas fa-moon text-6xl text-indigo-400 drop-shadow-[0_0_15px_rgba(99,102,241,0.6)]"></i>
+            </div>
+        </div>
+        
+        <h1 class="text-5xl md:text-6xl font-bold mb-3 header-glow bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-400 
+                   bg-clip-text text-transparent">
+            Mystic Zone
+        </h1>
+        
+        <div class="flex items-center justify-center gap-3 mb-4">
+            <div class="h-px w-12 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+            <p class="text-slate-400 text-lg font-light tracking-wide">
+                Harness your cosmic insights
+            </p>
+            <div class="h-px w-12 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+        </div>
+
+       <!-- Back to Home Button -->
+     <a href="{% url 'journal:journal_dashboard' %}"  
+   class="absolute top-0 left-0 group flex items-center gap-2 text-slate-400 hover:text-indigo-400 transition-all duration-300">
+    <div class="w-10 h-10 rounded-full bg-slate-800/50 border border-slate-700 hover:border-indigo-500 
+                flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <i class="fas fa-arrow-left text-sm"></i>
+    </div>
+    <span class="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        Back to Home
+    </span>
+</a>
+    </div>
+
+    <div id="particles-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
+</div>
+ 
+    <div class="max-w-7xl mx-auto space-y-8">
+
+        <!-- Cosmic Dashboard Section - Loaded via HTMX -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-stars text-indigo-400 mr-3"></i>Cosmic Dashboard
+            </h2>
+
+            <div id="cosmic-dashboard-container" hx-get="{% url 'deep_dive:moon_planets' %}" hx-trigger="load"
+                hx-swap="innerHTML">
+                <!-- Loading placeholder -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 cosmic-border">
+                        <div class="moon-card rounded-2xl p-8 text-center loading-shimmer" style="min-height: 400px;">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 cosmic-border">
+                        <div class="mystical-card rounded-2xl p-6 loading-shimmer" style="min-height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Birth Chart Section - Loaded via HTMX -->
+        <section class="space-y-6">          
+
+            <div id="birth-chart-container" hx-get="{% url 'deep_dive:astro_chart_reading' %}" hx-trigger="load"
+                hx-swap="innerHTML">
+                <!-- Loading placeholder -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="cosmic-border">
+                        <div class="mystical-card rounded-2xl p-8 loading-shimmer" style="min-height: 400px;"></div>
+                    </div>
+                    <div class="cosmic-border">
+                        <div class="mystical-card rounded-2xl p-6 loading-shimmer" style="min-height: 400px;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- Interactive Mystical Elements - Loaded via HTMX -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-semibold mb-4 flex items-center">
+                <i class="fas fa-magic text-indigo-400 mr-3"></i>Interactive Mystical Elements
+            </h2>
+
+            <div id="mystical-elements-container" hx-get="{% url 'deep_dive:interactive_mystical' %}" hx-trigger="load"
+                hx-swap="innerHTML">
+                <!-- Loading placeholder -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="cosmic-border">
+                        <div class="cosmic-card rounded-2xl p-6 loading-shimmer" style="min-height: 300px;"></div>
+                    </div>
+                    <div class="cosmic-border">
+                        <div class="mystical-card rounded-2xl p-6 loading-shimmer" style="min-height: 300px;"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Unified Chart Modal -->
+<div class="modal-overlay" id="chart-modal">
+    <div class="modal-content cosmic-border w-11/12 max-w-7xl my-8">
+        <div class="mystical-card relative rounded-2xl p-8">
+
+            <!-- Close Button -->
+            <button class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-50"
+                    onclick="document.getElementById('chart-modal').classList.remove('active')">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+
+            <!-- Modal Body - Content loaded via HTMX -->
+            <div id="chart-modal-content">
+                <!-- Loading state -->
+                <div class="text-center py-12">
+                    <i class="fas fa-spinner fa-spin text-4xl text-indigo-400 mb-4"></i>
+                    <p class="text-slate-400">Loading chart data...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+   
+
+</body>
+
+</html>
