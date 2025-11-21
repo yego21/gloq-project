@@ -63,12 +63,12 @@ INSTALLED_APPS = [
     "deep_dive",
     "userprofile",
     "user_management",
-    'rest_framework',
     'debug_toolbar',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -216,7 +216,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static', 'css'),    # ✅ Include output CSS
+    os.path.join(BASE_DIR, 'static', 'js'),     # ✅ Include JS
+    os.path.join(BASE_DIR, 'static', 'images'), # ✅ Include images
+    # ❌ NOT including static/src/
+]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

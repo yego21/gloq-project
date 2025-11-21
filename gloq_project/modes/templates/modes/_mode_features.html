@@ -1,4 +1,5 @@
-<script src="https://cdn.tailwindcss.com"></script>
+{% load static %}
+<link href="{% static 'css/output.css' %}" rel="stylesheet">
 {% if active_mode.slug %}
 <!-- Enhanced Mode Features -->
 <div id="mode-features" class="space-y-4">

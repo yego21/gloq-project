@@ -1,0 +1,29 @@
+@import "tailwindcss";
+
+/* Tell Tailwind where to scan for classes */
+@source "../../templates";
+@source "../../*/templates";
+
+/* Optional: Custom theme configuration */
+@theme {
+  /* Add custom colors if needed */
+  /* --color-primary: #3b82f6; */
+  
+  /* Add custom fonts if needed */
+  /* --font-sans: "Inter", sans-serif; */
+}
+
+/* Optional: Custom component classes */
+@layer components {
+  /* Example custom button */
+  /* .btn-primary {
+    @apply bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600;
+  } */
+}
+
+/* Optional: Custom utility classes */
+@layer utilities {
+  /* Add your custom utilities here */
+}
+
+/* Your regular custom CSS */
