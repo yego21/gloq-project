@@ -18,3 +18,4 @@ db.sqlite3
 .env
 gloqvenv/
 .idea/
+static/css/output.css
