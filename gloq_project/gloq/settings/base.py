@@ -217,11 +217,12 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static', 'css'),    # ✅ Include output CSS
-    os.path.join(BASE_DIR, 'static', 'js'),     # ✅ Include JS
-    os.path.join(BASE_DIR, 'static', 'images'), # ✅ Include images
-    # ❌ NOT including static/src/
+    os.path.join(BASE_DIR, 'static'),  # Point to static/, not static/css/
 ]
+
+# BUT exclude 'src' folder
+STATICFILES_IGNORE_PATTERNS = ['src/*']
+
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

@@ -34,6 +34,7 @@ class ChartRenderer {
 
     // Main rendering function
     renderChartWheel(natalChart, containerId, size = 600, isFullView = false) {
+        
         const container = document.getElementById(containerId);
         if (!container) {
             console.error('Container not found:', containerId);
@@ -413,6 +414,13 @@ class ChartRenderer {
             element.setAttribute('stroke', style.color);
             self.hideTooltip();
         });
+        
+
+        element.addEventListener('click', function (event) {
+            event.stopPropagation();
+            self.showAspectInfo(aspect);
+        });
+           
     }
 
     drawPlanets(svg, center, planets, getCirclePosition, isFullView = false) {
@@ -579,130 +587,182 @@ class ChartRenderer {
         }
     }
 
+    // showPlanetInfo(planet) {
+    //     const infoContainer = document.getElementById('planet-info');
+    //     const infoContent = document.getElementById('planet-info-content');
+
+    //     if (!infoContainer || !infoContent) {
+    //         console.warn('Planet info panel not found');
+    //         return;
+    //     }
+
+    //     // Find aspects involving this planet
+    //     const planetAspects = this.currentNatalChart.aspects.filter(
+    //         aspect => aspect.planet1 === planet.name || aspect.planet2 === planet.name
+    //     );
+
+    //     const elementDescriptions = {
+    //         'Fire': 'Dynamic, passionate, action-oriented',
+    //         'Earth': 'Practical, grounded, material-focused',
+    //         'Air': 'Intellectual, communicative, social',
+    //         'Water': 'Emotional, intuitive, sensitive'
+    //     };
+
+    //     const planetMeanings = {
+    //         'Sun': 'Core identity, ego, vitality, life purpose',
+    //         'Moon': 'Emotions, instincts, inner self, needs',
+    //         'Mercury': 'Communication, thinking, intellect, learning',
+    //         'Venus': 'Love, beauty, values, relationships',
+    //         'Mars': 'Action, desire, energy, assertiveness',
+    //         'Jupiter': 'Growth, expansion, luck, wisdom',
+    //         'Saturn': 'Structure, discipline, responsibility, karma',
+    //         'Uranus': 'Innovation, rebellion, sudden change',
+    //         'Neptune': 'Dreams, spirituality, illusion, compassion',
+    //         'Pluto': 'Transformation, power, death/rebirth'
+    //     };
+
+    //     infoContent.innerHTML = `
+    //         <div class="space-y-4">
+    //             <div class="flex items-center justify-between pb-3 border-b border-indigo-500/30">
+    //                 <div class="flex items-center gap-3">
+    //                     <span class="text-3xl">${planet.symbol}</span>
+    //                     <div>
+    //                         <h5 class="text-xl font-bold text-white">${planet.name}</h5>
+    //                         <p class="text-sm text-slate-400">${planetMeanings[planet.name] || 'Celestial body'}</p>
+    //                     </div>
+    //                 </div>
+    //             </div>
+
+    //             <div class="grid grid-cols-2 gap-3">
+    //                 <div class="bg-slate-700/30 rounded-lg p-3">
+    //                     <span class="text-xs text-slate-400 block mb-1">Sign</span>
+    //                     <span class="text-indigo-300 font-semibold">${planet.sign} ${planet.degree.toFixed(2)}°</span>
+    //                 </div>
+    //                 <div class="bg-slate-700/30 rounded-lg p-3">
+    //                     <span class="text-xs text-slate-400 block mb-1">Element</span>
+    //                     <span class="text-white font-semibold">${planet.element}</span>
+    //                 </div>
+    //                 <div class="bg-slate-700/30 rounded-lg p-3">
+    //                     <span class="text-xs text-slate-400 block mb-1">Longitude</span>
+    //                     <span class="text-white font-semibold">${planet.longitude.toFixed(2)}°</span>
+    //                 </div>
+    //                 <div class="bg-slate-700/30 rounded-lg p-3">
+    //                     <span class="text-xs text-slate-400 block mb-1">House</span>
+    //                     <span class="text-white font-semibold">${planet.house ? 'House ' + planet.house : 'N/A'}</span>
+    //                 </div>
+    //             </div>
+
+    //             ${planet.retrograde ? `
+    //                 <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
+    //                     <span class="text-red-400 font-semibold">
+    //                         <i class="fas fa-undo mr-2"></i>Retrograde Motion
+    //                     </span>
+    //                     <p class="text-xs text-slate-300 mt-1">
+    //                         This planet appears to move backward, suggesting internalized or review energy.
+    //                     </p>
+    //                 </div>
+    //             ` : ''}
+
+    //             <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 rounded-lg p-3 border border-indigo-500/20">
+    //                 <span class="text-xs text-slate-400 block mb-1">Element Quality</span>
+    //                 <p class="text-sm text-slate-200">${elementDescriptions[planet.element]}</p>
+    //             </div>
+
+    //             ${planetAspects.length > 0 ? `
+    //                 <div>
+    //                     <h6 class="text-sm font-semibold text-slate-300 mb-2 flex items-center">
+    //                         <i class="fas fa-project-diagram text-pink-400 mr-2"></i>
+    //                         Aspects (${planetAspects.length})
+    //                     </h6>
+    //                     <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+    //                         ${planetAspects.map(aspect => {
+    //                             const otherPlanet = aspect.planet1 === planet.name ? aspect.planet2 : aspect.planet1;
+    //                             const aspectColors = {
+    //                                 'Conjunction': 'text-yellow-300',
+    //                                 'Opposition': 'text-red-400',
+    //                                 'Trine': 'text-green-400',
+    //                                 'Square': 'text-orange-400',
+    //                                 'Sextile': 'text-blue-400'
+    //                             };
+    //                             const aspectIcons = {
+    //                                 'Conjunction': '☌',
+    //                                 'Opposition': '☍',
+    //                                 'Trine': '△',
+    //                                 'Square': '□',
+    //                                 'Sextile': '⚹'
+    //                             };
+    //                             return `
+    //                                 <div class="bg-slate-700/30 rounded-lg p-2 flex items-center justify-between hover:bg-slate-700/50 transition-colors">
+    //                                     <span class="text-sm">
+    //                                         <span class="${aspectColors[aspect.aspect_type]} font-bold mr-2">
+    //                                             ${aspectIcons[aspect.aspect_type]}
+    //                                         </span>
+    //                                         <span class="text-slate-300">${aspect.aspect_type} to ${otherPlanet}</span>
+    //                                     </span>
+    //                                     <span class="text-xs text-slate-400">${aspect.orb.toFixed(1)}°</span>
+    //                                 </div>
+    //                             `;
+    //                         }).join('')}
+    //                     </div>
+    //                 </div>
+    //             ` : '<p class="text-sm text-slate-400 italic">No major aspects</p>'}
+    //         </div>
+    //     `;
+
+    //     infoContainer.classList.remove('hidden');
+    // }
+
     showPlanetInfo(planet) {
-        const infoContainer = document.getElementById('planet-info');
-        const infoContent = document.getElementById('planet-info-content');
+    const infoContainer = document.getElementById('planet-info');
+    const placeholderContainer = document.getElementById('planet-info-placeholder');
+    const infoContent = document.getElementById('planet-info-content');
 
-        if (!infoContainer || !infoContent) {
-            console.warn('Planet info panel not found');
-            return;
-        }
-
-        // Find aspects involving this planet
-        const planetAspects = this.currentNatalChart.aspects.filter(
-            aspect => aspect.planet1 === planet.name || aspect.planet2 === planet.name
-        );
-
-        const elementDescriptions = {
-            'Fire': 'Dynamic, passionate, action-oriented',
-            'Earth': 'Practical, grounded, material-focused',
-            'Air': 'Intellectual, communicative, social',
-            'Water': 'Emotional, intuitive, sensitive'
-        };
-
-        const planetMeanings = {
-            'Sun': 'Core identity, ego, vitality, life purpose',
-            'Moon': 'Emotions, instincts, inner self, needs',
-            'Mercury': 'Communication, thinking, intellect, learning',
-            'Venus': 'Love, beauty, values, relationships',
-            'Mars': 'Action, desire, energy, assertiveness',
-            'Jupiter': 'Growth, expansion, luck, wisdom',
-            'Saturn': 'Structure, discipline, responsibility, karma',
-            'Uranus': 'Innovation, rebellion, sudden change',
-            'Neptune': 'Dreams, spirituality, illusion, compassion',
-            'Pluto': 'Transformation, power, death/rebirth'
-        };
-
-        infoContent.innerHTML = `
-            <div class="space-y-4">
-                <div class="flex items-center justify-between pb-3 border-b border-indigo-500/30">
-                    <div class="flex items-center gap-3">
-                        <span class="text-3xl">${planet.symbol}</span>
-                        <div>
-                            <h5 class="text-xl font-bold text-white">${planet.name}</h5>
-                            <p class="text-sm text-slate-400">${planetMeanings[planet.name] || 'Celestial body'}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-slate-700/30 rounded-lg p-3">
-                        <span class="text-xs text-slate-400 block mb-1">Sign</span>
-                        <span class="text-indigo-300 font-semibold">${planet.sign} ${planet.degree.toFixed(2)}°</span>
-                    </div>
-                    <div class="bg-slate-700/30 rounded-lg p-3">
-                        <span class="text-xs text-slate-400 block mb-1">Element</span>
-                        <span class="text-white font-semibold">${planet.element}</span>
-                    </div>
-                    <div class="bg-slate-700/30 rounded-lg p-3">
-                        <span class="text-xs text-slate-400 block mb-1">Longitude</span>
-                        <span class="text-white font-semibold">${planet.longitude.toFixed(2)}°</span>
-                    </div>
-                    <div class="bg-slate-700/30 rounded-lg p-3">
-                        <span class="text-xs text-slate-400 block mb-1">House</span>
-                        <span class="text-white font-semibold">${planet.house ? 'House ' + planet.house : 'N/A'}</span>
-                    </div>
-                </div>
-
-                ${planet.retrograde ? `
-                    <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-                        <span class="text-red-400 font-semibold">
-                            <i class="fas fa-undo mr-2"></i>Retrograde Motion
-                        </span>
-                        <p class="text-xs text-slate-300 mt-1">
-                            This planet appears to move backward, suggesting internalized or review energy.
-                        </p>
-                    </div>
-                ` : ''}
-
-                <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 rounded-lg p-3 border border-indigo-500/20">
-                    <span class="text-xs text-slate-400 block mb-1">Element Quality</span>
-                    <p class="text-sm text-slate-200">${elementDescriptions[planet.element]}</p>
-                </div>
-
-                ${planetAspects.length > 0 ? `
-                    <div>
-                        <h6 class="text-sm font-semibold text-slate-300 mb-2 flex items-center">
-                            <i class="fas fa-project-diagram text-pink-400 mr-2"></i>
-                            Aspects (${planetAspects.length})
-                        </h6>
-                        <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-                            ${planetAspects.map(aspect => {
-                                const otherPlanet = aspect.planet1 === planet.name ? aspect.planet2 : aspect.planet1;
-                                const aspectColors = {
-                                    'Conjunction': 'text-yellow-300',
-                                    'Opposition': 'text-red-400',
-                                    'Trine': 'text-green-400',
-                                    'Square': 'text-orange-400',
-                                    'Sextile': 'text-blue-400'
-                                };
-                                const aspectIcons = {
-                                    'Conjunction': '☌',
-                                    'Opposition': '☍',
-                                    'Trine': '△',
-                                    'Square': '□',
-                                    'Sextile': '⚹'
-                                };
-                                return `
-                                    <div class="bg-slate-700/30 rounded-lg p-2 flex items-center justify-between hover:bg-slate-700/50 transition-colors">
-                                        <span class="text-sm">
-                                            <span class="${aspectColors[aspect.aspect_type]} font-bold mr-2">
-                                                ${aspectIcons[aspect.aspect_type]}
-                                            </span>
-                                            <span class="text-slate-300">${aspect.aspect_type} to ${otherPlanet}</span>
-                                        </span>
-                                        <span class="text-xs text-slate-400">${aspect.orb.toFixed(1)}°</span>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                ` : '<p class="text-sm text-slate-400 italic">No major aspects</p>'}
-            </div>
-        `;
-
-        infoContainer.classList.remove('hidden');
+    if (!infoContainer || !infoContent) {
+        console.warn('Planet info panel not found');
+        return;
     }
+
+    // Hide placeholder, show info panel
+    if (placeholderContainer) {
+        placeholderContainer.classList.add('hidden');
+    }
+    infoContainer.classList.remove('hidden');
+
+    // Use HTMX to fetch planet details from Django view
+    // This replaces all the innerHTML generation with a server request
+    htmx.ajax('GET', `/deep_dives/planet/${planet.name}/`, {
+        target: '#planet-info-content',
+        swap: 'innerHTML'
+    });
+
+    
+}
+
+showAspectInfo(aspect) {
+    const infoContainer = document.getElementById('planet-info');
+    const placeholderContainer = document.getElementById('planet-info-placeholder');
+    const infoContent = document.getElementById('planet-info-content');
+
+    if (!infoContainer || !infoContent) {
+        console.warn('Planet info panel not found');
+        return;
+    }
+
+    // Hide placeholder, show info panel
+    if (placeholderContainer) {
+        placeholderContainer.classList.add('hidden');
+    }
+    infoContainer.classList.remove('hidden');
+
+    // Use HTMX to fetch aspect details from Django view
+    // aspect object should have: planet1, planet2, aspect_type
+    htmx.ajax('GET', `/deep_dives/aspect/${aspect.planet1}/${aspect.planet2}/${aspect.aspect_type}/`, {
+        target: '#planet-info-content',
+        swap: 'innerHTML'
+    });
+}
+
+
 }
 
 // Initialize global instance

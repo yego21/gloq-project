@@ -34,10 +34,11 @@ print("DEBUG: ALLOWED_HOSTS parsed =", ALLOWED_HOSTS)
 
 STORAGES = {
     'default': {
-        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     'staticfiles': {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        # "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
 # STORAGES = {
