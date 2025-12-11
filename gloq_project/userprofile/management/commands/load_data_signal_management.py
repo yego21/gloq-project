@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = 'Load data while controlling signal management and ensuring UTF-8 compatibility'
 
     def handle(self, *args, **kwargs):
-        file_path = Path("db_dump_dev.json")
+        file_path = Path("db_dump_prod.json")
 
         # Step 1 — Validate and fix encoding issues
         try:

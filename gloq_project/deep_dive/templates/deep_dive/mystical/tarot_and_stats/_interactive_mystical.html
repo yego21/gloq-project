@@ -434,7 +434,7 @@
 
             <div 
                 id="spread-content"
-                hx-post="{% url 'deep_dive:draw_tarot_spread' %}"
+                hx-get="{% url 'deep_dive:draw_tarot_spread' %}"
                 hx-trigger="revealed"
                 hx-swap="innerHTML">
                 <div class="text-center py-8 text-slate-400">

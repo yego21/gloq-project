@@ -4,8 +4,8 @@ import dj_database_url
 USE_CLOUDINARY = True
 
 SECRET_KEY = os.getenv("SECRET_KEY")
-# DEBUG = True
-DEBUG = os.getenv("DEBUG", "False") == "True"
+DEBUG = True
+# DEBUG = os.getenv("DEBUG", "False") == "True"
 
 allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "127.0.0.1")
 ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(",") if host.strip()]
@@ -28,7 +28,15 @@ print("DEBUG: ALLOWED_HOSTS parsed =", ALLOWED_HOSTS)
 # }
 # CLOUDINARY_STORAGE = {
 #     'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
-#     'API_KEY': env('CLOUDINARY_API_KEY'),
+#     'API_KEY': env('CLOUDINARY_API_KEY'),STORAGES = {
+# #     'default': {
+# #         "BACKEND": "django.core.files.storage.FileSystemStorage",
+# #     },
+# #     'staticfiles': {
+# #         # "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+# #         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+# #     },
+# # }
 #     'API_SECRET': env('CLOUDINARY_API_SECRET'),
 # }
 

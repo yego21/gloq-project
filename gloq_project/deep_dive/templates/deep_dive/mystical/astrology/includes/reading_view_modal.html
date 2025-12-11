@@ -10,7 +10,7 @@
 </style>
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
      id="reading-modal-backdrop">
-    <div class="bg-slate-900 rounded-2xl border border-indigo-500/30 max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col"
+    <div class="bg-slate-900 rounded-2xl border border-indigo-500/30 max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col"
          id="reading-modal-content">
         
         <!-- Modal Header -->
@@ -21,7 +21,7 @@
                         <i class="fas fa-calendar-day"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Daily Overview</h3>
+                        <h3 class="text-lg font-bold text-yellow-300">Daily Overview</h3>
                         <p class="text-xs text-slate-400">Your cosmic guidance for today</p>
                     </div>
                 {% elif reading.reading_type == 'transit_focus' %}
@@ -29,7 +29,7 @@
                         <i class="fas fa-arrows-rotate"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Transit Focus</h3>
+                        <h3 class="text-lg font-bold text-purple-300">Transit Focus</h3>
                         <p class="text-xs text-slate-400">Major planetary influence</p>
                     </div>
                 {% elif reading.reading_type == 'element_wisdom' %}
@@ -37,7 +37,7 @@
                         <i class="fas fa-atom"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-bold">Element Wisdom</h3>
+                        <h3 class="text-lg font-bold text-blue-300">Element Wisdom</h3>
                         <p class="text-xs text-slate-400">Elemental balance guidance</p>
                     </div>
                 {% endif %}
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Modal Content (Scrollable) -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-4">
+        <div class="flex-1 overflow-y-auto p-6 space-y-5">
             
             <!-- Metadata Bar -->
             <div class="flex items-center justify-between text-xs pb-4 border-b border-slate-700/30">
@@ -73,22 +73,113 @@
                         </span>
                     {% endif %}
                 </div>
-                {% if from_cache %}
-                    <span class="px-2 py-1 rounded-full bg-green-600/20 border border-green-500/30 text-green-400">
-                        <i class="fas fa-check-circle mr-1"></i>Cached
-                    </span>
-                {% else %}
-                    <span class="px-2 py-1 rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
-                        <i class="fas fa-sync-alt mr-1"></i>Fresh
-                    </span>
-                {% endif %}
+                <div class="flex items-center gap-2">
+                    {% if reading.journal_included %}
+                        <span class="px-2 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400">
+                            <i class="fas fa-book mr-1"></i>Journal
+                        </span>
+                    {% endif %}
+                    {% if from_cache %}
+                        <span class="px-2 py-1 rounded-full bg-green-600/20 border border-green-500/30 text-green-400">
+                            <i class="fas fa-check-circle mr-1"></i>Cached
+                        </span>
+                    {% else %}
+                        <span class="px-2 py-1 rounded-full bg-indigo-600/20 border border-indigo-500/30 text-indigo-400">
+                            <i class="fas fa-sync-alt mr-1"></i>Fresh
+                        </span>
+                    {% endif %}
+                </div>
             </div>
+{{ reaing.transit_summaries }}
+            <!-- Transit Summaries Section (New - Expanded by default) -->
+            {% if reading.transit_summaries %}
+            <div class="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 rounded-xl border border-indigo-500/30 overflow-hidden">
+                <div class="p-4 bg-indigo-900/30 border-b border-indigo-500/20">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-satellite-dish text-indigo-400"></i>
+                        <h4 class="text-sm font-semibold text-indigo-300">Today's Cosmic Weather</h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Notable planetary influences activating your chart</p>
+                </div>
+                
+                <div class="p-4 space-y-3">
+                    {% for transit in reading.transit_summaries %}
+                    <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/40 hover:border-indigo-500/30 transition-all">
+                        <!-- Transit Header -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-slate-200 mb-1">
+                                    <span class="text-indigo-300">Transit {{ transit.transit_planet }}</span>
+                                    <span class="text-slate-400 mx-1">in {{ transit.transit_sign }}</span>
+                                    <span class="text-purple-400">{{ transit.aspect_type }}</span>
+                                    <span class="text-slate-400 mx-1">Natal {{ transit.natal_planet }}</span>
+                                    <span class="text-slate-400">in {{ transit.natal_sign }}</span>
+                                </div>
+                                <div class="text-xs text-slate-500">
+                                    Orb: {{ transit.orb }}° 
+                                    <span class="mx-2">•</span>
+                                    <span class="px-2 py-0.5 rounded-full text-xs
+                                        {% if transit.quality == 'harmonious' %}
+                                            bg-green-600/20 text-green-400 border border-green-500/30
+                                        {% else %}
+                                            bg-amber-600/20 text-amber-400 border border-amber-500/30
+                                        {% endif %}">
+                                        {{ transit.quality }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        dsadad
+                        <!-- Meaning & Context -->
+                        <div class="space-y-2">
+                            <!-- Main Meaning -->
+                            <div class="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-circle-info text-indigo-400 text-xs mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-semibold text-indigo-300 mb-1">What This Means</p>
+                                        <p class="text-xs text-slate-300">{{ transit.meaning }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Life Areas Affected -->
+                            <div class="bg-slate-900/50 rounded-lg p-3 border border-purple-500/20">
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-location-dot text-purple-400 text-xs mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-semibold text-purple-300 mb-1">Life Areas Affected</p>
+                                        <p class="text-xs text-slate-300">{{ transit.life_areas }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Practical Themes -->
+                            <div class="bg-slate-900/50 rounded-lg p-3 border border-yellow-500/20">
+                                <div class="flex items-start space-x-2">
+                                    <i class="fas fa-lightbulb text-yellow-400 text-xs mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-semibold text-yellow-300 mb-1">What to Watch For</p>
+                                        <p class="text-xs text-slate-300">{{ transit.themes }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
 
             <!-- Reading Text -->
             {% if reading.reading_text %}
             <div class="bg-slate-800/30 rounded-xl p-5 border border-slate-700/30">
-                <div class="text-sm text-slate-200 leading-relaxed whitespace-pre-line" id="reading-text-content">
-                    {{ reading.reading_text }}
+                <div class="flex items-center space-x-2 mb-3 pb-2 border-b border-slate-700/30">
+                    <i class="fas fa-scroll text-indigo-400"></i>
+                    <h4 class="text-sm font-semibold text-indigo-300">Your Personal Reading</h4>
+                </div>
+                <div class="text-sm text-slate-200 leading-relaxed space-y-3" id="reading-text-content">
+                    {{ reading.reading_text|linebreaks }}
                 </div>
             </div>
             {% else %}
@@ -97,23 +188,23 @@
             </div>
             {% endif %}
 
-            <!-- Top Transits (Collapsible) -->
+            <!-- Legacy Transit Details (Collapsible - kept for reference) -->
             {% if reading.top_transits %}
             <details class="bg-slate-800/20 rounded-xl border border-slate-700/30">
                 <summary class="cursor-pointer p-4 text-sm font-semibold text-slate-300 hover:text-indigo-300 transition-colors flex items-center justify-between">
                     <span>
                         <i class="fas fa-chart-line mr-2"></i>
-                        Transit Details ({{ reading.top_transits|length }})
+                        Technical Transit Data
                     </span>
                     <i class="fas fa-chevron-down text-xs"></i>
                 </summary>
                 <div class="px-4 pb-4 space-y-2">
                     {% for transit in reading.top_transits %}
-                    <div class="bg-slate-700/30 rounded-lg p-3 text-sm">
+                    <div class="bg-slate-700/30 rounded-lg p-3 text-xs font-mono">
                         <span class="font-semibold text-indigo-300">{{ transit.transit_planet }}</span> 
                         <span class="text-slate-400">{{ transit.aspect_type }}</span>
                         <span class="font-semibold text-purple-300">{{ transit.natal_planet }}</span>
-                        <span class="text-slate-500 text-xs ml-2">({{ transit.orb }}° orb)</span>
+                        <span class="text-slate-500 ml-2">({{ transit.orb }}° orb, {{ transit.quality }})</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -138,7 +229,7 @@
                     {% csrf_token %}
                     <input type="hidden" name="reading_type" value="{{ reading.reading_type }}">
                     <input type="hidden" name="force_refresh" value="true">
-                    <input type="hidden" name="modal_view" value="true">  <!-- Important: tell view this is a modal request -->
+                    <input type="hidden" name="modal_view" value="true">
                     <button type="submit"
                             class="text-sm px-4 py-2 rounded-full bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 transition-all">
                         <i class="fas fa-sync-alt mr-2"></i>Regenerate Reading
@@ -152,5 +243,3 @@
 
     </div>
 </div>
-
-

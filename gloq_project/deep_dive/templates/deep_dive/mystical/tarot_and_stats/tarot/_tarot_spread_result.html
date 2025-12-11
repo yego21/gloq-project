@@ -1,0 +1,263 @@
+<!-- Three Card Spread Result -->
+
+<div class="space-y-6">
+    <!-- Intention Display (if provided) -->
+    {% if user_intention %}
+    <div class="text-center">
+        <div class="inline-flex items-center gap-2 text-amber-300 bg-amber-950/40 px-4 py-2 rounded-full text-xs mb-3">
+            <i class="fas fa-feather-alt"></i>
+            <span>Your Intention</span>
+        </div>
+        <p class="text-slate-300 text-sm italic max-w-2xl mx-auto leading-relaxed">
+            "{{ user_intention }}"
+        </p>
+    </div>
+    <div class="mystical-divider"></div>
+    {% endif %}
+
+    <!-- Reading Summary -->
+    <div class="text-center mb-6">
+        <div class="inline-flex items-center gap-2 text-indigo-300 bg-indigo-950/40 px-4 py-2 rounded-full text-sm mb-4">
+            <i class="fas fa-book-open"></i>
+            <span>Past • Present • Future Reading</span>
+        </div>
+        <p class="text-slate-300 text-sm leading-relaxed max-w-2xl mx-auto">
+            {{ reading_summary }}
+        </p>
+    </div>
+
+    <div class="mystical-divider"></div>
+
+    <!-- Three Card Display -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="spread-cards-container">
+        
+        <!-- PAST CARD -->
+        <div class="spread-card">
+            <div class="space-y-3">
+                <!-- Position Label -->
+                <div class="text-center">
+                    <div class="text-xs text-purple-400 font-semibold tracking-widest mb-1">
+                        {{ spread.past.position|upper }}
+                    </div>
+                    <div class="text-xs text-slate-400 italic">
+                        {{ spread.past.position_desc }}
+                    </div>
+                </div>
+
+                <!-- Card Visual -->
+                <div class="relative w-full aspect-[2/3] max-w-[200px] mx-auto">
+                    <div class="absolute inset-0 rounded-xl shadow-2xl"
+                         style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                                border: 3px solid #a855f7;">
+                        <div class="h-full flex flex-col p-4">
+                            <div class="text-xs font-bold text-purple-900 tracking-wider mb-2">
+                                {{ spread.past.card_number }}
+                            </div>
+                            
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-5xl mb-2">{{ spread.past.emoji }}</div>
+                                    <div class="text-sm font-bold text-slate-800 tracking-wide">
+                                        {{ spread.past.title }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-xs text-purple-800 text-center leading-tight border-t-2 border-purple-300 pt-2">
+                                {{ spread.past.keywords }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interpretation -->
+                <div class="bg-gradient-to-br from-purple-900/20 to-indigo-900/10 border border-purple-700/30 rounded-lg p-4">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        {{ spread.past.interpretation }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRESENT CARD -->
+        <div class="spread-card">
+            <div class="space-y-3">
+                <div class="text-center">
+                    <div class="text-xs text-indigo-400 font-semibold tracking-widest mb-1">
+                        {{ spread.present.position|upper }}
+                    </div>
+                    <div class="text-xs text-slate-400 italic">
+                        {{ spread.present.position_desc }}
+                    </div>
+                </div>
+
+                <div class="relative w-full aspect-[2/3] max-w-[200px] mx-auto">
+                    <div class="absolute inset-0 rounded-xl shadow-2xl"
+                         style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                                border: 3px solid #6366f1;">
+                        <div class="h-full flex flex-col p-4">
+                            <div class="text-xs font-bold text-indigo-900 tracking-wider mb-2">
+                                {{ spread.present.card_number }}
+                            </div>
+                            
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-5xl mb-2">{{ spread.present.emoji }}</div>
+                                    <div class="text-sm font-bold text-slate-800 tracking-wide">
+                                        {{ spread.present.title }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-xs text-indigo-800 text-center leading-tight border-t-2 border-indigo-300 pt-2">
+                                {{ spread.present.keywords }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-indigo-900/20 to-blue-900/10 border border-indigo-700/30 rounded-lg p-4">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        {{ spread.present.interpretation }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- FUTURE CARD -->
+        <div class="spread-card">
+            <div class="space-y-3">
+                <div class="text-center">
+                    <div class="text-xs text-pink-400 font-semibold tracking-widest mb-1">
+                        {{ spread.future.position|upper }}
+                    </div>
+                    <div class="text-xs text-slate-400 italic">
+                        {{ spread.future.position_desc }}
+                    </div>
+                </div>
+
+                <div class="relative w-full aspect-[2/3] max-w-[200px] mx-auto">
+                    <div class="absolute inset-0 rounded-xl shadow-2xl"
+                         style="background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+                                border: 3px solid #ec4899;">
+                        <div class="h-full flex flex-col p-4">
+                            <div class="text-xs font-bold text-pink-900 tracking-wider mb-2">
+                                {{ spread.future.card_number }}
+                            </div>
+                            
+                            <div class="flex-1 flex items-center justify-center">
+                                <div class="text-center">
+                                    <div class="text-5xl mb-2">{{ spread.future.emoji }}</div>
+                                    <div class="text-sm font-bold text-slate-800 tracking-wide">
+                                        {{ spread.future.title }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-xs text-pink-800 text-center leading-tight border-t-2 border-pink-300 pt-2">
+                                {{ spread.future.keywords }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gradient-to-br from-pink-900/20 to-purple-900/10 border border-pink-700/30 rounded-lg p-4">
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        {{ spread.future.interpretation }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Integration Guidance -->
+    <div class="mt-8 p-6 rounded-xl bg-gradient-to-r from-indigo-900/30 via-purple-900/30 to-pink-900/30 border border-indigo-700/30">
+        <div class="flex items-start gap-3">
+            <i class="fas fa-lightbulb text-yellow-400 text-xl mt-1 flex-shrink-0"></i>
+            <div>
+                <h4 class="text-sm font-semibold text-slate-200 mb-2">Reflection Prompt</h4>
+                <p class="text-xs text-slate-300 leading-relaxed">
+                    These three energies weave together to tell your story. Reflect on how the past has shaped you, 
+                    where you stand in the present moment, and the potential that awaits. Consider journaling about 
+                    the connections you see between these cards and your current circumstances.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex items-center justify-center gap-4 pt-4">
+        <button 
+            class="text-sm text-slate-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-2"
+            onclick="drawNewSpread()">
+            <i class="fas fa-redo-alt"></i>
+            <span>Draw New Spread</span>
+        </button>
+        <button 
+            class="text-sm text-slate-400 hover:text-indigo-300 transition-colors inline-flex items-center gap-2"
+            onclick="toggleSpreadReading()">
+            <i class="fas fa-times"></i>
+            <span>Close</span>
+        </button>
+    </div>
+</div>
+
+<style>
+.spread-card {
+    opacity: 0;
+    transform: rotateY(90deg);
+}
+</style>
+
+<script>
+function revealCardsSequentially() {
+    const cards = document.querySelectorAll('.spread-card');
+    
+    cards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.transition = 'all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)';
+            card.style.opacity = '1';
+            card.style.transform = 'rotateY(0deg)';
+        }, index * 600);
+    });
+}
+
+function drawNewSpread() {
+    const spreadContent = document.getElementById('spread-content');
+    
+    spreadContent.innerHTML = `
+        <div class="text-center py-12 text-slate-400">
+            <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+            <p>Preparing new spread...</p>
+        </div>
+    `;
+    
+    fetch('{% url "deep_dive:draw_tarot_spread" %}', {
+        method: 'GET'
+    })
+    .then(response => response.text())
+    .then(html => {
+        spreadContent.innerHTML = html;
+    })
+    .catch(error => {
+        console.error('Error loading spread:', error);
+        spreadContent.innerHTML = `
+            <div class="text-center py-12 text-red-400">
+                <i class="fas fa-exclamation-circle text-3xl mb-3"></i>
+                <p>Unable to load spread. Please try again.</p>
+            </div>
+        `;
+    });
+}
+
+// Trigger animation when template loads
+document.addEventListener('DOMContentLoaded', function() {
+    revealCardsSequentially();
+});
+
+// Also trigger immediately in case DOMContentLoaded already fired
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(revealCardsSequentially, 50);
+}
+</script>

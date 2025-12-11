@@ -319,26 +319,28 @@ class ThreeCardSpreadService:
     Each position draws from different astrological energies.
     """
 
-    def __init__(self, natal_chart: Dict, transits: List[Dict]):
+    def __init__(self, natal_chart: Dict, transits: List[Dict], user_intention: str = ''):
         self.natal_chart = natal_chart
         self.transits = transits
+        self.user_intention = user_intention  # NEW
         self.planets = {p['name']: p for p in natal_chart['planets']}
         self.dominant_element = natal_chart.get('dominant_element', 'Earth')
 
     def generate_spread(self, deck: List[Dict]) -> Tuple[Dict, Dict, Dict]:
         """
         Generate a three-card spread with cosmic intelligence.
+        Intention influences the present card selection.
 
         Returns:
             (past_card, present_card, future_card)
         """
 
-        # Draw each position with different logic
         past_card = self._draw_past_card(deck)
         present_card = self._draw_present_card(deck, exclude=[past_card])
         future_card = self._draw_future_card(deck, exclude=[past_card, present_card])
 
         return (past_card, present_card, future_card)
+
 
     def _draw_past_card(self, deck: List[Dict]) -> Dict:
         """
@@ -392,23 +394,52 @@ class ThreeCardSpreadService:
         """
         PRESENT: Current activation, what's happening now.
 
+        If user has set an intention, the card selection is influenced by keywords.
+
         Strategy:
         - 70%: Current transits (fast-moving planets prioritized)
         - 20%: Wild draw (serendipity)
         - 10%: Challenging aspects (what needs attention)
+        - OVERRIDE: If intention has strong keywords, weight toward matching themes
         """
 
         available_deck = [c for c in deck if c not in (exclude or [])]
+
+        # ═══════════════════════════════════════════════════════════
+        # INTENTION OVERRIDE: If user asked about specific themes
+        # ═══════════════════════════════════════════════════════════
+        if self.user_intention:
+            intention_lower = self.user_intention.lower()
+
+            # Map common question themes to card themes
+            theme_keywords = {
+                'career': ['ambition', 'achievement', 'mastery', 'work', 'success'],
+                'love': ['love', 'relationship', 'partnership', 'union', 'connection'],
+                'growth': ['growth', 'learning', 'wisdom', 'evolution', 'expansion'],
+                'change': ['transformation', 'change', 'transition', 'breakthrough'],
+                'decision': ['choice', 'decision', 'clarity', 'balance', 'judgment'],
+                'challenge': ['challenge', 'conflict', 'tension', 'obstacle', 'test'],
+            }
+
+            # Check if intention matches any theme
+            for theme, keywords in theme_keywords.items():
+                if any(word in intention_lower for word in [theme]):
+                    matching_cards = [
+                        card for card in available_deck
+                        if any(kw in card.get('keywords', '').lower() for kw in keywords)
+                    ]
+                    if matching_cards:
+                        # 50% chance to use intention-matched card
+                        if random.random() < 0.5:
+                            return random.choice(matching_cards)
+
+        # Continue with normal logic if no intention match
         roll = random.random()
 
-        # ═══════════════════════════════════════════════════════════
-        # PATH 1: Current Transits (70%)
-        # ═══════════════════════════════════════════════════════════
+        # [Rest of the original _draw_present_card logic remains the same]
         if roll < 0.70 and self.transits:
-            # Prioritize fast-moving planets (current action)
             fast_planets = ['Mars', 'Venus', 'Mercury', 'Moon']
 
-            # First try fast-moving transits
             for transit in self.transits:
                 if transit['transit_planet'] in fast_planets:
                     matching_cards = [
@@ -416,7 +447,6 @@ class ThreeCardSpreadService:
                         if transit['transit_planet'] in card.get('planets', [])
                     ]
                     if matching_cards:
-                        # Filter by aspect quality (like main draw)
                         aspect_quality = transit.get('quality', 'flowing')
                         aspect_type = transit.get('aspect_type', '')
 
@@ -429,7 +459,6 @@ class ThreeCardSpreadService:
 
                         return random.choice(matching_cards)
 
-            # Fallback: any transit planet
             for transit in self.transits[:3]:
                 matching_cards = [
                     card for card in available_deck
@@ -438,15 +467,9 @@ class ThreeCardSpreadService:
                 if matching_cards:
                     return random.choice(matching_cards)
 
-        # ═══════════════════════════════════════════════════════════
-        # PATH 2: Wild Draw (20%)
-        # ═══════════════════════════════════════════════════════════
         elif roll < 0.90:
             return random.choice(available_deck)
 
-        # ═══════════════════════════════════════════════════════════
-        # PATH 3: Challenging Aspects (10%)
-        # ═══════════════════════════════════════════════════════════
         if self.transits:
             challenging = [
                 t for t in self.transits
@@ -531,12 +554,11 @@ class ThreeCardSpreadService:
     def generate_spread_narrative(self, past: Dict, present: Dict, future: Dict) -> str:
         """
         Generate cohesive narrative connecting the three cards.
-        Uses natal chart themes to weave story.
+        Uses natal chart themes and user intention to weave story.
         """
 
         dominant_elem = self.dominant_element
 
-        # Element-based narrative style
         narrative_styles = {
             'Fire': f"Your {past['title']} foundation ignites into {present['title']}'s passionate action, "
                     f"blazing toward {future['title']}'s bold potential.",
@@ -557,7 +579,6 @@ class ThreeCardSpreadService:
             f"your journey unfolds with cosmic precision."
         )
 
-        # Add personalized insight
         if self.transits:
             top_transit = self.transits[0]
             base_narrative += f" Current {top_transit['transit_planet']} {top_transit['aspect_type']} " \

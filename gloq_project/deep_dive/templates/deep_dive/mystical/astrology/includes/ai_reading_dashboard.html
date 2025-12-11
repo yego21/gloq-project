@@ -419,34 +419,25 @@ function closeGenerateAllModal() {
     modal.classList.remove('flex');
 }
 
-async function executeGenerateAll() {
+function executeGenerateAll() {
     closeGenerateAllModal();
     
     const readings = window.readingsToGenerate || [];
     
-    for (const reading of readings) {
-        try {
-            const formData = new FormData();
-            formData.append('reading_type', reading.type);
-            formData.append('force_refresh', 'true');
-            formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    // Click each "Generate" button sequentially
+    readings.forEach((reading, index) => {
+        setTimeout(() => {
+            // Find the form with this reading type and submit it
+            const form = document.querySelector(`form input[name="reading_type"][value="${reading.type}"]`)?.closest('form');
             
-            const response = await fetch('{% url "deep_dive:generate_ai_reading" %}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            if (form) {
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.click();
                 }
-            });
-            
-            if (response.ok) {
-                const html = await response.text();
-                document.getElementById('ai_reading_dashboard').innerHTML = html;
             }
-        } catch (error) {
-            console.error(`Error generating ${reading.name}:`, error);
-        }
-    }
+        }, index * 3000); // 3 second delay between each to allow time for generation
+    });
 }
 
 // Close modal on outside click

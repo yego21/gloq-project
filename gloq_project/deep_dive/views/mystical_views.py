@@ -780,8 +780,18 @@ def generate_natal_chart(request):
         birth_profile.cached_chart_data = natal_chart
         birth_profile.save(update_fields=['cached_chart_data'])
 
+        if natal_chart:
+            sun_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Sun'), None)
+            moon_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Moon'), None)
 
-
+            chart_context = {
+                'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
+                'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
+                # 'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
+                'dominant_element': natal_chart.get('dominant_element', 'Spirit'),
+                'planet_count': len(natal_chart.get('planets', [])),
+                'aspect_count': len(natal_chart.get('aspects', [])),
+            }
         # Prepare context
         context = {
             'has_chart': True,
@@ -790,6 +800,7 @@ def generate_natal_chart(request):
             'daily_reading': None,  # Add if you have these
             'transit_reading': None,
             'element_reading': None,
+            'chart_info': chart_context,
         }
 
         # Return the partial template
@@ -879,6 +890,7 @@ def generate_ai_reading(request):
     reading_type = request.POST.get('reading_type', 'daily_overview')
     force_refresh = request.POST.get('force_refresh', 'false') == 'true'
     modal_view = request.POST.get('modal_view', 'false') == 'true'
+    user = request.user
 
     # Validate reading type
     valid_types = ['daily_overview', 'transit_focus', 'element_wisdom']
@@ -908,7 +920,7 @@ def generate_ai_reading(request):
         else:
             # Generate fresh reading
             print(f"Generating fresh {reading_type} for {request.user.username}")
-            reading_data = generate_reading(natal_chart, reading_type)
+            reading_data = generate_reading(natal_chart, reading_type, user)  # Pass user here!
 
             # Update the specific reading type
             ai_reading.update_reading(reading_type, reading_data)
@@ -919,7 +931,7 @@ def generate_ai_reading(request):
 
         # If this is a modal view request, return the updated modal
         if modal_view:
-            return render(request, 'deep_dive/mystical/partials/reading_view_modal.html', {
+            return render(request, 'deep_dive/mystical/astrology/includes/reading_view_modal.html', {
                 'reading': updated_reading,
                 'from_cache': from_cache
             })
@@ -1204,20 +1216,23 @@ def tarot_card_history(request):
 @login_required
 def draw_tarot_spread(request):
     """
-    Draw a 3-card spread: Past, Present, Future
-    Based on natal chart patterns and current transits.
-    Now uses ThreeCardSpreadService for intelligent selection.
+    Two modes:
+    1. GET: Show initial spread interface with face-down cards
+    2. POST: Generate and return the actual spread
     """
 
-    if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
+    if request.method == 'GET':
+        return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread_initial.html')
 
+    # POST: Generate the spread
     try:
         birth_profile = request.user.birth_profile
         natal_chart = birth_profile.cached_chart_data
 
         if not natal_chart:
             return JsonResponse({'error': 'No natal chart found'}, status=404)
+
+        user_intention = request.POST.get('intention', '').strip()
 
         # Get current transits
         try:
@@ -1231,13 +1246,8 @@ def draw_tarot_spread(request):
             print(f"Transit error: {e}")
             transits = []
 
-        # ═══════════════════════════════════════════════════════════
-        # NEW: Use ThreeCardSpreadService
-        # ═══════════════════════════════════════════════════════════
-
-
-
-        spread_service = ThreeCardSpreadService(natal_chart, transits)
+        # Generate spread with intention
+        spread_service = ThreeCardSpreadService(natal_chart, transits, user_intention)
         past_card, present_card, future_card = spread_service.generate_spread(COSMIC_TAROT_DECK)
 
         # Personalize interpretations
@@ -1253,7 +1263,6 @@ def draw_tarot_spread(request):
                     past_card['base_interpretation'],
                     dominant_planet
                 ),
-                'temporal_insight': 'This card reflects your foundational energies and natal patterns.'
             },
             'present': {
                 'position': 'Present Energy',
@@ -1263,7 +1272,6 @@ def draw_tarot_spread(request):
                     present_card['base_interpretation'],
                     dominant_planet
                 ),
-                'temporal_insight': 'This card mirrors your current transits and active life situations.'
             },
             'future': {
                 'position': 'Future Potential',
@@ -1273,18 +1281,17 @@ def draw_tarot_spread(request):
                     future_card['base_interpretation'],
                     dominant_planet
                 ),
-                'temporal_insight': 'This card illuminates your unfolding path and growth edges.'
             }
         }
 
-        # Generate cohesive narrative
         reading_summary = spread_service.generate_spread_narrative(
             past_card, present_card, future_card
         )
 
-        return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread.html', {
+        return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread_result.html', {
             'spread': spread_data,
-            'reading_summary': reading_summary
+            'reading_summary': reading_summary,
+            'user_intention': user_intention
         })
 
     except Exception as e:
