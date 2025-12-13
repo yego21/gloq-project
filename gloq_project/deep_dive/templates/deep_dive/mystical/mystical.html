@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,48 +6,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <title>Mystical Deep Dive</title>
     <meta name="csrf-token" content="{{ csrf_token }}"> 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script>
-document.addEventListener('htmx:configRequest', (event) => {
-    event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
-});
-</script>
-
-
+        document.addEventListener('htmx:configRequest', (event) => {
+            event.detail.headers['X-CSRFToken'] = '{{ csrf_token }}';
+        });
+    </script>
 
     <style>
         body {
-            background: radial-gradient(ellipse at center, #0c0e2a 0%, #0a0a1f 40%, #050511 100%);
-            color: #e2e8f0;
-            font-family: 'Inter', sans-serif;
+            background: #0a0118;
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(88, 28, 135, 0.15) 0px, transparent 50%),
+                radial-gradient(at 80% 70%, rgba(67, 56, 202, 0.15) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(29, 78, 216, 0.1) 0px, transparent 50%);
+            color: #f1f5f9;
+            font-family: 'Inter', -apple-system, sans-serif;
             overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated background gradient */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.03) 0%, transparent 50%);
+            animation: gradientShift 20s ease infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(-10%, -10%) rotate(180deg); }
         }
 
         .cosmic-gradient {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.6) 100%);
+            background: linear-gradient(145deg, rgba(30, 27, 75, 0.6) 0%, rgba(17, 24, 39, 0.8) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.1);
         }
 
         .moon-glow {
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.15), 0 0 60px rgba(99, 102, 241, 0.1);
+            box-shadow: 
+                0 0 40px rgba(139, 92, 246, 0.2),
+                0 0 80px rgba(139, 92, 246, 0.1),
+                inset 0 0 60px rgba(139, 92, 246, 0.05);
         }
 
         #chart-tooltip {
             position: fixed;
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
-            border: 2px solid rgba(99, 102, 241, 0.5);
-            border-radius: 12px;
-            padding: 12px 16px;
+            background: linear-gradient(145deg, rgba(17, 24, 39, 0.98), rgba(30, 27, 75, 0.98));
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 16px;
+            padding: 16px 20px;
             pointer-events: none;
             z-index: 9999;
             opacity: 0;
-            transition: opacity 0.2s ease;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(10px);
-            max-width: 280px;
+            transition: opacity 0.3s ease;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(139, 92, 246, 0.1);
+            backdrop-filter: blur(20px);
+            max-width: 300px;
             font-size: 13px;
         }
 
@@ -55,23 +86,24 @@ document.addEventListener('htmx:configRequest', (event) => {
         }
 
         #chart-tooltip .tooltip-header {
-            font-weight: bold;
-            color: #a5b4fc;
-            margin-bottom: 6px;
+            font-weight: 600;
+            color: #c4b5fd;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
             gap: 8px;
+            font-size: 14px;
         }
 
         #chart-tooltip .tooltip-body {
             color: #e2e8f0;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         #chart-tooltip .tooltip-label {
             color: #94a3b8;
             font-size: 11px;
-            margin-top: 4px;
+            margin-top: 6px;
         }
 
         #chart-tooltip .tooltip-value {
@@ -81,250 +113,164 @@ document.addEventListener('htmx:configRequest', (event) => {
 
         #chart-tooltip .tooltip-divider {
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.3), transparent);
-            margin: 8px 0;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+            margin: 10px 0;
         }
 
         #chart-wheel {
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.3));
         }
 
         #chart-wheel:hover {
-            transform: scale(1.05);
-        }
-
-        #chart-wheel::after {
-            content: 'Click to enlarge';
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.75rem;
-            color: rgba(148, 163, 184, 0.6);
-            white-space: nowrap;
+            transform: scale(1.03);
+            filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.5));
         }
 
         #chart-wheel.has-data {
             cursor: pointer;
-            transition: transform 0.2s ease;
-        }
-
-        #chart-wheel.has-data:hover {
-            transform: scale(1.05);
         }
 
         #chart-wheel.has-data::after {
-            content: 'Click to enlarge';
+            content: 'Click to expand';
             position: absolute;
-            bottom: -20px;
+            bottom: -24px;
             left: 50%;
             transform: translateX(-50%);
             font-size: 0.75rem;
-            color: rgba(148, 163, 184, 0.6);
+            color: rgba(196, 181, 253, 0.5);
             white-space: nowrap;
+            letter-spacing: 0.05em;
         }
 
         .mystical-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.3));
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(99, 102, 241, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(145deg, rgba(30, 27, 75, 0.4), rgba(17, 24, 39, 0.6));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .mystical-card:hover {
+            border-color: rgba(139, 92, 246, 0.25);
+            box-shadow: 
+                0 12px 48px rgba(0, 0, 0, 0.5),
+                0 0 40px rgba(139, 92, 246, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
         .floating-orb {
             animation: float 6s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(139, 92, 246, 0.6));
         }
 
         @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0px);
-            }
-
-            50% {
-                transform: translateY(-10px);
-            }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
         }
 
         .pulse-slow {
-            animation: pulse 4s infinite;
+            animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
         @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 0.8;
-            }
-
-            50% {
-                opacity: 1;
-            }
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
         }
 
         .constellation {
             position: absolute;
-            width: 3px;
-            height: 3px;
-            background: rgba(226, 232, 240, 0.7);
+            width: 2px;
+            height: 2px;
+            background: rgba(196, 181, 253, 0.8);
             border-radius: 50%;
-            opacity: 0.7;
-            animation: twinkle 3s infinite;
+            box-shadow: 0 0 3px rgba(196, 181, 253, 0.8);
+            animation: twinkle 4s ease-in-out infinite;
         }
 
         @keyframes twinkle {
-
-            0%,
-            100% {
-                opacity: 0.3;
-                transform: scale(1);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
         }
 
         .cosmic-border {
             position: relative;
-            overflow: hidden;
+            border-radius: 24px;
         }
 
         .cosmic-border::before {
             content: '';
             position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #1e3a8a, #3730a3, #1e40af, #3730a3);
-            background-size: 300% 300%;
-            animation: gradientShift 4s ease infinite;
+            inset: -1px;
+            background: linear-gradient(145deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
             border-radius: inherit;
-            z-index: -1;
-        }
-
-        @keyframes gradientShift {
-
-            0%,
-            100% {
-                background-position: 0% 50%;
-            }
-
-            50% {
-                background-position: 100% 50%;
-            }
-        }
-
-        .chart-orbit {
-            animation: rotate 25s linear infinite;
-        }
-
-        @keyframes rotate {
-            from {
-                transform: rotate(0deg);
-            }
-
-            to {
-                transform: rotate(360deg);
-            }
+            padding: 1px;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
         }
 
         .mystical-btn {
-            background: linear-gradient(135deg, #3730a3, #1e40af);
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(59, 130, 246, 0.8));
             color: white;
-            border: 1px solid rgba(99, 102, 241, 0.3);
+            border: 1px solid rgba(139, 92, 246, 0.3);
             transition: all 0.3s ease;
-        }
-
-        .mystical-btn:hover {
-            background: linear-gradient(135deg, #1e40af, #3730a3);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
-        }
-
-        .header-glow {
-            text-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
-        }
-
-        .feature-icon {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.4));
-            border: 1px solid rgba(99, 102, 241, 0.2);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .mystical-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.5), transparent);
-            margin: 1.5rem 0;
-        }
-
-        .tarot-card {
-            transition: all 0.5s ease;
-            transform-style: preserve-3d;
-        }
-
-        .tarot-card.flipped {
-            transform: rotateY(180deg);
-        }
-
-        .tarot-front,
-        .tarot-back {
-            backface-visibility: hidden;
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border-radius: 0.75rem;
-        }
-
-        .tarot-back {
-            transform: rotateY(180deg);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #1e1b4b, #3730a3);
-        }
-
-        .moon-phase {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: #1e40af;
             position: relative;
             overflow: hidden;
         }
 
-        .moon-shadow {
+        .mystical-btn::before {
+            content: '';
             position: absolute;
             top: 0;
-            right: 0;
-            width: 50%;
+            left: -100%;
+            width: 100%;
             height: 100%;
-            background: #0f172a;
-            border-radius: 50%;
-            transition: all 0.5s ease;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
         }
 
-        .cosmic-particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
-            opacity: 0;
+        .mystical-btn:hover::before {
+            left: 100%;
+        }
+
+        .mystical-btn:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(139, 92, 246, 0.9));
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .header-glow {
+            text-shadow: 
+                0 0 20px rgba(139, 92, 246, 0.5),
+                0 0 40px rgba(139, 92, 246, 0.3),
+                0 0 60px rgba(139, 92, 246, 0.1);
+        }
+
+        .feature-icon {
+            background: linear-gradient(145deg, rgba(30, 27, 75, 0.6), rgba(17, 24, 39, 0.4));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .mystical-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), transparent);
+            margin: 2rem 0;
         }
 
         .modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(5, 5, 17, 0.9);
+            inset: 0;
+            background: rgba(10, 1, 24, 0.95);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -342,229 +288,629 @@ document.addEventListener('htmx:configRequest', (event) => {
         }
 
         .modal-content {
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
+            transform: scale(0.95) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             max-height: 90vh;
             overflow-y: auto;
             margin: auto;
         }
 
         .modal-overlay.active .modal-content {
-            transform: scale(1);
+            transform: scale(1) translateY(0);
         }
 
         .modal-content::-webkit-scrollbar {
-            width: 8px;
+            width: 10px;
         }
 
         .modal-content::-webkit-scrollbar-track {
-            background: rgba(30, 41, 59, 0.3);
-            border-radius: 4px;
+            background: rgba(30, 27, 75, 0.3);
+            border-radius: 5px;
         }
 
         .modal-content::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.5);
-            border-radius: 4px;
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.6), rgba(59, 130, 246, 0.6));
+            border-radius: 5px;
         }
 
         .modal-content::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.7);
-        }
-
-        .zodiac-sign {
-            transition: all 0.3s ease;
-        }
-
-        .zodiac-sign:hover {
-            transform: scale(1.2);
-            color: #818cf8;
-        }
-
-        .profile-progress {
-            height: 8px;
-            border-radius: 4px;
-            background: rgba(30, 41, 59, 0.5);
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-            background: linear-gradient(90deg, #3730a3, #1e40af);
-            transition: width 0.5s ease;
-        }
-
-        .cosmic-card {
-            background: linear-gradient(135deg, #1e1b4b, #3730a3);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        }
-
-        .moon-card {
-            background: radial-gradient(circle at 30% 30%, #3730a3, #1e1b4b);
-            border: 1px solid rgba(99, 102, 241, 0.3);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(180deg, rgba(139, 92, 246, 0.8), rgba(59, 130, 246, 0.8));
         }
 
         .loading-shimmer {
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            background: linear-gradient(
+                90deg,
+                rgba(30, 27, 75, 0.4) 0%,
+                rgba(139, 92, 246, 0.1) 50%,
+                rgba(30, 27, 75, 0.4) 100%
+            );
             background-size: 200% 100%;
-            animation: shimmer 2s infinite;
+            animation: shimmer 2s ease-in-out infinite;
         }
 
         @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
 
-            100% {
-                background-position: 200% 0;
+        .cosmic-card {
+            background: linear-gradient(145deg, rgba(30, 27, 75, 0.6), rgba(88, 28, 135, 0.4));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .moon-card {
+            background: radial-gradient(circle at 30% 30%, rgba(88, 28, 135, 0.6), rgba(30, 27, 75, 0.8));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #c4b5fd, #a78bfa, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            color: #c4b5fd;
+            transform: translateX(-4px);
+        }
+
+        .back-button-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(30, 27, 75, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .back-button:hover .back-button-circle {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(30, 27, 75, 0.8);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+
+        .back-button-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(-8px);
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover .back-button-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #94a3b8;
+            transition: all 0.3s ease;
+            z-index: 10;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover {
+            color: #c4b5fd;
+        }
+
+        .theme-toggle-circle {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(30, 27, 75, 0.6);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover .theme-toggle-circle {
+            border-color: rgba(139, 92, 246, 0.5);
+            background: rgba(30, 27, 75, 0.8);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+            transform: rotate(180deg);
+        }
+
+        .theme-toggle-text {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateX(8px);
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover .theme-toggle-text {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .theme-icon {
+            transition: transform 0.3s ease;
+        }
+
+        /* Light Theme Styles - Gray/Black Scheme */
+        body.light-theme {
+            background: #f8fafc;
+            background-image: 
+                radial-gradient(at 20% 30%, rgba(30, 41, 59, 0.04) 0px, transparent 50%),
+                radial-gradient(at 80% 70%, rgba(15, 23, 42, 0.04) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(51, 65, 85, 0.03) 0px, transparent 50%);
+            color: #0f172a;
+        }
+
+        body.light-theme::before {
+            background: 
+                radial-gradient(circle at 50% 50%, rgba(30, 41, 59, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(51, 65, 85, 0.03) 0%, transparent 50%);
+        }
+
+        body.light-theme .mystical-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+            border: 1px solid rgba(30, 41, 59, 0.12);
+            box-shadow: 
+                0 8px 32px rgba(15, 23, 42, 0.08),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        body.light-theme .mystical-card:hover {
+            border-color: rgba(30, 41, 59, 0.2);
+            box-shadow: 
+                0 12px 48px rgba(15, 23, 42, 0.12),
+                0 0 40px rgba(30, 41, 59, 0.06);
+        }
+
+        body.light-theme .cosmic-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+            border: 1px solid rgba(30, 41, 59, 0.15);
+        }
+
+        body.light-theme .moon-card {
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
+            border: 1px solid rgba(30, 41, 59, 0.15);
+        }
+
+        body.light-theme .loading-shimmer {
+            background: linear-gradient(
+                90deg,
+                rgba(248, 250, 252, 0.6) 0%,
+                rgba(226, 232, 240, 0.4) 50%,
+                rgba(248, 250, 252, 0.6) 100%
+            );
+        }
+
+        body.light-theme .back-button-circle,
+        body.light-theme .theme-toggle-circle {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(30, 41, 59, 0.15);
+        }
+
+        body.light-theme .back-button:hover .back-button-circle,
+        body.light-theme .theme-toggle:hover .theme-toggle-circle {
+            background: rgba(255, 255, 255, 1);
+            border-color: rgba(30, 41, 59, 0.25);
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .back-button,
+        body.light-theme .theme-toggle {
+            color: #475569;
+        }
+
+        body.light-theme .back-button:hover,
+        body.light-theme .theme-toggle:hover {
+            color: #0f172a;
+        }
+
+        body.light-theme .constellation {
+            background: rgba(51, 65, 85, 0.5);
+            box-shadow: 0 0 3px rgba(51, 65, 85, 0.5);
+        }
+
+        body.light-theme #chart-tooltip {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+            border: 1px solid rgba(30, 41, 59, 0.2);
+            box-shadow: 
+                0 20px 60px rgba(15, 23, 42, 0.15),
+                0 0 0 1px rgba(30, 41, 59, 0.1);
+        }
+
+        body.light-theme #chart-tooltip .tooltip-header {
+            color: #1e293b;
+        }
+
+        body.light-theme #chart-tooltip .tooltip-body {
+            color: #334155;
+        }
+
+        body.light-theme #chart-tooltip .tooltip-label {
+            color: #64748b;
+        }
+
+        body.light-theme .modal-overlay {
+            background: rgba(248, 250, 252, 0.96);
+            backdrop-filter: blur(12px);
+        }
+
+        body.light-theme .modal-content::-webkit-scrollbar-track {
+            background: rgba(226, 232, 240, 0.5);
+        }
+
+        body.light-theme .modal-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(100, 116, 139, 0.4), rgba(71, 85, 105, 0.4));
+        }
+
+        body.light-theme .section-title {
+            background: linear-gradient(135deg, #1e293b, #334155, #0f172a);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        /* Light theme typography improvements */
+        body.light-theme {
+            font-weight: 400;
+        }
+
+        body.light-theme h1 {
+            font-weight: 700;
+            background: linear-gradient(135deg, #0f172a, #1e293b, #0f172a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+        }
+
+        body.light-theme h2 {
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        body.light-theme .section-title {
+            font-weight: 600;
+        }
+
+        body.light-theme p,
+        body.light-theme .text-slate-300,
+        body.light-theme .text-slate-400 {
+            color: #475569;
+            font-weight: 400;
+        }
+
+        body.light-theme .header-glow {
+            text-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+        }
+
+        body.light-theme .mystical-card,
+        body.light-theme .cosmic-card,
+        body.light-theme .moon-card {
+            color: #0f172a;
+        }
+
+        body.light-theme .mystical-btn {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(51, 65, 85, 0.9));
+            color: #ffffff;
+            font-weight: 500;
+            border: 1px solid rgba(30, 41, 59, 0.3);
+        }
+
+        body.light-theme .mystical-btn:hover {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+            box-shadow: 0 0 30px rgba(15, 23, 42, 0.3);
+        }
+
+        body.light-theme #chart-tooltip .tooltip-value {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        body.light-theme .floating-orb {
+            filter: drop-shadow(0 0 20px rgba(30, 41, 59, 0.2));
+        }
+
+        body.light-theme .floating-orb i {
+            color: #334155;
+        }
+
+        /* Better contrast for light theme text elements */
+        body.light-theme .back-button-text,
+        body.light-theme .theme-toggle-text {
+            color: #475569;
+            font-weight: 500;
+        }
+
+        body.light-theme .back-button:hover .back-button-text,
+        body.light-theme .theme-toggle:hover .theme-toggle-text {
+            color: #0f172a;
+        }
+
+        body.light-theme #chart-wheel.has-data::after {
+            color: rgba(71, 85, 105, 0.6);
+            font-weight: 500;
+        }
+
+        body.light-theme #chart-wheel {
+            filter: drop-shadow(0 0 15px rgba(30, 41, 59, 0.15));
+        }
+
+        body.light-theme #chart-wheel:hover {
+            filter: drop-shadow(0 0 25px rgba(30, 41, 59, 0.25));
+        }
+
+        /* Ensure icons are visible in light theme */
+        body.light-theme i {
+            color: #475569;
+        }
+
+        body.light-theme .section-title i {
+            color: #1e293b;
+        }
+
+        body.light-theme .planet-icon {
+            filter: drop-shadow(0 0 6px rgba(30, 41, 59, 0.2));
+        }
+
+        body.light-theme .cosmic-border::before {
+            background: linear-gradient(145deg, rgba(30, 41, 59, 0.2), rgba(51, 65, 85, 0.2), rgba(30, 41, 59, 0.2));
+            opacity: 0.6;
+        }
+
+        /* Enhanced particle effect */
+        .cosmic-particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: radial-gradient(circle, rgba(196, 181, 253, 0.8) 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            animation: particleFloat 8s ease-in-out infinite;
+        }
+
+        @keyframes particleFloat {
+            0% { 
+                transform: translate(0, 0) scale(0);
+                opacity: 0;
             }
+            10% { 
+                opacity: 1;
+            }
+            90% { 
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(var(--tx), var(--ty)) scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Glass morphism effect for cards */
+        .glass-card {
+            background: linear-gradient(
+                145deg,
+                rgba(255, 255, 255, 0.05) 0%,
+                rgba(255, 255, 255, 0.02) 100%
+            );
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         .planet-icon {
             font-size: 1.5rem;
             margin-bottom: 0.25rem;
+            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5));
         }
     </style>
 </head>
 
 <body class="min-h-screen p-8">
+    <!-- Header with Dynamic Moon Phase -->
+    <div class="text-center mb-16 relative">
+        <div class="absolute inset-0 overflow-hidden" id="constellation-container"></div>
 
-   <!-- Header with Dynamic Moon Phase -->
-<div class="text-center mb-12 relative">
-    <div class="absolute inset-0 overflow-hidden" id="constellation-container"></div>
-
-  
-
-    <!-- Main Header Content -->
-    <div class="relative z-10">
-        <div class="inline-flex items-center justify-center mb-4">
-            <div class="floating-orb">
-                <i class="fas fa-moon text-6xl text-indigo-400 drop-shadow-[0_0_15px_rgba(99,102,241,0.6)]"></i>
+        <!-- Main Header Content -->
+        <div class="relative z-10">
+            <div class="inline-flex items-center justify-center mb-6">
+                <div class="floating-orb">
+                    <i class="fas fa-moon text-7xl text-purple-300"></i>
+                </div>
             </div>
-        </div>
-        
-        <h1 class="text-5xl md:text-6xl font-bold mb-3 header-glow bg-gradient-to-r from-indigo-300 via-purple-300 to-indigo-400 
-                   bg-clip-text text-transparent">
-            Mystic Zone
-        </h1>
-        
-        <div class="flex items-center justify-center gap-3 mb-4">
-            <div class="h-px w-12 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
-            <p class="text-slate-400 text-lg font-light tracking-wide">
-                Harness your cosmic insights
-            </p>
-            <div class="h-px w-12 bg-gradient-to-r from-transparent via-indigo-500 to-transparent"></div>
+            
+            <h1 class="text-6xl md:text-7xl font-bold mb-4 header-glow bg-gradient-to-r from-purple-300 via-violet-300 to-purple-400 
+                       bg-clip-text text-transparent tracking-tight">
+                Mystic Zone
+            </h1>
+            
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="h-px w-16 bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
+                <p class="text-slate-300 text-lg font-light tracking-wider">
+                    Harness your cosmic insights
+                </p>
+                <div class="h-px w-16 bg-gradient-to-r from-transparent via-purple-400 to-transparent"></div>
+            </div>
+
+            <!-- Back to Home Button -->
+            <a href="{% url 'journal:journal_dashboard' %}" class="back-button">
+                <div class="back-button-circle">
+                    <i class="fas fa-arrow-left text-sm"></i>
+                </div>
+                <span class="back-button-text">Back to Home</span>
+            </a>
+
+            <!-- Theme Toggle Button -->
+            <button onclick="toggleTheme()" class="theme-toggle">
+                <div class="theme-toggle-circle">
+                    <i class="fas fa-sun theme-icon" id="theme-icon"></i>
+                </div>
+                <span class="theme-toggle-text" id="theme-text">Light Mode</span>
+            </button>
         </div>
 
-       <!-- Back to Home Button -->
-     <a href="{% url 'journal:journal_dashboard' %}"  
-   class="absolute top-0 left-0 group flex items-center gap-2 text-slate-400 hover:text-indigo-400 transition-all duration-300">
-    <div class="w-10 h-10 rounded-full bg-slate-800/50 border border-slate-700 hover:border-indigo-500 
-                flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-        <i class="fas fa-arrow-left text-sm"></i>
+        <div id="particles-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
     </div>
-    <span class="text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        Back to Home
-    </span>
-</a>
-    </div>
-
-    <div id="particles-container" class="absolute inset-0 overflow-hidden pointer-events-none"></div>
-</div>
  
-    <div class="max-w-7xl mx-auto space-y-8">
-
-        <!-- Cosmic Dashboard Section - Loaded via HTMX -->
+    <div class="max-w-7xl mx-auto space-y-12 relative z-10">
+        <!-- Cosmic Dashboard Section -->
         <section class="space-y-6">
-            <h2 class="text-2xl font-semibold mb-4 flex items-center">
-                <i class="fas fa-stars text-indigo-400 mr-3"></i>Cosmic Dashboard
+            <h2 class="section-title">
+                <i class="fas fa-stars text-purple-400"></i>
+                Cosmic Dashboard
             </h2>
 
-            <div id="cosmic-dashboard-container" hx-get="{% url 'deep_dive:moon_planets' %}" hx-trigger="load"
-                hx-swap="innerHTML">
+            <div id="cosmic-dashboard-container" 
+                 hx-get="{% url 'deep_dive:moon_planets' %}" 
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
                 <!-- Loading placeholder -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-1 cosmic-border">
-                        <div class="moon-card rounded-2xl p-8 text-center loading-shimmer" style="min-height: 400px;">
-                        </div>
+                        <div class="moon-card rounded-3xl p-8 text-center loading-shimmer" style="min-height: 400px;"></div>
                     </div>
                     <div class="lg:col-span-2 cosmic-border">
-                        <div class="mystical-card rounded-2xl p-6 loading-shimmer" style="min-height: 400px;"></div>
+                        <div class="mystical-card rounded-3xl p-6 loading-shimmer" style="min-height: 400px;"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Birth Chart Section - Loaded via HTMX -->
+        <!-- Birth Chart Section -->
         <section class="space-y-6">          
-
-            <div id="birth-chart-container" hx-get="{% url 'deep_dive:astro_chart_reading' %}" hx-trigger="load"
-                hx-swap="innerHTML">
+            <div id="birth-chart-container" 
+                 hx-get="{% url 'deep_dive:astro_chart_reading' %}" 
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
                 <!-- Loading placeholder -->
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="cosmic-border">
-                        <div class="mystical-card rounded-2xl p-8 loading-shimmer" style="min-height: 400px;"></div>
+                        <div class="mystical-card rounded-3xl p-8 loading-shimmer" style="min-height: 400px;"></div>
                     </div>
                     <div class="cosmic-border">
-                        <div class="mystical-card rounded-2xl p-6 loading-shimmer" style="min-height: 400px;"></div>
+                        <div class="mystical-card rounded-3xl p-6 loading-shimmer" style="min-height: 400px;"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-
-        <!-- Interactive Mystical Elements - Loaded via HTMX -->
+        <!-- Interactive Mystical Elements -->
         <section class="space-y-6">
-            <h2 class="text-2xl font-semibold mb-4 flex items-center">
-                <i class="fas fa-magic text-indigo-400 mr-3"></i>Interactive Mystical Elements
+            <h2 class="section-title">
+                <i class="fas fa-magic text-purple-400"></i>
+                Interactive Mystical Elements
             </h2>
 
-            <div id="mystical-elements-container" hx-get="{% url 'deep_dive:interactive_mystical' %}" hx-trigger="load"
-                hx-swap="innerHTML">
+            <div id="mystical-elements-container" 
+                 hx-get="{% url 'deep_dive:interactive_mystical' %}" 
+                 hx-trigger="load"
+                 hx-swap="innerHTML">
                 <!-- Loading placeholder -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="cosmic-border">
-                        <div class="cosmic-card rounded-2xl p-6 loading-shimmer" style="min-height: 300px;"></div>
+                        <div class="cosmic-card rounded-3xl p-6 loading-shimmer" style="min-height: 300px;"></div>
                     </div>
                     <div class="cosmic-border">
-                        <div class="mystical-card rounded-2xl p-6 loading-shimmer" style="min-height: 300px;"></div>
+                        <div class="mystical-card rounded-3xl p-6 loading-shimmer" style="min-height: 300px;"></div>
                     </div>
                 </div>
             </div>
         </section>
-
     </div>
 
     <!-- Unified Chart Modal -->
-<div class="modal-overlay" id="chart-modal">
-    <div class="modal-content cosmic-border w-11/12 max-w-7xl my-8">
-        <div class="mystical-card relative rounded-2xl p-8">
+    <div class="modal-overlay" id="chart-modal">
+        <div class="modal-content cosmic-border w-11/12 max-w-7xl my-8">
+            <div class="mystical-card relative rounded-3xl p-8">
+                <!-- Close Button -->
+                <button class="absolute top-6 right-6 text-slate-400 hover:text-purple-300 transition-colors z-50 
+                               w-10 h-10 rounded-full bg-slate-800/50 hover:bg-slate-700/50 
+                               flex items-center justify-center border border-purple-500/20 hover:border-purple-400/40"
+                        onclick="document.getElementById('chart-modal').classList.remove('active')">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
 
-            <!-- Close Button -->
-            <button class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors z-50"
-                    onclick="document.getElementById('chart-modal').classList.remove('active')">
-                <i class="fas fa-times text-2xl"></i>
-            </button>
-
-            <!-- Modal Body - Content loaded via HTMX -->
-            <div id="chart-modal-content">
-                <!-- Loading state -->
-                <div class="text-center py-12">
-                    <i class="fas fa-spinner fa-spin text-4xl text-indigo-400 mb-4"></i>
-                    <p class="text-slate-400">Loading chart data...</p>
+                <!-- Modal Body -->
+                <div id="chart-modal-content">
+                    <!-- Loading state -->
+                    <div class="text-center py-16">
+                        <i class="fas fa-spinner fa-spin text-5xl text-purple-400 mb-6"></i>
+                        <p class="text-slate-300 text-lg">Loading chart data...</p>
+                    </div>
                 </div>
             </div>
-
         </div>
     </div>
-</div>
 
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            const text = document.getElementById('theme-text');
+            
+            body.classList.toggle('light-theme');
+            
+            if (body.classList.contains('light-theme')) {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                text.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                text.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
 
-
-   
-
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('theme-icon').classList.remove('fa-sun');
+                document.getElementById('theme-icon').classList.add('fa-moon');
+                document.getElementById('theme-text').textContent = 'Dark Mode';
+            }
+        });
+    </script>
 </body>
-
 </html>

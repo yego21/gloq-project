@@ -922,13 +922,22 @@ def generate_ai_reading(request):
             print(f"Generating fresh {reading_type} for {request.user.username}")
             reading_data = generate_reading(natal_chart, reading_type, user)  # Pass user here!
 
+            print(f"Generated reading_data keys: {reading_data.keys()}")
+            print(f"transit_summaries exists: {'transit_summaries' in reading_data}")
+            print(f"transit_summaries value: {reading_data.get('transit_summaries')}")
+            print(f"transit_summaries type: {type(reading_data.get('transit_summaries'))}")
+
             # Update the specific reading type
             ai_reading.update_reading(reading_type, reading_data)
             ai_reading.refresh_from_db()
 
+
+
         # Get the updated reading data
         updated_reading = ai_reading.get_reading(reading_type)
-
+        print(f"After save - reading keys: {updated_reading.keys() if updated_reading else 'None'}")
+        print(f"After save - transit_summaries: {updated_reading.get('transit_summaries') if updated_reading else 'None'}")
+        # print(updated_reading.reading_text)
         # If this is a modal view request, return the updated modal
         if modal_view:
             return render(request, 'deep_dive/mystical/astrology/includes/reading_view_modal.html', {

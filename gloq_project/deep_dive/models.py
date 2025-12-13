@@ -41,6 +41,7 @@ class AIReading(models.Model):
         blank=True,
         help_text="When daily overview was generated"
     )
+    daily_overview_transit_summaries = models.JSONField(default=list, blank=True)
 
     # Transit Focus Reading
     transit_focus_text = models.TextField(
@@ -61,6 +62,7 @@ class AIReading(models.Model):
         blank=True,
         help_text="When transit focus was generated"
     )
+    transit_focus_transit_summaries = models.JSONField(default=list, blank=True)
 
     # Element Wisdom Reading
     element_wisdom_text = models.TextField(
@@ -81,6 +83,7 @@ class AIReading(models.Model):
         blank=True,
         help_text="When element wisdom was generated"
     )
+    element_wisdom_transit_summaries = models.JSONField(default=list, blank=True)
 
     # General metadata
     cosmic_weather = models.TextField(
@@ -115,6 +118,7 @@ class AIReading(models.Model):
                 'moon_phase': self.daily_overview_moon_phase,
                 'generated_at': self.daily_overview_generated_at,
                 'transits_analyzed': len(self.daily_overview_transits),
+                'transit_summaries': self.daily_overview_transit_summaries,
             }
         elif reading_type == 'transit_focus':
             return {
@@ -124,6 +128,7 @@ class AIReading(models.Model):
                 'moon_phase': self.transit_focus_moon_phase,
                 'generated_at': self.transit_focus_generated_at,
                 'transits_analyzed': len(self.transit_focus_transits),
+                'transit_summaries': self.transit_focus_transit_summaries,
             }
         elif reading_type == 'element_wisdom':
             return {
@@ -133,6 +138,7 @@ class AIReading(models.Model):
                 'moon_phase': self.element_wisdom_moon_phase,
                 'generated_at': self.element_wisdom_generated_at,
                 'transits_analyzed': len(self.element_wisdom_transits),
+                'transit_summaries': self.element_wisdom_transit_summaries,
             }
         return None
 
@@ -157,13 +163,6 @@ class AIReading(models.Model):
             available.append('element_wisdom')
         return available
 
-
-
-
-
-
-
-
     def update_reading(self, reading_type, reading_data):
         """Update specific reading by type."""
         from django.utils import timezone
@@ -171,16 +170,19 @@ class AIReading(models.Model):
         if reading_type == 'daily_overview':
             self.daily_overview_text = reading_data['reading_text']
             self.daily_overview_transits = reading_data['top_transits']
+            self.daily_overview_transit_summaries = reading_data.get('transit_summaries', [])  # ADD THIS
             self.daily_overview_moon_phase = reading_data['moon_phase']
             self.daily_overview_generated_at = timezone.now()
         elif reading_type == 'transit_focus':
             self.transit_focus_text = reading_data['reading_text']
             self.transit_focus_transits = reading_data['top_transits']
+            self.transit_focus_transit_summaries = reading_data.get('transit_summaries', [])  # ADD THIS
             self.transit_focus_moon_phase = reading_data['moon_phase']
             self.transit_focus_generated_at = timezone.now()
         elif reading_type == 'element_wisdom':
             self.element_wisdom_text = reading_data['reading_text']
             self.element_wisdom_transits = reading_data['top_transits']
+            self.element_wisdom_transit_summaries = reading_data.get('transit_summaries', [])  # ADD THIS
             self.element_wisdom_moon_phase = reading_data['moon_phase']
             self.element_wisdom_generated_at = timezone.now()
 
