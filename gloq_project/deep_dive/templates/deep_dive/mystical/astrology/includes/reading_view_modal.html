@@ -15,6 +15,12 @@
     .fa-chevron-down {
         transition: transform 0.2s ease;
     }
+    
+    .element-bar {
+        height: 8px;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
 </style>
 
 <div class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
@@ -107,129 +113,460 @@
             </div>
             {% endif %}
 
-            <!-- Transit Details (Individual Collapsibles) -->
-            {% if reading.transit_summaries %}
-            <div class="space-y-3">
-                <div class="flex items-center space-x-2 text-sm font-semibold text-slate-300 mb-2">
-                    <i class="fas fa-satellite-dish text-indigo-400"></i>
-                    <span>Today's Transit Details</span>
-                    <span class="text-xs font-normal text-slate-500">({{ reading.transit_summaries|length }} active)</span>
-                </div>
-                <p class="text-xs text-slate-400 mb-4">
-                    Notable planetary influences activating your natal chart today
-                </p>
+            <!-- ========================================== -->
+            <!-- DAILY OVERVIEW SPECIFIC DATA -->
+            <!-- ========================================== -->
+            {% if reading.reading_type == 'daily_overview' %}
                 
-                {% for transit in reading.transit_summaries %}
-                <details class="bg-slate-800/30 rounded-xl border border-slate-700/30 group hover:border-indigo-500/30 transition-all">
-                    <summary class="cursor-pointer p-4 select-none flex items-center justify-between">
-                        <div class="flex-1">
-                            <div class="text-sm font-medium text-slate-200 mb-1.5">
-                                <span class="text-indigo-300">Transit {{ transit.transit_planet }}</span>
-                                <span class="text-slate-500 text-xs mx-1">in</span>
-                                <span class="text-slate-400">{{ transit.transit_sign }}</span>
-                                <span class="text-purple-400 mx-2">{{ transit.aspect_type }}</span>
-                                <span class="text-slate-500 text-xs mr-1">natal</span>
-                                <span class="text-purple-300">{{ transit.natal_planet }}</span>
-                                <span class="text-slate-500 text-xs mx-1">in</span>
-                                <span class="text-slate-400">{{ transit.natal_sign }}</span>
+                <!-- Primary Transit Context (brief) -->
+                {% if reading.primary_transit %}
+                <div class="bg-slate-800/30 rounded-xl p-4 border border-yellow-500/30">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-star text-yellow-400 text-sm"></i>
+                        <h4 class="text-sm font-semibold text-yellow-300">Primary Transit Today</h4>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-slate-200">{{ reading.primary_transit.summary }}</span>
+                        <span class="px-2 py-1 rounded-full text-xs
+                            {% if reading.primary_transit.quality == 'harmonious' or reading.primary_transit.quality == 'flowing' %}
+                                bg-green-600/20 text-green-400 border border-green-500/30
+                            {% elif reading.primary_transit.quality == 'challenging' %}
+                                bg-amber-600/20 text-amber-400 border border-amber-500/30
+                            {% else %}
+                                bg-blue-600/20 text-blue-400 border border-blue-500/30
+                            {% endif %}">
+                            {{ reading.primary_transit.quality|title }}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Cosmic Weather Summary -->
+                {% if reading.cosmic_weather %}
+                <div class="bg-gradient-to-br from-indigo-900/30 to-purple-900/30 rounded-xl p-4 border border-indigo-500/30">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fas fa-cloud-sun text-indigo-400"></i>
+                        <h4 class="text-sm font-semibold text-indigo-300">Cosmic Weather</h4>
+                    </div>
+                    <p class="text-xs text-slate-300 italic">{{ reading.cosmic_weather }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Element & Modality Distribution -->
+                {% if reading.element_distribution %}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <!-- Element Distribution -->
+                    <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <i class="fas fa-fire text-orange-400 text-sm"></i>
+                            <h4 class="text-sm font-semibold text-slate-200">Elements in Sky</h4>
+                        </div>
+                        <div class="space-y-2">
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-red-400">🔥 Fire</span>
+                                    <span class="text-slate-400">{{ reading.element_distribution.Fire }}</span>
+                                </div>
+                                <div class="element-bar bg-slate-700/50" style="width: {{ reading.element_distribution.Fire|default:0|floatformat:0 }}0%;">
+                                    <div class="h-full bg-gradient-to-r from-red-500 to-orange-500 rounded-full" style="width: 100%;"></div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-2 text-xs">
-                                <span class="text-slate-500">Orb: {{ transit.orb }}°</span>
-                                <span class="text-slate-600">•</span>
-                                <span class="px-2 py-0.5 rounded-full
-                                    {% if transit.tone == 'harmonious' %}
-                                        bg-green-600/20 text-green-400 border border-green-500/30
-                                    {% elif transit.tone == 'challenging' %}
-                                        bg-amber-600/20 text-amber-400 border border-amber-500/30
-                                    {% else %}
-                                        bg-blue-600/20 text-blue-400 border border-blue-500/30
-                                    {% endif %}">
-                                    {{ transit.tone|title }}
-                                </span>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-green-400">🌍 Earth</span>
+                                    <span class="text-slate-400">{{ reading.element_distribution.Earth }}</span>
+                                </div>
+                                <div class="element-bar bg-slate-700/50" style="width: {{ reading.element_distribution.Earth|default:0|floatformat:0 }}0%;">
+                                    <div class="h-full bg-gradient-to-r from-green-600 to-emerald-500 rounded-full" style="width: 100%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-blue-400">💨 Air</span>
+                                    <span class="text-slate-400">{{ reading.element_distribution.Air }}</span>
+                                </div>
+                                <div class="element-bar bg-slate-700/50" style="width: {{ reading.element_distribution.Air|default:0|floatformat:0 }}0%;">
+                                    <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: 100%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span class="text-purple-400">💧 Water</span>
+                                    <span class="text-slate-400">{{ reading.element_distribution.Water }}</span>
+                                </div>
+                                <div class="element-bar bg-slate-700/50" style="width: {{ reading.element_distribution.Water|default:0|floatformat:0 }}0%;">
+                                    <div class="h-full bg-gradient-to-r from-blue-600 to-purple-500 rounded-full" style="width: 100%;"></div>
+                                </div>
                             </div>
                         </div>
-                        <i class="fas fa-chevron-down text-xs text-slate-400 ml-3 flex-shrink-0"></i>
-                    </summary>
+                    </div>
+
+                    <!-- Modality Distribution -->
+                    {% if reading.modality_distribution %}
+                    <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                        <div class="flex items-center space-x-2 mb-3">
+                            <i class="fas fa-chart-pie text-purple-400 text-sm"></i>
+                            <h4 class="text-sm font-semibold text-slate-200">Modalities</h4>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">⚡ Cardinal (Initiation)</span>
+                                <span class="text-sm font-semibold text-yellow-400">{{ reading.modality_distribution.Cardinal }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">🏔️ Fixed (Stability)</span>
+                                <span class="text-sm font-semibold text-blue-400">{{ reading.modality_distribution.Fixed }}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">🌊 Mutable (Adaptability)</span>
+                                <span class="text-sm font-semibold text-green-400">{{ reading.modality_distribution.Mutable }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Sign Concentrations -->
+                {% if reading.sign_concentrations %}
+                <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-layer-group text-indigo-400 text-sm"></i>
+                        <h4 class="text-sm font-semibold text-slate-200">Planetary Clusters</h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Multiple planets in the same sign amplify that energy</p>
+                    <div class="space-y-2">
+                        {% for cluster in reading.sign_concentrations %}
+                        <div class="bg-slate-700/30 rounded-lg p-3 border border-indigo-500/20">
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-sm font-medium text-indigo-300">{{ cluster.sign }}</span>
+                                <span class="text-xs text-slate-400">{{ cluster.count }} planets</span>
+                            </div>
+                            <div class="text-xs text-slate-300">
+                                {{ cluster.planets|join:", " }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Sky Conjunctions -->
+                {% if reading.sky_conjunctions %}
+                <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-link text-purple-400 text-sm"></i>
+                        <h4 class="text-sm font-semibold text-slate-200">Planetary Meetings</h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">Close alignments between planets in the sky</p>
+                    <div class="space-y-2">
+                        {% for conj in reading.sky_conjunctions %}
+                        <div class="bg-slate-700/30 rounded-lg p-3 border border-purple-500/20">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-slate-200">
+                                    {{ conj.planet1 }} ⚡ {{ conj.planet2 }}
+                                </span>
+                                <div class="text-right">
+                                    <span class="text-xs text-slate-400">{{ conj.sign }}</span>
+                                    <span class="text-xs text-purple-400 ml-2">({{ conj.orb }}°)</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+            {% endif %}
+
+            <!-- ========================================== -->
+            <!-- TRANSIT FOCUS SPECIFIC DATA -->
+            <!-- ========================================== -->
+            {% if reading.reading_type == 'transit_focus' %}
+                {% if reading.transit_summaries %}
+                <div class="space-y-3">
+                    <div class="flex items-center space-x-2 text-sm font-semibold text-slate-300 mb-2">
+                        <i class="fas fa-satellite-dish text-indigo-400"></i>
+                        <span>Today's Transit Details</span>
+                        <span class="text-xs font-normal text-slate-500">({{ reading.transit_summaries|length }} active)</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">
+                        Notable planetary influences activating your natal chart today
+                    </p>
                     
-                    <!-- Expanded Content -->
-                    <div class="px-4 pb-4 pt-2 border-t border-slate-700/30">
-                        <div class="space-y-2">
-                            <!-- What This Means -->
-                            <div class="bg-slate-700/30 rounded-lg p-3 border border-indigo-500/20">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-circle-info text-indigo-400 text-xs mt-0.5 flex-shrink-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-indigo-300 mb-1">Meaning</p>
-                                        <p class="text-xs text-slate-300 leading-relaxed">{{ transit.meaning }}</p>
-                                    </div>
+                    {% for transit in reading.transit_summaries %}
+                    <details class="bg-slate-800/30 rounded-xl border border-slate-700/30 group hover:border-indigo-500/30 transition-all">
+                        <summary class="cursor-pointer p-4 select-none flex items-center justify-between">
+                            <div class="flex-1">
+                                <div class="text-sm font-medium text-slate-200 mb-1.5">
+                                    <span class="text-indigo-300">Transit {{ transit.transit_planet }}</span>
+                                    <span class="text-slate-500 text-xs mx-1">in</span>
+                                    <span class="text-slate-400">{{ transit.transit_sign }}</span>
+                                    <span class="text-purple-400 mx-2">{{ transit.aspect_type }}</span>
+                                    <span class="text-slate-500 text-xs mr-1">natal</span>
+                                    <span class="text-purple-300">{{ transit.natal_planet }}</span>
+                                    <span class="text-slate-500 text-xs mx-1">in</span>
+                                    <span class="text-slate-400">{{ transit.natal_sign }}</span>
+                                </div>
+                                {% if transit.summary %}
+                                <div class="text-xs text-slate-400 italic mb-1">{{ transit.summary }}</div>
+                                {% endif %}
+                                <div class="flex items-center gap-2 text-xs">
+                                    <span class="text-slate-500">Orb: {{ transit.orb }}°</span>
+                                    <span class="text-slate-600">•</span>
+                                    <span class="px-2 py-0.5 rounded-full
+                                        {% if transit.tone == 'harmonious' %}
+                                            bg-green-600/20 text-green-400 border border-green-500/30
+                                        {% elif transit.tone == 'challenging' %}
+                                            bg-amber-600/20 text-amber-400 border border-amber-500/30
+                                        {% else %}
+                                            bg-blue-600/20 text-blue-400 border border-blue-500/30
+                                        {% endif %}">
+                                        {{ transit.tone|title }}
+                                    </span>
                                 </div>
                             </div>
-                            
-                            <!-- Life Areas -->
-                            <div class="bg-slate-700/30 rounded-lg p-3 border border-purple-500/20">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-compass text-purple-400 text-xs mt-0.5 flex-shrink-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-purple-300 mb-1">Life Areas</p>
-                                        <p class="text-xs text-slate-300 leading-relaxed">{{ transit.life_areas }}</p>
+                            <i class="fas fa-chevron-down text-xs text-slate-400 ml-3 flex-shrink-0"></i>
+                        </summary>
+                        
+                        <!-- Expanded Content -->
+                        <div class="px-4 pb-4 pt-2 border-t border-slate-700/30">
+                            <div class="space-y-2">
+                                <!-- What This Means -->
+                                <div class="bg-slate-700/30 rounded-lg p-3 border border-indigo-500/20">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-circle-info text-indigo-400 text-xs mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-indigo-300 mb-1">Meaning</p>
+                                            <p class="text-xs text-slate-300 leading-relaxed">{{ transit.meaning }}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Themes to Watch -->
-                            <div class="bg-slate-700/30 rounded-lg p-3 border border-yellow-500/20">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-lightbulb text-yellow-400 text-xs mt-0.5 flex-shrink-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-yellow-300 mb-1">What to Watch For</p>
-                                        <p class="text-xs text-slate-300 leading-relaxed">{{ transit.themes }}</p>
+                                
+                                <!-- Life Areas -->
+                                <div class="bg-slate-700/30 rounded-lg p-3 border border-purple-500/20">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-compass text-purple-400 text-xs mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-purple-300 mb-1">Life Areas</p>
+                                            <p class="text-xs text-slate-300 leading-relaxed">{{ transit.life_areas }}</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            {% if transit.shadow_aspect %}
-                            <!-- Shadow Aspect -->
-                            <div class="bg-slate-700/30 rounded-lg p-3 border border-orange-500/20">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-exclamation-triangle text-orange-400 text-xs mt-0.5 flex-shrink-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-orange-300 mb-1">Shadow to Watch</p>
-                                        <p class="text-xs text-slate-300 leading-relaxed">{{ transit.shadow_aspect }}</p>
+                                
+                                <!-- Themes to Watch -->
+                                <div class="bg-slate-700/30 rounded-lg p-3 border border-yellow-500/20">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-lightbulb text-yellow-400 text-xs mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-yellow-300 mb-1">What to Watch For</p>
+                                            <p class="text-xs text-slate-300 leading-relaxed">{{ transit.themes }}</p>
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                {% if transit.shadow_aspect %}
+                                <!-- Shadow Aspect -->
+                                <div class="bg-slate-700/30 rounded-lg p-3 border border-orange-500/20">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-exclamation-triangle text-orange-400 text-xs mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-orange-300 mb-1">Shadow to Watch</p>
+                                            <p class="text-xs text-slate-300 leading-relaxed">{{ transit.shadow_aspect }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if transit.grounded_recommendation %}
+                                <!-- Grounded Recommendation -->
+                                <div class="bg-slate-700/30 rounded-lg p-3 border border-emerald-500/20">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-hand-holding-heart text-emerald-400 text-xs mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-emerald-300 mb-1">Practical Guidance</p>
+                                            <p class="text-xs text-slate-300 leading-relaxed">{{ transit.grounded_recommendation }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if transit.disclaimer %}
+                                <!-- Disclaimer -->
+                                <div class="bg-slate-700/30 rounded-lg p-3 border border-slate-600/20">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-info-circle text-slate-400 text-xs mt-0.5 flex-shrink-0"></i>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-xs font-semibold text-slate-400 mb-1">Keep in Mind</p>
+                                            <p class="text-xs text-slate-400 leading-relaxed italic">{{ transit.disclaimer }}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
+                        </div>
+                    </details>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- ========================================== -->
+            <!-- ELEMENT WISDOM SPECIFIC DATA -->
+            <!-- ========================================== -->
+            {% if reading.reading_type == 'element_wisdom' %}
+                
+                {% if reading.current_elements %}
+                <!-- Current Sky Elements -->
+                <div class="bg-gradient-to-br from-blue-900/30 to-purple-900/30 rounded-xl p-5 border border-blue-500/30">
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-globe text-blue-400"></i>
+                        <h4 class="text-sm font-semibold text-blue-300">Current Elemental Sky</h4>
+                    </div>
+                    
+                    <!-- Element Distribution Bars -->
+                    <div class="space-y-3 mb-4">
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-red-400 font-medium">🔥 Fire</span>
+                                <span class="text-slate-300">{{ reading.current_elements.distribution.Fire }} planets</span>
+                            </div>
+                            <div class="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all duration-500" 
+                                     style="width: {{ reading.current_elements.distribution.Fire|default:0|floatformat:0 }}0%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-green-400 font-medium">🌍 Earth</span>
+                                <span class="text-slate-300">{{ reading.current_elements.distribution.Earth }} planets</span>
+                            </div>
+                            <div class="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-green-600 to-emerald-500 transition-all duration-500" 
+                                     style="width: {{ reading.current_elements.distribution.Earth|default:0|floatformat:0 }}0%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-blue-400 font-medium">💨 Air</span>
+                                <span class="text-slate-300">{{ reading.current_elements.distribution.Air }} planets</span>
+                            </div>
+                            <div class="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500" 
+                                     style="width: {{ reading.current_elements.distribution.Air|default:0|floatformat:0 }}0%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs mb-1.5">
+                                <span class="text-purple-400 font-medium">💧 Water</span>
+                                <span class="text-slate-300">{{ reading.current_elements.distribution.Water }} planets</span>
+                            </div>
+                            <div class="h-3 bg-slate-700/50 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-blue-600 to-purple-500 transition-all duration-500" 
+                                     style="width: {{ reading.current_elements.distribution.Water|default:0|floatformat:0 }}0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Balance Assessment -->
+                    {% if reading.current_elements.balance %}
+                    <div class="bg-slate-800/50 rounded-lg p-3 border border-slate-700/30 mt-3">
+                        <div class="text-xs">
+                            <span class="text-slate-400">Elemental Balance:</span>
+                            <span class="ml-2 font-semibold
+                                {% if reading.current_elements.balance.balance == 'balanced' %}
+                                    text-green-400
+                                {% else %}
+                                    text-amber-400
+                                {% endif %}">
+                                {{ reading.current_elements.balance.balance|title }}
+                            </span>
+                            {% if reading.current_elements.balance.dominant %}
+                            <span class="text-slate-500 mx-1">•</span>
+                            <span class="text-slate-300">Dominant: {{ reading.current_elements.balance.dominant }}</span>
                             {% endif %}
-                            
-                            {% if transit.grounded_recommendation %}
-                            <!-- Grounded Recommendation -->
-                            <div class="bg-slate-700/30 rounded-lg p-3 border border-emerald-500/20">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-hand-holding-heart text-emerald-400 text-xs mt-0.5 flex-shrink-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-emerald-300 mb-1">Practical Guidance</p>
-                                        <p class="text-xs text-slate-300 leading-relaxed">{{ transit.grounded_recommendation }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                            {% endif %}
-                            
-                            {% if transit.disclaimer %}
-                            <!-- Disclaimer -->
-                            <div class="bg-slate-700/30 rounded-lg p-3 border border-slate-600/20">
-                                <div class="flex items-start space-x-2">
-                                    <i class="fas fa-info-circle text-slate-400 text-xs mt-0.5 flex-shrink-0"></i>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-xs font-semibold text-slate-400 mb-1">Keep in Mind</p>
-                                        <p class="text-xs text-slate-400 leading-relaxed italic">{{ transit.disclaimer }}</p>
-                                    </div>
-                                </div>
-                            </div>
+                            {% if reading.current_elements.balance.lacking %}
+                            <span class="text-slate-500 mx-1">•</span>
+                            <span class="text-slate-300">Lacking: {{ reading.current_elements.balance.lacking }}</span>
                             {% endif %}
                         </div>
                     </div>
-                </details>
-                {% endfor %}
-            </div>
+                    {% endif %}
+                </div>
+
+                <!-- Planets by Element -->
+                {% if reading.current_elements.planets_by_element %}
+                <div class="grid grid-cols-2 gap-3">
+                    {% for element, planets in reading.current_elements.planets_by_element.items %}
+                    <div class="bg-slate-800/30 rounded-xl p-3 border border-slate-700/30">
+                        <h5 class="text-xs font-semibold mb-2
+                            {% if element == 'Fire' %}text-red-400
+                            {% elif element == 'Earth' %}text-green-400
+                            {% elif element == 'Air' %}text-blue-400
+                            {% elif element == 'Water' %}text-purple-400
+                            {% endif %}">
+                            {% if element == 'Fire' %}🔥{% elif element == 'Earth' %}🌍{% elif element == 'Air' %}💨{% elif element == 'Water' %}💧{% endif %}
+                            {{ element }}
+                        </h5>
+                        <div class="space-y-1">
+                            {% for planet in planets %}
+                            <div class="text-xs text-slate-300 flex items-center justify-between">
+                                <span>{{ planet.symbol }} {{ planet.name }}</span>
+                                <span class="text-slate-500">{{ planet.sign }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Natal vs Current Comparison -->
+                {% if reading.elemental_weather_comparison %}
+                <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-balance-scale text-indigo-400"></i>
+                        <h4 class="text-sm font-semibold text-slate-200">Your Elements vs Sky Elements</h4>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-3">How today's elemental weather compares to your natal chart</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        {% for element, status in reading.elemental_weather_comparison.items %}
+                        <div class="bg-slate-700/30 rounded-lg p-2 border
+                            {% if status == 'amplified' %}border-green-500/30
+                            {% elif status == 'diminished' %}border-red-500/30
+                            {% else %}border-slate-600/30{% endif %}">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-slate-300">{{ element }}</span>
+                                <span class="text-xs font-semibold
+                                    {% if status == 'amplified' %}text-green-400
+                                    {% elif status == 'diminished' %}text-red-400
+                                    {% else %}text-slate-400{% endif %}">
+                                    {% if status == 'amplified' %}↑ Amplified
+                                    {% elif status == 'diminished' %}↓ Diminished
+                                    {% else %}→ Stable{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Natal Element Summary -->
+                {% if reading.natal_elements %}
+                <div class="bg-slate-800/30 rounded-xl p-4 border border-slate-700/30">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-user text-purple-400"></i>
+                        <h4 class="text-sm font-semibold text-slate-200">Your Natal Elements</h4>
+                    </div>
+                    <div class="flex items-center justify-between text-xs">
+                        <span class="text-slate-400">Dominant Element:</span>
+                        <span class="font-semibold text-purple-300">{{ reading.natal_elements.dominant }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% endif %}
             {% endif %}
 
         </div>

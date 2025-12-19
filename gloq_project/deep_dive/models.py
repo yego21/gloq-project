@@ -164,29 +164,34 @@ class AIReading(models.Model):
         return available
 
     def update_reading(self, reading_type, reading_data):
-        """Update specific reading by type."""
-        from django.utils import timezone
+        """Update reading data for a specific type."""
 
         if reading_type == 'daily_overview':
-            self.daily_overview_text = reading_data['reading_text']
-            self.daily_overview_transits = reading_data['top_transits']
-            self.daily_overview_transit_summaries = reading_data.get('transit_summaries', [])  # ADD THIS
-            self.daily_overview_moon_phase = reading_data['moon_phase']
-            self.daily_overview_generated_at = timezone.now()
-        elif reading_type == 'transit_focus':
-            self.transit_focus_text = reading_data['reading_text']
-            self.transit_focus_transits = reading_data['top_transits']
-            self.transit_focus_transit_summaries = reading_data.get('transit_summaries', [])  # ADD THIS
-            self.transit_focus_moon_phase = reading_data['moon_phase']
-            self.transit_focus_generated_at = timezone.now()
-        elif reading_type == 'element_wisdom':
-            self.element_wisdom_text = reading_data['reading_text']
-            self.element_wisdom_transits = reading_data['top_transits']
-            self.element_wisdom_transit_summaries = reading_data.get('transit_summaries', [])  # ADD THIS
-            self.element_wisdom_moon_phase = reading_data['moon_phase']
-            self.element_wisdom_generated_at = timezone.now()
+            self.daily_overview_text = reading_data.get('reading_text', '')
+            self.daily_overview_transits = reading_data.get('top_transits', [])
+            self.daily_overview_generated_at = reading_data.get('generated_at')
 
-        self.cosmic_weather = reading_data.get('cosmic_weather', '')
+            # New cosmic context fields (add these to your model if needed)
+            self.daily_overview_moon_phase = reading_data.get('moon_phase', {})
+            self.daily_overview_element_dist = reading_data.get('element_distribution', {})
+            self.daily_overview_cosmic_weather = reading_data.get('cosmic_weather', '')
+
+        elif reading_type == 'transit_focus':
+            self.transit_focus_text = reading_data.get('reading_text', '')
+            self.transit_focus_transits = reading_data.get('top_transits', [])
+            self.transit_focus_summaries = reading_data.get('transit_summaries', [])  # Full interpretations
+            self.transit_focus_generated_at = reading_data.get('generated_at')
+
+        elif reading_type == 'element_wisdom':
+            self.element_wisdom_text = reading_data.get('reading_text', '')
+            self.element_wisdom_transits = reading_data.get('top_transits', [])  # Will be empty []
+            self.element_wisdom_generated_at = reading_data.get('generated_at')
+
+            # New elemental analysis fields (add these to your model)
+            self.element_wisdom_current_elements = reading_data.get('current_elements', {})
+            self.element_wisdom_natal_elements = reading_data.get('natal_elements', {})
+            self.element_wisdom_comparison = reading_data.get('elemental_weather_comparison', {})
+
         self.save()
 
     def is_today(self, reading_type):

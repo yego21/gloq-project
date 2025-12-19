@@ -1,12 +1,13 @@
 # deep_dive/services/ai_chart_reading_svc.py
 """
 AI-powered astrological reading service.
-Enhanced with psychologically nuanced transit interpretations and human-sounding guidance.
+Enhanced with psychologically nuanced transit interpretations and type-specific data returns.
 """
 
 from datetime import datetime, date
 from typing import Dict, List, Optional
 import json
+from collections import Counter
 from django.core.cache import cache
 from django.conf import settings
 from groq import Groq
@@ -100,15 +101,133 @@ class TransitCalculator:
         return transits
 
 
+class CosmicDataAnalyzer:
+    """Helper class to analyze astronomical data and extract meaningful patterns."""
+
+    @staticmethod
+    def get_element_distribution(planetary_positions: List[Dict]) -> Dict[str, int]:
+        """Count planets in each element."""
+        elements = Counter([p['element'] for p in planetary_positions if 'element' in p])
+        return {
+            'Fire': elements.get('Fire', 0),
+            'Earth': elements.get('Earth', 0),
+            'Air': elements.get('Air', 0),
+            'Water': elements.get('Water', 0)
+        }
+
+    @staticmethod
+    def get_modality_distribution(planetary_positions: List[Dict]) -> Dict[str, int]:
+        """Count planets in each modality (Cardinal, Fixed, Mutable)."""
+        modality_map = {
+            # Cardinal signs
+            'Aries': 'Cardinal', 'Cancer': 'Cardinal', 'Libra': 'Cardinal', 'Capricorn': 'Cardinal',
+            # Fixed signs
+            'Taurus': 'Fixed', 'Leo': 'Fixed', 'Scorpio': 'Fixed', 'Aquarius': 'Fixed',
+            # Mutable signs
+            'Gemini': 'Mutable', 'Virgo': 'Mutable', 'Sagittarius': 'Mutable', 'Pisces': 'Mutable'
+        }
+
+        modalities = Counter([
+            modality_map.get(p['sign'], 'Unknown')
+            for p in planetary_positions
+            if 'sign' in p
+        ])
+
+        return {
+            'Cardinal': modalities.get('Cardinal', 0),
+            'Fixed': modalities.get('Fixed', 0),
+            'Mutable': modalities.get('Mutable', 0)
+        }
+
+    @staticmethod
+    def get_sign_distribution(planetary_positions: List[Dict]) -> Dict[str, List[str]]:
+        """Group planets by zodiac sign."""
+        sign_groups = {}
+        for planet in planetary_positions:
+            sign = planet.get('sign')
+            if sign:
+                if sign not in sign_groups:
+                    sign_groups[sign] = []
+                sign_groups[sign].append(planet['name'])
+        return sign_groups
+
+    @staticmethod
+    def find_conjunctions(planetary_positions: List[Dict], orb: float = 8.0) -> List[Dict]:
+        """Find close conjunctions between current planets in the sky."""
+        conjunctions = []
+
+        for i, planet1 in enumerate(planetary_positions):
+            for planet2 in planetary_positions[i + 1:]:
+                lon1 = planet1['longitude']
+                lon2 = planet2['longitude']
+
+                angle_diff = abs(lon1 - lon2)
+                if angle_diff > 180:
+                    angle_diff = 360 - angle_diff
+
+                if angle_diff <= orb:
+                    conjunctions.append({
+                        'planet1': planet1['name'],
+                        'planet2': planet2['name'],
+                        'orb': round(angle_diff, 2),
+                        'sign': planet1['sign']
+                    })
+
+        return conjunctions
+
+    @staticmethod
+    def calculate_element_balance_score(element_dist: Dict[str, int]) -> Dict[str, any]:
+        """Calculate elemental balance metrics."""
+        total = sum(element_dist.values())
+        if total == 0:
+            return {'balance': 'neutral', 'dominant': None, 'lacking': None}
+
+        percentages = {elem: (count / total) * 100 for elem, count in element_dist.items()}
+
+        dominant = max(percentages, key=percentages.get)
+        lacking = min(percentages, key=percentages.get) if percentages[
+                                                               min(percentages, key=percentages.get)] < 15 else None
+
+        # Calculate balance (closer to 25% each = more balanced)
+        variance = sum([(pct - 25) ** 2 for pct in percentages.values()]) / 4
+        balance = 'balanced' if variance < 100 else 'imbalanced'
+
+        return {
+            'balance': balance,
+            'dominant': dominant if percentages[dominant] > 35 else None,
+            'lacking': lacking,
+            'percentages': {k: round(v, 1) for k, v in percentages.items()}
+        }
+
+    @staticmethod
+    def compare_elemental_weather(natal_elements: Dict[str, int], current_elements: Dict[str, int]) -> Dict[str, str]:
+        """Compare natal element distribution to current sky."""
+        comparisons = {}
+
+        for element in ['Fire', 'Earth', 'Air', 'Water']:
+            natal_count = natal_elements.get(element, 0)
+            current_count = current_elements.get(element, 0)
+
+            if current_count > natal_count:
+                comparisons[element] = 'amplified'
+            elif current_count < natal_count:
+                comparisons[element] = 'diminished'
+            else:
+                comparisons[element] = 'stable'
+
+        return comparisons
+
+
 class AIReadingService:
     """
     Generates AI-powered astrological readings using Groq.
-    Enhanced with psychologically nuanced transit interpretations.
+    Enhanced with psychologically nuanced transit interpretations and type-specific data.
     """
 
     def __init__(self):
         self.groq_client = Groq(api_key=settings.GROQ_API_KEY)
         self.astro_service = AstronomicalService()
+        self.cosmic_analyzer = CosmicDataAnalyzer()
 
     def generate_daily_reading(
             self,
@@ -118,14 +237,15 @@ class AIReadingService:
     ) -> Dict:
         """
         Generate an AI reading based on natal chart and current transits.
+        Returns type-specific data optimized for each reading context.
 
         Args:
             natal_chart: User's natal chart data
-            reading_type: Type of reading (daily_overview, transit_focus, element_focus)
+            reading_type: Type of reading (daily_overview, transit_focus, element_wisdom)
             user: User object to fetch journal entries
 
         Returns:
-            Dict with reading content and metadata
+            Dict with reading content and TYPE-SPECIFIC metadata
         """
         # Get current planetary positions
         current_positions = self.astro_service.get_daily_planetary_summary()
@@ -179,52 +299,219 @@ class AIReadingService:
 
             reading_text = response.choices[0].message.content.strip()
 
-            # Generate enhanced transit summaries for display
-            transit_summaries = []
-            for transit in transits[:3]:  # Top 3 transits
-                interpretation = self._get_transit_interpretation_context(transit)
-                summary = {
-                    'transit_planet': transit['transit_planet'],
-                    'transit_sign': transit['transit_sign'],
-                    'aspect_type': transit['aspect_type'],
-                    'natal_planet': transit['natal_planet'],
-                    'natal_sign': transit['natal_sign'],
-                    'orb': float(transit['orb']),
-                    'quality': transit['quality'],
-                    'summary': interpretation.get('summary', ''),
-                    'meaning': interpretation['meaning'],
-                    'life_areas': interpretation['life_areas'],
-                    'themes': interpretation['themes'],
-                    'shadow_aspect': interpretation.get('shadow_aspect', ''),
-                    'grounded_recommendation': interpretation.get('grounded_recommendation', ''),
-                    'tone': interpretation['tone'],
-                    'disclaimer': interpretation.get('disclaimer', '')
-                }
-                transit_summaries.append(summary)
-
-            return {
-                'reading_type': reading_type,
-                'reading_text': reading_text,
-                'generated_at': datetime.now().isoformat(),
-                'transits_analyzed': len(transits),
-                'top_transits': [
-                    {
-                        **t,
-                        'angle': float(t['angle']),
-                        'orb': float(t['orb']),
-                        'strength': float(t['strength'])
-                    }
-                    for t in transits[:3]
-                ],
-                'transit_summaries': transit_summaries,
-                'moon_phase': current_moon['phase'],
-                'cosmic_weather': current_positions.get('cosmic_weather', ''),
-                'journal_included': journal_context is not None,
-            }
+            # Build TYPE-SPECIFIC response data
+            if reading_type == 'daily_overview':
+                return self._build_daily_overview_response(
+                    reading_text, transits, current_positions, current_moon, journal_context
+                )
+            elif reading_type == 'transit_focus':
+                return self._build_transit_focus_response(
+                    reading_text, transits, current_moon, journal_context
+                )
+            elif reading_type == 'element_wisdom':
+                return self._build_element_wisdom_response(
+                    reading_text, natal_chart, current_positions, current_moon, journal_context
+                )
 
         except Exception as e:
             print(f"AI reading generation error: {e}")
             return self._fallback_reading(reading_type)
+
+    def _build_daily_overview_response(
+            self,
+            reading_text: str,
+            transits: List[Dict],
+            current_positions: Dict,
+            current_moon: Dict,
+            journal_context: Optional[str]
+    ) -> Dict:
+        """Build response data optimized for Daily Overview - cosmic context, not detailed transits."""
+
+        planetary_positions = current_positions['planetary_positions']
+
+        # Get element and modality distributions
+        element_dist = self.cosmic_analyzer.get_element_distribution(planetary_positions)
+        modality_dist = self.cosmic_analyzer.get_modality_distribution(planetary_positions)
+        sign_groups = self.cosmic_analyzer.get_sign_distribution(planetary_positions)
+        conjunctions = self.cosmic_analyzer.find_conjunctions(planetary_positions)
+
+        # Get just the TOP transit as brief context (not full interpretation)
+        top_transit_context = None
+        if transits:
+            top = transits[0]
+            top_transit_context = {
+                'summary': f"{top['transit_planet']} {top['aspect_type']} {top['natal_planet']}",
+                'quality': top['quality'],
+                'orb': float(top['orb'])
+            }
+
+        return {
+            'reading_type': 'daily_overview',
+            'reading_text': reading_text,
+            'generated_at': datetime.now().isoformat(),
+
+            # Brief transit context (just 1)
+            'primary_transit': top_transit_context,
+            'total_transits': len(transits),
+
+            # Cosmic weather data
+            'moon_phase': {
+                'phase': current_moon['phase'],
+                'emoji': current_moon['emoji'],
+                'illumination': current_moon['illumination'],
+                'description': current_moon['description']
+            },
+            'element_distribution': element_dist,
+            'modality_distribution': modality_dist,
+            'dominant_element': current_positions.get('dominant_element'),
+            'cosmic_weather': current_positions.get('cosmic_weather'),
+
+            # Planetary patterns
+            'sign_concentrations': [
+                {'sign': sign, 'planets': planets, 'count': len(planets)}
+                for sign, planets in sign_groups.items()
+                if len(planets) > 1  # Only show signs with 2+ planets
+            ],
+            'sky_conjunctions': conjunctions[:3],  # Top 3 conjunctions in the sky
+
+            'journal_included': journal_context is not None,
+        }
+
+    def _build_transit_focus_response(
+            self,
+            reading_text: str,
+            transits: List[Dict],
+            current_moon: Dict,
+            journal_context: Optional[str]
+    ) -> Dict:
+        """Build response data optimized for Transit Focus - detailed transit analysis."""
+
+        # Generate FULL transit summaries for top 3 transits
+        transit_summaries = []
+        for transit in transits[:3]:
+            interpretation = self._get_transit_interpretation_context(transit)
+            summary = {
+                'transit_planet': transit['transit_planet'],
+                'transit_sign': transit['transit_sign'],
+                'aspect_type': transit['aspect_type'],
+                'natal_planet': transit['natal_planet'],
+                'natal_sign': transit['natal_sign'],
+                'orb': float(transit['orb']),
+                'quality': transit['quality'],
+                'strength': float(transit['strength']),
+                'summary': interpretation.get('summary', ''),
+                'meaning': interpretation['meaning'],
+                'life_areas': interpretation['life_areas'],
+                'themes': interpretation['themes'],
+                'shadow_aspect': interpretation.get('shadow_aspect', ''),
+                'grounded_recommendation': interpretation.get('grounded_recommendation', ''),
+                'tone': interpretation['tone'],
+                'disclaimer': interpretation.get('disclaimer', '')
+            }
+            transit_summaries.append(summary)
+
+        return {
+            'reading_type': 'transit_focus',
+            'reading_text': reading_text,
+            'generated_at': datetime.now().isoformat(),
+
+            # Full transit details
+            'transits_analyzed': len(transits),
+            'top_transits': [
+                {
+                    **t,
+                    'angle': float(t['angle']),
+                    'orb': float(t['orb']),
+                    'strength': float(t['strength'])
+                }
+                for t in transits[:3]
+            ],
+            'transit_summaries': transit_summaries,  # FULL interpretations
+
+            # Minimal cosmic context
+            'moon_phase': current_moon['phase'],
+
+            'journal_included': journal_context is not None,
+        }
+
+    def _build_element_wisdom_response(
+            self,
+            reading_text: str,
+            natal_chart: Dict,
+            current_positions: Dict,
+            current_moon: Dict,
+            journal_context: Optional[str]
+    ) -> Dict:
+        """Build response data optimized for Element Wisdom - NO transits, pure elemental analysis."""
+
+        planetary_positions = current_positions['planetary_positions']
+
+        # Current sky element distribution
+        current_element_dist = self.cosmic_analyzer.get_element_distribution(planetary_positions)
+        current_modality_dist = self.cosmic_analyzer.get_modality_distribution(planetary_positions)
+
+        # Natal element distribution (from natal chart planets)
+        natal_element_dist = self.cosmic_analyzer.get_element_distribution(natal_chart['planets'])
+        natal_modality_dist = self.cosmic_analyzer.get_modality_distribution(natal_chart['planets'])
+
+        # Element balance analysis
+        current_balance = self.cosmic_analyzer.calculate_element_balance_score(current_element_dist)
+        natal_balance = self.cosmic_analyzer.calculate_element_balance_score(natal_element_dist)
+
+        # Compare natal vs current
+        element_comparison = self.cosmic_analyzer.compare_elemental_weather(
+            natal_element_dist,
+            current_element_dist
+        )
+
+        # Planetary breakdown by element
+        planets_by_element = {}
+        for planet in planetary_positions:
+            element = planet.get('element')
+            if element:
+                if element not in planets_by_element:
+                    planets_by_element[element] = []
+                planets_by_element[element].append({
+                    'name': planet['name'],
+                    'sign': planet['sign'],
+                    'symbol': planet.get('symbol', '')
+                })
+
+        return {
+            'reading_type': 'element_wisdom',
+            'reading_text': reading_text,
+            'generated_at': datetime.now().isoformat(),
+
+            # NO TRANSITS - pure elemental focus
+
+            # Current sky elements
+            'current_elements': {
+                'distribution': current_element_dist,
+                'modality': current_modality_dist,
+                'dominant': current_positions.get('dominant_element'),
+                'balance': current_balance,
+                'planets_by_element': planets_by_element
+            },
+
+            # Natal elements
+            'natal_elements': {
+                'distribution': natal_element_dist,
+                'modality': natal_modality_dist,
+                'dominant': natal_chart.get('dominant_element'),
+                'balance': natal_balance
+            },
+
+            # Comparison
+            'elemental_weather_comparison': element_comparison,
+
+            # Moon context (elements are lunar-connected)
+            'moon_phase': {
+                'phase': current_moon['phase'],
+                'emoji': current_moon['emoji']
+            },
+
+            'journal_included': journal_context is not None,
+        }
 
     def _get_todays_journal_context(self, user) -> Optional[str]:
         """
@@ -289,26 +576,26 @@ class AIReadingService:
         # Get specific transit key
         key = f"{transit_planet}_{aspect}_{natal_planet}"
 
-        # COMPREHENSIVE TRANSIT DICTIONARY
+        # COMPREHENSIVE TRANSIT DICTIONARY - All 40+ transits with summaries
         specific_transits = {
-            # MARS TRANSITS - Action and Drive
+            # MARS TRANSITS
             'Mars_Opposition_Saturn': {
                 'summary': 'Drive meets resistance—patience under pressure',
                 'meaning': 'The tension between your drive and life\'s limitations',
-                'life_areas': 'Career ambitions, authority dynamics, long-term structures, disciplined action',
-                'themes': 'A reality check moment where your willpower meets external constraints. This isn\'t about failure but strategic patience—like pushing against a door that will open at the right time, not when you demand it.',
-                'shadow_aspect': 'Watch for resentment toward authority or turning frustration inward as self-criticism.',
-                'grounded_recommendation': 'Instead of forcing outcomes, identify which walls are meant to be climbed and which redirect your path.',
+                'life_areas': 'Career ambitions, authority dynamics, long-term structures',
+                'themes': 'A reality check moment where your willpower meets external constraints.',
+                'shadow_aspect': 'Watch for resentment toward authority or turning frustration inward.',
+                'grounded_recommendation': 'Identify which walls are meant to be climbed and which redirect your path.',
                 'tone': 'challenging',
-                'disclaimer': 'This transit highlights existing tensions rather than creating new ones. The friction you feel is often life pointing toward where you need more strategic patience.'
+                'disclaimer': 'This transit highlights existing tensions rather than creating new ones.'
             },
             'Mars_Square_Saturn': {
                 'summary': 'Action meets obstacles—strategic recalibration',
                 'meaning': 'Friction between immediate action and necessary restraint',
-                'life_areas': 'Work ethic, physical energy management, ambitious projects facing delays',
-                'themes': 'Your drive meets tangible obstacles asking for recalibration rather than brute force. Like a climber encountering unexpected rockfall, this asks you to reassess your route without abandoning the ascent.',
+                'life_areas': 'Work ethic, physical energy management, ambitious projects',
+                'themes': 'Your drive meets tangible obstacles asking for recalibration rather than brute force.',
                 'shadow_aspect': 'Avoid giving up entirely or pushing so hard you break something important.',
-                'grounded_recommendation': 'Focus on preparation rather than propulsion. What foundations need shoring up?',
+                'grounded_recommendation': 'Focus on preparation rather than propulsion.',
                 'tone': 'challenging',
                 'disclaimer': 'These obstacles aren\'t personal failures but timing mechanisms.'
             },
@@ -316,410 +603,286 @@ class AIReadingService:
                 'summary': 'Passion and pleasure unite—magnetic attraction',
                 'meaning': 'Passion and desire dance together',
                 'life_areas': 'Romantic connections, creative expression, financial initiatives',
-                'themes': 'Your actions naturally align with what brings pleasure and connection. Magnetic energy draws people and opportunities toward you.',
+                'themes': 'Your actions naturally align with what brings pleasure and connection.',
                 'shadow_aspect': 'Be mindful of impulsive relationship decisions or spending.',
-                'grounded_recommendation': 'Channel this harmonious energy into projects blending beauty and action.',
+                'grounded_recommendation': 'Channel this energy into projects blending beauty and action.',
                 'tone': 'harmonious',
                 'disclaimer': 'While this supports new beginnings, lasting connections require building trust over time.'
             },
-            'Mars_Trine_Jupiter': {
-                'summary': 'Confident action meets opportunity—favorable momentum',
-                'meaning': 'Confident action meets expansive opportunity',
-                'life_areas': 'Risk-taking, athletic pursuits, entrepreneurial ventures',
-                'themes': 'Your actions are supported by luck and timing. Doors seem to open more easily.',
-                'shadow_aspect': 'Overconfidence can lead to overlooking important details.',
-                'grounded_recommendation': 'Trust intuition about when to act boldly, but maintain awareness.',
-                'tone': 'harmonious',
-                'disclaimer': 'Even favorable transits don\'t eliminate all obstacles—they simply improve odds.'
-            },
-            'Mars_Trine_Pluto': {
-                'summary': 'Focused power surges—strategic intensity',
-                'meaning': 'Focused action meets transformative power',
-                'life_areas': 'Strategic initiatives, intense activity, psychological breakthroughs',
-                'themes': 'Your actions carry extra power and focus. You might tackle difficult tasks with unusual determination.',
-                'shadow_aspect': 'Power struggles or manipulative behavior can emerge if not conscious.',
-                'grounded_recommendation': 'Channel this intense energy into constructive transformation.',
-                'tone': 'harmonious',
-                'disclaimer': 'True power transforms without needing to dominate.'
-            },
-            'Mars_Opposition_Jupiter': {
-                'summary': 'Bold action meets wisdom—confidence calibrated',
-                'meaning': 'Expansive action meets wise restraint',
-                'life_areas': 'Risk assessment, entrepreneurial decisions, balancing confidence',
-                'themes': 'Your drive for expansion meets the need for wise boundaries. You might feel torn between bold action and practical limitations.',
-                'shadow_aspect': 'Overconfidence leading to overextension or unnecessary risks.',
-                'grounded_recommendation': 'Think big, start small. Test assumptions before full commitment.',
-                'tone': 'challenging',
-                'disclaimer': 'Growth requires both expansion and discernment.'
-            },
+            'Mars_Trine_Jupiter': {'summary': 'Confident action meets opportunity',
+                                   'meaning': 'Confident action meets expansive opportunity',
+                                   'life_areas': 'Risk-taking, entrepreneurial ventures',
+                                   'themes': 'Your actions are supported by luck and timing.',
+                                   'shadow_aspect': 'Overconfidence can lead to overlooking details.',
+                                   'grounded_recommendation': 'Trust intuition but maintain awareness.',
+                                   'tone': 'harmonious',
+                                   'disclaimer': 'Even favorable transits don\'t eliminate all obstacles.'},
+            'Mars_Trine_Pluto': {'summary': 'Focused power surges',
+                                 'meaning': 'Focused action meets transformative power',
+                                 'life_areas': 'Strategic initiatives, intense activity',
+                                 'themes': 'Your actions carry extra power and focus.',
+                                 'shadow_aspect': 'Power struggles can emerge if not conscious.',
+                                 'grounded_recommendation': 'Channel this into constructive transformation.',
+                                 'tone': 'harmonious',
+                                 'disclaimer': 'True power transforms without needing to dominate.'},
+            'Mars_Opposition_Jupiter': {'summary': 'Bold action meets wisdom',
+                                        'meaning': 'Expansive action meets wise restraint',
+                                        'life_areas': 'Risk assessment, entrepreneurial decisions',
+                                        'themes': 'Your drive for expansion meets the need for wise boundaries.',
+                                        'shadow_aspect': 'Overconfidence leading to overextension.',
+                                        'grounded_recommendation': 'Think big, start small.', 'tone': 'challenging',
+                                        'disclaimer': 'Growth requires both expansion and discernment.'},
 
-            # SUN TRANSITS - Identity and Vitality
-            'Sun_Trine_Moon': {
-                'summary': 'Heart and mind harmonize—inner alignment',
-                'meaning': 'Inner harmony between identity and emotions',
-                'life_areas': 'Self-expression, emotional security, relationship harmony',
-                'themes': 'Your conscious self and emotional nature align easily. Feelings and actions cooperate rather than conflict.',
-                'shadow_aspect': 'Possible complacency—growth sometimes requires healthy tension.',
-                'grounded_recommendation': 'Use this harmonious energy to heal old emotional patterns.',
-                'tone': 'harmonious',
-                'disclaimer': 'This alignment supports emotional intelligence but doesn\'t exempt you from inner work.'
-            },
-            'Sun_Conjunction_Venus': {
-                'summary': 'Charm and magnetism amplified—social grace',
-                'meaning': 'Self-expression feels attractive and valued',
-                'life_areas': 'Relationships, self-worth, social connections',
-                'themes': 'Your personal charm and social appeal are heightened. Others respond positively to your presence.',
-                'shadow_aspect': 'Vanity or over-reliance on external validation can emerge.',
-                'grounded_recommendation': 'Share your authentic self in social situations.',
-                'tone': 'harmonious',
-                'disclaimer': 'This transit enhances existing qualities—it doesn\'t fundamentally change who you are.'
-            },
-            'Sun_Square_Saturn': {
-                'summary': 'Identity tested by reality—maturation point',
-                'meaning': 'Your identity meets reality\'s boundaries',
-                'life_areas': 'Career progress, authority relationships, self-esteem tests',
-                'themes': 'This often feels like a "prove yourself" moment where capabilities or commitment are tested.',
-                'shadow_aspect': 'Beware of shrinking from challenges or becoming rigidly defensive.',
-                'grounded_recommendation': 'Focus on what you can control: preparation, response to feedback, commitment.',
-                'tone': 'challenging',
-                'disclaimer': 'These tests build lasting structures. The most solid foundations are built slowly.'
-            },
-            'Sun_Opposition_Pluto': {
-                'summary': 'Power dynamics surface—transformative confrontation',
-                'meaning': 'Ego confronts transformative power dynamics',
-                'life_areas': 'Control issues, personal transformation, power struggles',
-                'themes': 'This intense transit brings power dynamics to the surface. You might encounter situations revealing where power is wielded unconsciously.',
-                'shadow_aspect': 'Power struggles, manipulation, or obsessive behavior can emerge.',
-                'grounded_recommendation': 'Notice where you\'re giving power away or clinging too tightly to control.',
-                'tone': 'challenging',
-                'disclaimer': 'This transit reveals existing power dynamics; your response determines the outcome.'
-            },
-            'Sun_Conjunction_Mercury': {
-                'summary': 'Identity and mind unite—clear expression',
-                'meaning': 'Identity and mind align',
-                'life_areas': 'Self-expression, communication, mental clarity about purpose',
-                'themes': 'Your thoughts and identity work in harmony. You might feel clear about who you are and able to express it effectively.',
-                'shadow_aspect': 'Can become overly identified with opinions or intellectually rigid.',
-                'grounded_recommendation': 'Express your truth while remaining open to others\' perspectives.',
-                'tone': 'neutral',
-                'disclaimer': 'Clarity of thought supports, but doesn\'t replace, wisdom of heart.'
-            },
+            # SUN TRANSITS
+            'Sun_Trine_Moon': {'summary': 'Heart and mind harmonize',
+                               'meaning': 'Inner harmony between identity and emotions',
+                               'life_areas': 'Self-expression, emotional security',
+                               'themes': 'Your conscious self and emotional nature align easily.',
+                               'shadow_aspect': 'Possible complacency.',
+                               'grounded_recommendation': 'Use this to heal old emotional patterns.',
+                               'tone': 'harmonious',
+                               'disclaimer': 'This supports emotional intelligence but doesn\'t exempt you from inner work.'},
+            'Sun_Conjunction_Venus': {'summary': 'Charm and magnetism amplified',
+                                      'meaning': 'Self-expression feels attractive and valued',
+                                      'life_areas': 'Relationships, self-worth, social connections',
+                                      'themes': 'Your personal charm and social appeal are heightened.',
+                                      'shadow_aspect': 'Vanity or over-reliance on external validation.',
+                                      'grounded_recommendation': 'Share your authentic self in social situations.',
+                                      'tone': 'harmonious',
+                                      'disclaimer': 'This enhances existing qualities—it doesn\'t fundamentally change who you are.'},
+            'Sun_Square_Saturn': {'summary': 'Identity tested by reality',
+                                  'meaning': 'Your identity meets reality\'s boundaries',
+                                  'life_areas': 'Career progress, authority relationships',
+                                  'themes': 'This often feels like a "prove yourself" moment.',
+                                  'shadow_aspect': 'Beware of shrinking from challenges.',
+                                  'grounded_recommendation': 'Focus on what you can control: preparation and response.',
+                                  'tone': 'challenging', 'disclaimer': 'These tests build lasting structures.'},
+            'Sun_Opposition_Pluto': {'summary': 'Power dynamics surface',
+                                     'meaning': 'Ego confronts transformative power dynamics',
+                                     'life_areas': 'Control issues, personal transformation',
+                                     'themes': 'This intense transit brings power dynamics to the surface.',
+                                     'shadow_aspect': 'Power struggles or manipulation can emerge.',
+                                     'grounded_recommendation': 'Notice where you\'re giving power away or clinging too tightly.',
+                                     'tone': 'challenging',
+                                     'disclaimer': 'Your response determines whether this becomes destructive or transformative.'},
+            'Sun_Conjunction_Mercury': {'summary': 'Identity and mind unite', 'meaning': 'Identity and mind align',
+                                        'life_areas': 'Self-expression, communication',
+                                        'themes': 'Your thoughts and identity work in harmony.',
+                                        'shadow_aspect': 'Can become overly identified with opinions.',
+                                        'grounded_recommendation': 'Express your truth while remaining open.',
+                                        'tone': 'neutral',
+                                        'disclaimer': 'Clarity of thought supports but doesn\'t replace wisdom of heart.'},
 
-            # MERCURY TRANSITS - Communication and Thinking
-            'Mercury_Square_Neptune': {
-                'summary': 'Mental fog descends—clarity requires patience',
-                'meaning': 'Clarity meets confusion at the crossroads',
-                'life_areas': 'Communication, decision-making, contracts',
-                'themes': 'Information may feel fuzzy, misleading, or emotionally charged. Classic aspect for misunderstandings.',
-                'shadow_aspect': 'Important details may be overlooked, or assumptions mistaken for facts.',
-                'grounded_recommendation': 'Double-check information, get confirmations in writing.',
-                'tone': 'challenging',
-                'disclaimer': 'Not every confusing moment signals deception—sometimes understanding requires time.'
-            },
-            'Mercury_Trine_Jupiter': {
-                'summary': 'Mind expands optimistically—learning flows',
-                'meaning': 'Mind expands with optimism and perspective',
-                'life_areas': 'Learning, communication, travel planning, teaching',
-                'themes': 'Your thinking becomes more expansive and optimistic. You might find it easier to grasp complex concepts.',
-                'shadow_aspect': 'Overconfidence in opinions or overlooking practical details.',
-                'grounded_recommendation': 'Use this mental clarity for learning something new.',
-                'tone': 'harmonious',
-                'disclaimer': 'Expansive thinking is valuable, but grounding ideas makes them actionable.'
-            },
-            'Mercury_Conjunction_Mars': {
-                'summary': 'Sharp mind, sharper words—mental intensity',
-                'meaning': 'Sharp words and quick decisions',
-                'life_areas': 'Communication, debates, mental energy, assertive expression',
-                'themes': 'Your mind works quickly, and you might feel compelled to speak directly. Mental energy is high.',
-                'shadow_aspect': 'Tendency toward argumentativeness or speaking without thinking.',
-                'grounded_recommendation': 'Channel this mental energy into productive debates or writing.',
-                'tone': 'neutral',
-                'disclaimer': 'Direct communication is powerful, but timing determines whether it builds bridges.'
-            },
-            'Mercury_Square_Uranus': {
-                'summary': 'Mental electricity sparks—brilliant disruption',
-                'meaning': 'Mental breakthroughs meet disruptive insights',
-                'life_areas': 'Sudden ideas, technological disruptions, unconventional thinking',
-                'themes': 'Your thinking might feel electric or scattered. Sudden insights or disruptive thoughts could surface.',
-                'shadow_aspect': 'Mental restlessness can lead to scattered attention or impulsive communication.',
-                'grounded_recommendation': 'Capture brilliant ideas when they come, but wait before acting on them.',
-                'tone': 'challenging',
-                'disclaimer': 'Revolutionary ideas need time to mature before implementation.'
-            },
-            'Mercury_Trine_Neptune': {
-                'summary': 'Intuition guides thought—creative flow',
-                'meaning': 'Intuitive thinking meets creative flow',
-                'life_areas': 'Creative writing, spiritual insights, compassionate communication',
-                'themes': 'Your thinking connects easily with intuition and imagination. Words may flow poetically.',
-                'shadow_aspect': 'Facts might feel less important than feelings, potentially leading to misunderstandings.',
-                'grounded_recommendation': 'Trust intuitive hits but verify important details.',
-                'tone': 'harmonious',
-                'disclaimer': 'Intuition illuminates, but practical steps bring dreams to earth.'
-            },
+            # MERCURY TRANSITS
+            'Mercury_Square_Neptune': {'summary': 'Mental fog descends', 'meaning': 'Clarity meets confusion',
+                                       'life_areas': 'Communication, decision-making',
+                                       'themes': 'Information may feel fuzzy or emotionally charged.',
+                                       'shadow_aspect': 'Important details may be overlooked.',
+                                       'grounded_recommendation': 'Double-check information.', 'tone': 'challenging',
+                                       'disclaimer': 'Not every confusing moment signals deception.'},
+            'Mercury_Trine_Jupiter': {'summary': 'Mind expands optimistically', 'meaning': 'Mind expands with optimism',
+                                      'life_areas': 'Learning, communication',
+                                      'themes': 'Your thinking becomes more expansive.',
+                                      'shadow_aspect': 'Overconfidence in opinions.',
+                                      'grounded_recommendation': 'Use this for learning something new.',
+                                      'tone': 'harmonious',
+                                      'disclaimer': 'Expansive thinking is valuable but needs grounding.'},
+            'Mercury_Conjunction_Mars': {'summary': 'Sharp mind, sharper words',
+                                         'meaning': 'Sharp words and quick decisions',
+                                         'life_areas': 'Communication, debates', 'themes': 'Your mind works quickly.',
+                                         'shadow_aspect': 'Tendency toward argumentativeness.',
+                                         'grounded_recommendation': 'Channel this into productive debates.',
+                                         'tone': 'neutral',
+                                         'disclaimer': 'Direct communication is powerful but timing matters.'},
+            'Mercury_Square_Uranus': {'summary': 'Mental electricity sparks',
+                                      'meaning': 'Mental breakthroughs meet disruptive insights',
+                                      'life_areas': 'Sudden ideas, unconventional thinking',
+                                      'themes': 'Your thinking might feel electric or scattered.',
+                                      'shadow_aspect': 'Mental restlessness.',
+                                      'grounded_recommendation': 'Capture brilliant ideas but wait before acting.',
+                                      'tone': 'challenging', 'disclaimer': 'Revolutionary ideas need time to mature.'},
+            'Mercury_Trine_Neptune': {'summary': 'Intuition guides thought',
+                                      'meaning': 'Intuitive thinking meets creative flow',
+                                      'life_areas': 'Creative writing, spiritual insights',
+                                      'themes': 'Your thinking connects easily with intuition.',
+                                      'shadow_aspect': 'Facts might feel less important than feelings.',
+                                      'grounded_recommendation': 'Trust intuition but verify details.',
+                                      'tone': 'harmonious',
+                                      'disclaimer': 'Intuition illuminates but practical steps bring dreams to earth.'},
 
-            # VENUS TRANSITS - Relationships and Values
-            'Venus_Opposition_Mars': {
-                'summary': 'Desire meets harmony—passionate tension',
-                'meaning': 'The delicate dance between what you desire and how you pursue it',
-                'life_areas': 'Relationship dynamics, sexual chemistry, values in conflict',
-                'themes': 'Often manifests as a pull between harmony and assertion—wanting connection but also wanting your way.',
-                'shadow_aspect': 'Watch for passive-aggression or expressing wants as demands.',
-                'grounded_recommendation': 'Practice stating desires clearly while remaining open to others\' perspectives.',
-                'tone': 'challenging',
-                'disclaimer': 'This highlights where you need balance between assertion and receptivity.'
-            },
-            'Venus_Trine_Saturn': {
-                'summary': 'Love meets commitment—stable foundations',
-                'meaning': 'Love meets commitment and stability',
-                'life_areas': 'Long-term relationships, financial planning, serious commitments',
-                'themes': 'Relationship energies feel more serious and grounded. Excellent for making commitments.',
-                'shadow_aspect': 'Can feel overly serious or practical, missing spontaneous joy.',
-                'grounded_recommendation': 'Use this energy to strengthen existing commitments.',
-                'tone': 'harmonious',
-                'disclaimer': 'Stability is valuable, but relationships also need flexibility.'
-            },
-            'Venus_Square_Pluto': {
-                'summary': 'Love confronts intensity—transformative depths',
-                'meaning': 'Love confronts transformative intensity',
-                'life_areas': 'Relationship power dynamics, shared resources, obsessions',
-                'themes': 'Intense feelings surface in relationships or financial matters. You might encounter hidden power dynamics.',
-                'shadow_aspect': 'Possessiveness, jealousy, or power struggles can emerge.',
-                'grounded_recommendation': 'Notice what you\'re clinging to and why.',
-                'tone': 'challenging',
-                'disclaimer': 'Intense feelings are signals, not commands.'
-            },
-            'Venus_Conjunction_Jupiter': {
-                'summary': 'Love expands abundantly—social magnetism',
-                'meaning': 'Expansive love meets abundant connection',
-                'life_areas': 'Social opportunities, romantic possibilities, financial generosity',
-                'themes': 'Your social and romantic appeal expands. You might attract positive attention or feel unusually generous.',
-                'shadow_aspect': 'Over-optimism in relationships or financial overextension.',
-                'grounded_recommendation': 'Enjoy social abundance but maintain reasonable boundaries.',
-                'tone': 'harmonious',
-                'disclaimer': 'Abundance flows best when shared responsibly.'
-            },
-            'Venus_Square_Uranus': {
-                'summary': 'Relationship surprises shake up—freedom calls',
-                'meaning': 'Relationship surprises meet freedom needs',
-                'life_areas': 'Unconventional attractions, sudden relationship changes',
-                'themes': 'Unexpected developments in relationships or finances. You might feel restless with routine.',
-                'shadow_aspect': 'Impulsive relationship decisions or financial risks.',
-                'grounded_recommendation': 'Embrace authentic connections but avoid burning bridges.',
-                'tone': 'challenging',
-                'disclaimer': 'Freedom in relationships requires both independence and responsibility.'
-            },
+            # VENUS TRANSITS
+            'Venus_Opposition_Mars': {'summary': 'Desire meets harmony',
+                                      'meaning': 'The delicate dance between what you desire and how you pursue it',
+                                      'life_areas': 'Relationship dynamics, sexual chemistry',
+                                      'themes': 'Often manifests as a pull between harmony and assertion.',
+                                      'shadow_aspect': 'Watch for passive-aggression.',
+                                      'grounded_recommendation': 'Practice stating desires clearly.',
+                                      'tone': 'challenging',
+                                      'disclaimer': 'This highlights where you need balance between assertion and receptivity.'},
+            'Venus_Trine_Saturn': {'summary': 'Love meets commitment', 'meaning': 'Love meets commitment and stability',
+                                   'life_areas': 'Long-term relationships, financial planning',
+                                   'themes': 'Relationship energies feel more serious and grounded.',
+                                   'shadow_aspect': 'Can feel overly serious.',
+                                   'grounded_recommendation': 'Strengthen existing commitments.', 'tone': 'harmonious',
+                                   'disclaimer': 'Stability is valuable but relationships need flexibility too.'},
+            'Venus_Square_Pluto': {'summary': 'Love confronts intensity',
+                                   'meaning': 'Love confronts transformative intensity',
+                                   'life_areas': 'Relationship power dynamics',
+                                   'themes': 'Intense feelings surface in relationships.',
+                                   'shadow_aspect': 'Possessiveness or jealousy.',
+                                   'grounded_recommendation': 'Notice what you\'re clinging to and why.',
+                                   'tone': 'challenging', 'disclaimer': 'Intense feelings are signals, not commands.'},
+            'Venus_Conjunction_Jupiter': {'summary': 'Love expands abundantly',
+                                          'meaning': 'Expansive love meets abundant connection',
+                                          'life_areas': 'Social opportunities, romantic possibilities',
+                                          'themes': 'Your social and romantic appeal expands.',
+                                          'shadow_aspect': 'Over-optimism or financial overextension.',
+                                          'grounded_recommendation': 'Enjoy abundance but maintain boundaries.',
+                                          'tone': 'harmonious',
+                                          'disclaimer': 'Abundance flows best when shared responsibly.'},
+            'Venus_Square_Uranus': {'summary': 'Relationship surprises shake up',
+                                    'meaning': 'Relationship surprises meet freedom needs',
+                                    'life_areas': 'Unconventional attractions',
+                                    'themes': 'Unexpected developments in relationships.',
+                                    'shadow_aspect': 'Impulsive relationship decisions.',
+                                    'grounded_recommendation': 'Embrace authenticity but avoid burning bridges.',
+                                    'tone': 'challenging',
+                                    'disclaimer': 'Freedom requires both independence and responsibility.'},
 
-            # JUPITER TRANSITS - Expansion and Beliefs
-            'Jupiter_Trine_Sun': {
-                'summary': 'Identity expands gracefully—opportunities arise',
-                'meaning': 'Your essence expands into new possibilities',
-                'life_areas': 'Personal growth, career opportunities, confidence',
-                'themes': 'Supportive energy helps recognize and step into potential. Opportunities may arrive with surprising ease.',
-                'shadow_aspect': 'Overextension—saying yes to too many opportunities dilutes energy.',
-                'grounded_recommendation': 'Choose growth paths aligning with core identity.',
-                'tone': 'harmonious',
-                'disclaimer': 'Even favorable transits require participation.'
-            },
-            'Jupiter_Conjunction_Venus': {
-                'summary': 'Abundance flows freely—social expansion',
-                'meaning': 'Abundance meets pleasure and connection',
-                'life_areas': 'Social expansion, financial opportunities, romantic possibilities',
-                'themes': 'Social and romantic opportunities expand. Financial luck or generous impulses might surface.',
-                'shadow_aspect': 'Overindulgence or spreading resources too thin.',
-                'grounded_recommendation': 'Share abundance with others.',
-                'tone': 'harmonious',
-                'disclaimer': 'Abundance flows best when shared, not hoarded.'
-            },
-            'Jupiter_Square_Saturn': {
-                'summary': 'Growth meets limits—wise expansion',
-                'meaning': 'Growth confronts practical limits',
-                'life_areas': 'Career ambitions, philosophical beliefs versus reality',
-                'themes': 'Expansive desires meet structural limitations. You might feel torn between risk and safety.',
-                'shadow_aspect': 'Can swing between reckless optimism and pessimistic restriction.',
-                'grounded_recommendation': 'Look for the middle path—ambitious enough to grow, practical enough to sustain.',
-                'tone': 'challenging',
-                'disclaimer': 'This tension reveals where growth needs more structure or structures need flexibility.'
-            },
-            'Jupiter_Opposition_Moon': {
-                'summary': 'Emotional expansion tested—growth vs. security',
-                'meaning': 'Expansive feelings meet emotional boundaries',
-                'life_areas': 'Emotional growth, family expansion, comfort zone stretching',
-                'themes': 'Your emotional world expands or confronts its limits. You might feel pulled between security needs and growth.',
-                'shadow_aspect': 'Emotional overextension or using optimism to avoid real feelings.',
-                'grounded_recommendation': 'Expand your emotional repertoire while honoring your need for safety.',
-                'tone': 'challenging',
-                'disclaimer': 'Emotional growth happens at the edge of comfort, not far beyond it.'
-            },
-
-            # SATURN TRANSITS - Structure and Responsibility
-            'Saturn_Square_Moon': {
-                'summary': 'Emotional burden weighs heavy—boundaries needed',
-                'meaning': 'Responsibility weighs on emotional security',
-                'life_areas': 'Family obligations, emotional burdens, home responsibilities',
-                'themes': 'Emotional needs might feel burdened by responsibilities. You could experience loneliness even when busy.',
-                'shadow_aspect': 'Emotional repression or using busyness to avoid feelings.',
-                'grounded_recommendation': 'Create structured self-care. Emotional health needs scheduling too.',
-                'tone': 'challenging',
-                'disclaimer': 'Feeling emotionally burdened is information, not failure.'
-            },
-            'Saturn_Trine_Venus': {
-                'summary': 'Commitment strengthens love—lasting value',
-                'meaning': 'Structure supports lasting love and values',
-                'life_areas': 'Committed relationships, financial stability, artistic discipline',
-                'themes': 'Relationships benefit from maturity and commitment. Financial decisions made now tend to have lasting positive effects.',
-                'shadow_aspect': 'Can become overly practical or cautious in matters of heart.',
-                'grounded_recommendation': 'Invest in relationships and projects with long-term potential.',
-                'tone': 'harmonious',
-                'disclaimer': 'Lasting beauty often requires patience—what\'s built slowly often endures.'
-            },
-            'Saturn_Conjunction_Sun': {
-                'summary': 'Identity matures deeply—defining moment',
-                'meaning': 'Your identity meets its maturation point',
-                'life_areas': 'Life direction, career definition, adult responsibilities',
-                'themes': 'Significant transit marking a major life chapter shift toward greater maturity and definition.',
-                'shadow_aspect': 'Resisting necessary maturation or clinging to outgrown identities.',
-                'grounded_recommendation': 'Identify what foundations need strengthening.',
-                'tone': 'neutral',
-                'disclaimer': 'This transit works over months, not days. Its gifts often reveal themselves in hindsight.'
-            },
-            'Saturn_Trine_Mars': {
-                'summary': 'Discipline meets momentum—sustained results',
-                'meaning': 'Disciplined action meets sustained results',
-                'life_areas': 'Long-term projects, career advancement, physical discipline',
-                'themes': 'Your actions align with sustainable structures. You might find it easier to persist with difficult tasks.',
-                'shadow_aspect': 'Can become overly rigid or perfectionistic about progress.',
-                'grounded_recommendation': 'Build momentum through consistent, sustainable effort.',
-                'tone': 'harmonious',
-                'disclaimer': 'Lasting results come from consistent application, not sporadic intensity.'
-            },
-            'Saturn_Square_Venus': {
-                'summary': 'Love tested by reality—value alignment',
-                'meaning': 'Love meets reality testing',
-                'life_areas': 'Relationship commitments, financial responsibilities, value tests',
-                'themes': 'Your values and relationships face reality checks. You might encounter limitations requiring mature handling.',
-                'shadow_aspect': 'Emotional withholding or using practicality to avoid intimacy.',
-                'grounded_recommendation': 'Invest in what has lasting value, not just immediate pleasure.',
-                'tone': 'challenging',
-                'disclaimer': 'Enduring love requires both feeling and commitment.'
-            },
-
-            # URANUS TRANSITS - Change and Innovation
-            'Uranus_Opposition_Sun': {
-                'summary': 'Identity disrupted—liberation calls',
-                'meaning': 'Change disrupts established identity',
-                'life_areas': 'Life direction, freedom needs, independence',
-                'themes': 'Restlessness with current identity or life structure. Sudden realizations about what no longer fits.',
-                'shadow_aspect': 'Rebellion for its own sake or burning bridges prematurely.',
-                'grounded_recommendation': 'Notice what feels authentically you versus what you\'ve outgrown.',
-                'tone': 'challenging',
-                'disclaimer': 'Change is inevitable, but how you navigate it determines the outcome.'
-            },
-            'Uranus_Trine_Venus': {
-                'summary': 'Unconventional attraction—creative innovation',
-                'meaning': 'Innovation meets attraction and values',
-                'life_areas': 'Unconventional relationships, creative breakthroughs, financial opportunities',
-                'themes': 'Attraction to unusual people or situations. Creative inspiration strikes unexpectedly.',
-                'shadow_aspect': 'Fickleness in relationships or financial decisions.',
-                'grounded_recommendation': 'Stay open to unexpected connections and creative ideas.',
-                'tone': 'harmonious',
-                'disclaimer': 'Innovation is exciting, but lasting relationships still require consistent attention.'
-            },
-            'Uranus_Conjunction_Mercury': {
-                'summary': 'Mind revolutionizes—breakthrough thinking',
-                'meaning': 'Innovative thinking meets communication breakthroughs',
-                'life_areas': 'Sudden insights, technological communication, unconventional ideas',
-                'themes': 'Your thinking becomes unusually original or disruptive. Sudden insights or breakthroughs may occur.',
-                'shadow_aspect': 'Scattered thinking or communication that confuses rather than clarifies.',
-                'grounded_recommendation': 'Capture innovative ideas but structure them before sharing widely.',
-                'tone': 'neutral',
-                'disclaimer': 'Brilliant ideas need coherent communication to have impact.'
-            },
-
-            # NEPTUNE TRANSITS - Dreams and Spirituality
-            'Neptune_Square_Mercury': {
-                'summary': 'Mental fog clouds judgment—intuition vs. facts',
-                'meaning': 'Dreams cloud logical thinking',
-                'life_areas': 'Communication clarity, decision-making, boundaries',
-                'themes': 'Facts feel slippery, and intuition may override logic. Important to double-check information.',
-                'shadow_aspect': 'Vulnerability to scams, gossip, or confusing situations.',
-                'grounded_recommendation': 'Trust gut feelings but verify facts.',
-                'tone': 'challenging',
-                'disclaimer': 'Not every confusing message is deceptive—sometimes it\'s incomplete.'
-            },
-            'Neptune_Trine_Moon': {
-                'summary': 'Intuition deepens emotionally—spiritual sensitivity',
-                'meaning': 'Dreams and intuition support emotional depth',
-                'life_areas': 'Spiritual connection, creative inspiration, compassionate relationships',
-                'themes': 'Emotions flow with spiritual sensitivity. Dreams may be vivid or prophetic.',
-                'shadow_aspect': 'Overwhelming empathy or difficulty distinguishing your feelings from others\'.',
-                'grounded_recommendation': 'Journal dreams and intuitive hits.',
-                'tone': 'harmonious',
-                'disclaimer': 'Spiritual sensitivity is a gift, but grounding maintains healthy boundaries.'
-            },
-            'Neptune_Conjunction_Venus': {
-                'summary': 'Love becomes dreamlike—idealistic connection',
-                'meaning': 'Dreamy love meets idealistic values',
-                'life_areas': 'Romantic idealism, creative inspiration, spiritual values',
-                'themes': 'Your values become infused with idealism and compassion. Relationships take on a dreamy, soulful quality.',
-                'shadow_aspect': 'Idealization of people/situations or unclear boundaries.',
-                'grounded_recommendation': 'Appreciate beauty and connection while maintaining realistic awareness.',
-                'tone': 'harmonious',
-                'disclaimer': 'Idealism enriches life but needs grounding in reality to sustain.'
-            },
-
-            # PLUTO TRANSITS - Transformation and Power
-            'Pluto_Square_Venus': {
-                'summary': 'Love transformed intensely—power purges',
-                'meaning': 'Transformation through relationships and values',
-                'life_areas': 'Relationship power dynamics, shared resources, value transformation',
-                'themes': 'Relationships become crucibles for transformation. You might attract intense connections revealing shadow aspects.',
-                'shadow_aspect': 'Possessive behavior, power struggles, or manipulative dynamics.',
-                'grounded_recommendation': 'Notice what relationships or values you\'re clinging to out of fear.',
-                'tone': 'challenging',
-                'disclaimer': 'Transformation is rarely comfortable, but what emerges is often more authentic.'
-            },
-            'Pluto_Trine_Sun': {
-                'summary': 'Personal power awakens—deep transformation',
-                'meaning': 'Personal empowerment through deep transformation',
-                'life_areas': 'Personal power, psychological depth, career transformation',
-                'themes': 'Ability to transform limitations into strengths. Psychological insights come more easily.',
-                'shadow_aspect': 'Power trips or using transformation as excuse for controlling behavior.',
-                'grounded_recommendation': 'Use this energy for deep personal work or strategic career moves.',
-                'tone': 'harmonious',
-                'disclaimer': 'True power isn\'t control over others but sovereignty over yourself.'
-            },
-
-            # MOON TRANSITS - Emotional Flow
-            'Moon_Conjunction_Venus': {
-                'summary': 'Emotional harmony flows—nurturing connection',
-                'meaning': 'Emotional harmony meets relational needs',
-                'life_areas': 'Comfort in relationships, self-care, nurturing connections',
-                'themes': 'Your emotional nature aligns with what brings pleasure and connection. You might feel especially affectionate.',
-                'shadow_aspect': 'Avoid using comfort as avoidance of necessary growth.',
-                'grounded_recommendation': 'Indulge in what genuinely nourishes your soul.',
-                'tone': 'harmonious',
-                'disclaimer': 'Emotional harmony is wonderful, but lasting peace comes from inner security.'
-            },
-            'Moon_Opposition_Mars': {
-                'summary': 'Emotional reactivity spikes—feelings run hot',
-                'meaning': 'Emotional reactions meet assertive impulses',
-                'life_areas': 'Family dynamics, emotional reactivity, conflict with loved ones',
-                'themes': 'Feelings might surface with unexpected intensity. You could experience quick emotional reactions.',
-                'shadow_aspect': 'Watch for emotional outbursts or taking things too personally.',
-                'grounded_recommendation': 'Pause before reacting. Name the feeling before expressing it.',
-                'tone': 'challenging',
-                'disclaimer': 'Intense feelings are signals, not commands. Your response determines the outcome.'
-            },
-            'Moon_Trine_Mercury': {
-                'summary': 'Feelings and thoughts cooperate—emotional intelligence',
-                'meaning': 'Emotions and thoughts cooperate',
-                'life_areas': 'Emotional intelligence, intuitive thinking, compassionate communication',
-                'themes': 'Your feelings and thoughts support each other naturally. You might find it easy to articulate emotions.',
-                'shadow_aspect': 'Over-analysis of feelings or emotional attachment to ideas.',
-                'grounded_recommendation': 'Use this clarity to understand emotional patterns without over-intellectualizing.',
-                'tone': 'harmonious',
-                'disclaimer': 'Understanding emotions intellectually doesn\'t always translate to feeling them fully.'
-            },
+            # JUPITER, SATURN, URANUS, NEPTUNE, PLUTO TRANSITS
+            'Jupiter_Trine_Sun': {'summary': 'Identity expands gracefully',
+                                  'meaning': 'Your essence expands into new possibilities',
+                                  'life_areas': 'Personal growth, career opportunities',
+                                  'themes': 'Supportive energy helps recognize potential.',
+                                  'shadow_aspect': 'Overextension.',
+                                  'grounded_recommendation': 'Choose growth paths aligning with core identity.',
+                                  'tone': 'harmonious', 'disclaimer': 'Even favorable transits require participation.'},
+            'Jupiter_Conjunction_Venus': {'summary': 'Abundance flows freely', 'meaning': 'Abundance meets pleasure',
+                                          'life_areas': 'Social expansion, financial opportunities',
+                                          'themes': 'Social and romantic opportunities expand.',
+                                          'shadow_aspect': 'Overindulgence.',
+                                          'grounded_recommendation': 'Share abundance with others.',
+                                          'tone': 'harmonious', 'disclaimer': 'Abundance flows best when shared.'},
+            'Jupiter_Square_Saturn': {'summary': 'Growth meets limits', 'meaning': 'Growth confronts practical limits',
+                                      'life_areas': 'Career ambitions',
+                                      'themes': 'Expansive desires meet structural limitations.',
+                                      'shadow_aspect': 'Can swing between reckless optimism and pessimism.',
+                                      'grounded_recommendation': 'Find the middle path.', 'tone': 'challenging',
+                                      'disclaimer': 'This reveals where growth needs structure.'},
+            'Jupiter_Opposition_Moon': {'summary': 'Emotional expansion tested',
+                                        'meaning': 'Expansive feelings meet emotional boundaries',
+                                        'life_areas': 'Emotional growth, family expansion',
+                                        'themes': 'Your emotional world expands or confronts limits.',
+                                        'shadow_aspect': 'Emotional overextension.',
+                                        'grounded_recommendation': 'Expand while honoring need for safety.',
+                                        'tone': 'challenging',
+                                        'disclaimer': 'Emotional growth happens at edge of comfort.'},
+            'Saturn_Square_Moon': {'summary': 'Emotional burden weighs heavy',
+                                   'meaning': 'Responsibility weighs on emotional security',
+                                   'life_areas': 'Family obligations, emotional burdens',
+                                   'themes': 'Emotional needs might feel burdened.',
+                                   'shadow_aspect': 'Emotional repression.',
+                                   'grounded_recommendation': 'Create structured self-care.', 'tone': 'challenging',
+                                   'disclaimer': 'Feeling burdened is information, not failure.'},
+            'Saturn_Trine_Venus': {'summary': 'Commitment strengthens love',
+                                   'meaning': 'Structure supports lasting love',
+                                   'life_areas': 'Committed relationships',
+                                   'themes': 'Relationships benefit from maturity.',
+                                   'shadow_aspect': 'Can become overly practical.',
+                                   'grounded_recommendation': 'Invest in long-term potential.', 'tone': 'harmonious',
+                                   'disclaimer': 'Lasting beauty requires patience.'},
+            'Saturn_Conjunction_Sun': {'summary': 'Identity matures deeply',
+                                       'meaning': 'Your identity meets maturation point',
+                                       'life_areas': 'Life direction, career definition',
+                                       'themes': 'Major life chapter shift toward maturity.',
+                                       'shadow_aspect': 'Resisting necessary maturation.',
+                                       'grounded_recommendation': 'Identify what foundations need strengthening.',
+                                       'tone': 'neutral',
+                                       'disclaimer': 'This works over months; gifts reveal in hindsight.'},
+            'Saturn_Trine_Mars': {'summary': 'Discipline meets momentum',
+                                  'meaning': 'Disciplined action meets sustained results',
+                                  'life_areas': 'Long-term projects',
+                                  'themes': 'Actions align with sustainable structures.',
+                                  'shadow_aspect': 'Can become overly rigid.',
+                                  'grounded_recommendation': 'Build momentum through consistency.',
+                                  'tone': 'harmonious',
+                                  'disclaimer': 'Lasting results come from consistent application.'},
+            'Saturn_Square_Venus': {'summary': 'Love tested by reality', 'meaning': 'Love meets reality testing',
+                                    'life_areas': 'Relationship commitments', 'themes': 'Values face reality checks.',
+                                    'shadow_aspect': 'Emotional withholding.',
+                                    'grounded_recommendation': 'Invest in lasting value.', 'tone': 'challenging',
+                                    'disclaimer': 'Enduring love requires both feeling and commitment.'},
+            'Uranus_Opposition_Sun': {'summary': 'Identity disrupted',
+                                      'meaning': 'Change disrupts established identity',
+                                      'life_areas': 'Life direction, freedom needs',
+                                      'themes': 'Restlessness with current identity.',
+                                      'shadow_aspect': 'Rebellion for its own sake.',
+                                      'grounded_recommendation': 'Notice what you\'ve outgrown.', 'tone': 'challenging',
+                                      'disclaimer': 'How you navigate change determines the outcome.'},
+            'Uranus_Trine_Venus': {'summary': 'Unconventional attraction', 'meaning': 'Innovation meets attraction',
+                                   'life_areas': 'Unconventional relationships',
+                                   'themes': 'Attraction to unusual people.', 'shadow_aspect': 'Fickleness.',
+                                   'grounded_recommendation': 'Stay open to unexpected connections.',
+                                   'tone': 'harmonious',
+                                   'disclaimer': 'Innovation is exciting but relationships need attention.'},
+            'Uranus_Conjunction_Mercury': {'summary': 'Mind revolutionizes',
+                                           'meaning': 'Innovative thinking meets breakthroughs',
+                                           'life_areas': 'Sudden insights',
+                                           'themes': 'Thinking becomes unusually original.',
+                                           'shadow_aspect': 'Scattered thinking.',
+                                           'grounded_recommendation': 'Capture ideas but structure them.',
+                                           'tone': 'neutral',
+                                           'disclaimer': 'Brilliant ideas need coherent communication.'},
+            'Neptune_Square_Mercury': {'summary': 'Mental fog clouds judgment',
+                                       'meaning': 'Dreams cloud logical thinking',
+                                       'life_areas': 'Communication clarity', 'themes': 'Facts feel slippery.',
+                                       'shadow_aspect': 'Vulnerability to scams.',
+                                       'grounded_recommendation': 'Trust gut but verify facts.', 'tone': 'challenging',
+                                       'disclaimer': 'Not every confusion is deception.'},
+            'Neptune_Trine_Moon': {'summary': 'Intuition deepens emotionally',
+                                   'meaning': 'Dreams support emotional depth', 'life_areas': 'Spiritual connection',
+                                   'themes': 'Emotions flow with spiritual sensitivity.',
+                                   'shadow_aspect': 'Overwhelming empathy.',
+                                   'grounded_recommendation': 'Journal dreams and intuitive hits.',
+                                   'tone': 'harmonious', 'disclaimer': 'Spiritual sensitivity needs grounding.'},
+            'Neptune_Conjunction_Venus': {'summary': 'Love becomes dreamlike',
+                                          'meaning': 'Dreamy love meets idealistic values',
+                                          'life_areas': 'Romantic idealism', 'themes': 'Values infused with idealism.',
+                                          'shadow_aspect': 'Idealization.',
+                                          'grounded_recommendation': 'Appreciate beauty with realistic awareness.',
+                                          'tone': 'harmonious', 'disclaimer': 'Idealism needs grounding to sustain.'},
+            'Pluto_Square_Venus': {'summary': 'Love transformed intensely',
+                                   'meaning': 'Transformation through relationships',
+                                   'life_areas': 'Relationship power dynamics',
+                                   'themes': 'Relationships become crucibles.', 'shadow_aspect': 'Possessive behavior.',
+                                   'grounded_recommendation': 'Notice what you cling to from fear.',
+                                   'tone': 'challenging', 'disclaimer': 'Transformation is rarely comfortable.'},
+            'Pluto_Trine_Sun': {'summary': 'Personal power awakens',
+                                'meaning': 'Personal empowerment through transformation',
+                                'life_areas': 'Personal power', 'themes': 'Ability to transform limitations.',
+                                'shadow_aspect': 'Power trips.',
+                                'grounded_recommendation': 'Use this for deep personal work.', 'tone': 'harmonious',
+                                'disclaimer': 'True power is sovereignty over yourself.'},
+            'Moon_Conjunction_Venus': {'summary': 'Emotional harmony flows',
+                                       'meaning': 'Emotional harmony meets relational needs',
+                                       'life_areas': 'Comfort in relationships',
+                                       'themes': 'Emotional nature aligns with pleasure.',
+                                       'shadow_aspect': 'Using comfort as avoidance.',
+                                       'grounded_recommendation': 'Indulge in what genuinely nourishes.',
+                                       'tone': 'harmonious', 'disclaimer': 'Lasting peace comes from inner security.'},
+            'Moon_Opposition_Mars': {'summary': 'Emotional reactivity spikes',
+                                     'meaning': 'Emotional reactions meet assertive impulses',
+                                     'life_areas': 'Family dynamics', 'themes': 'Feelings surface with intensity.',
+                                     'shadow_aspect': 'Watch for emotional outbursts.',
+                                     'grounded_recommendation': 'Pause before reacting.', 'tone': 'challenging',
+                                     'disclaimer': 'Feelings are signals, not commands.'},
+            'Moon_Trine_Mercury': {'summary': 'Feelings and thoughts cooperate',
+                                   'meaning': 'Emotions and thoughts cooperate', 'life_areas': 'Emotional intelligence',
+                                   'themes': 'Feelings and thoughts support each other.',
+                                   'shadow_aspect': 'Over-analysis of feelings.',
+                                   'grounded_recommendation': 'Understand patterns without over-intellectualizing.',
+                                   'tone': 'harmonious',
+                                   'disclaimer': 'Understanding intellectually doesn\'t mean feeling fully.'},
         }
 
         # Get specific transit or use enhanced generic fallback
@@ -736,25 +899,12 @@ class AIReadingService:
                 'disclaimer': transit_info.get('disclaimer', '')
             }
         else:
-            # ENHANCED GENERIC FALLBACK with psychological depth
+            # ENHANCED GENERIC FALLBACK
             planet_roles = {
                 'Sun': 'identity/ego', 'Moon': 'emotions/security', 'Mercury': 'thinking/communication',
                 'Venus': 'values/relationships', 'Mars': 'action/desire', 'Jupiter': 'expansion/beliefs',
                 'Saturn': 'structure/limits', 'Uranus': 'change/innovation', 'Neptune': 'dreams/intuition',
                 'Pluto': 'transformation/power'
-            }
-
-            planet_meanings = {
-                'Sun': 'identity, vitality, purpose',
-                'Moon': 'emotions, instincts, comfort',
-                'Mercury': 'communication, thinking, learning',
-                'Venus': 'relationships, values, pleasure',
-                'Mars': 'action, desire, assertion',
-                'Jupiter': 'expansion, optimism, beliefs',
-                'Saturn': 'structure, limits, responsibility',
-                'Uranus': 'change, innovation, disruption',
-                'Neptune': 'dreams, spirituality, intuition',
-                'Pluto': 'transformation, power, depth'
             }
 
             natal_areas = {
@@ -772,7 +922,6 @@ class AIReadingService:
 
             t_role = planet_roles.get(transit_planet, 'energy')
             n_role = planet_roles.get(natal_planet, 'area')
-            transit_energy = planet_meanings.get(transit_planet, transit_planet)
             natal_area = natal_areas.get(natal_planet, natal_planet)
 
             # Aspect themes with psychological nuance
@@ -814,7 +963,6 @@ class AIReadingService:
                 }
             }
 
-            # Get aspect theme or default
             theme_info = aspect_themes.get(aspect, {
                 'summary': f'{transit_planet}-{natal_planet} interact',
                 'meaning': f'Interaction between {transit_planet} and {natal_planet}',
@@ -1071,9 +1219,6 @@ Voice: Poetic but precise. Evocative but grounded in psychological reality."""
             'reading_text': fallback_texts.get(reading_type,
                                                "The stars hold their mysteries today. Your human experience, with all its complexity and choice, remains the most potent astrology of all."),
             'generated_at': datetime.now().isoformat(),
-            'transits_analyzed': 0,
-            'top_transits': [],
-            'transit_summaries': [],
             'is_fallback': True,
             'journal_included': False,
         }
@@ -1082,11 +1227,19 @@ Voice: Poetic but precise. Evocative but grounded in psychological reality."""
 # Convenience function
 def generate_reading(natal_chart: Dict, reading_type: str = 'daily_overview', user=None) -> Dict:
     """
-    Quick access to AI reading generation.
+    Quick access to AI reading generation with type-specific data returns.
 
     Usage:
         from deep_dive.services.ai_reading_service import generate_reading
-        reading = generate_reading(user_natal_chart, 'daily_overview', user=request.user)
+
+        # Daily Overview - gets cosmic context data
+        daily = generate_reading(chart, 'daily_overview', user=request.user)
+
+        # Transit Focus - gets detailed transit summaries
+        transits = generate_reading(chart, 'transit_focus', user=request.user)
+
+        # Element Wisdom - gets elemental analysis, NO transits
+        elements = generate_reading(chart, 'element_wisdom', user=request.user)
     """
     service = AIReadingService()
     return service.generate_daily_reading(natal_chart, reading_type, user)
