@@ -1,312 +1,279 @@
-{% load static %}
-<link href="{% static 'css/output.css' %}" rel="stylesheet">
-{% if active_mode.slug %}
-<!-- Enhanced Mode Features -->
-<div id="mode-features" class="space-y-4">
+<!-- This replaces the content inside #mode-features div when Mystical mode is active -->
 
-    {% if active_mode.slug != "mystical" %}
-        <!-- Question/Inquiry Card -->         
-        <div class="{{ feature_styles.question_container }}" onclick="toggleCard(this)">
-            <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0">
-                    <div class="{{ feature_styles.icon_container }}">
-                        <svg class="{{ feature_styles.icon_class }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {{ card_icons.mystical|safe }}
-                            <!-- <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/> -->
-                        </svg>
-                    </div>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="{{ feature_styles.title }}">{{ feature_content.title }}</h4>
-                    <p class="{{ feature_styles.text }}">{{ feature_content.question_content }}</p>
-                    
-                    <div class="card-content-expanded">
-                        <div class="{{ feature_styles.expanded_content }}">
-                            <p class="{{ feature_styles.expanded_text }} mb-3">Reflection prompts:</p>
-                            <ul class="{{ feature_styles.expanded_text }} space-y-1">
-                                <li>• What connections am I making between different ideas?</li>
-                                <li>• Where do I feel resistance or excitement?</li>
-                                <li>• What questions keep emerging?</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center justify-between mt-4">
-                        <span class="text-xs text-gray-500">Click to expand</span>
-                        <button class="{{ feature_styles.action_btn }}">
-                            💭 Reflect on this
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-
-    {% if active_mode.slug == "mystical" %}
-        <!-- Mystical Astronomical Card -->
-        <div class="{{ feature_styles.astronomical_container }}" onclick="toggleCard(this)">
-            <div class="flex items-start space-x-4">
-                <div class="flex-shrink-0">
-                    <div class="{{ feature_styles.icon_container }}">
-                        <svg class="{{ feature_styles.icon_class }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                        </svg>
-                    </div>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <h4 class="{{ feature_styles.title }}">🌌 Astronomical Notable</h4>
-                    <p class="{{ feature_styles.text }}">{{ feature_content.astronomical }}</p>
-                    
-                    <div class="card-content-expanded">
-                        <div class="{{ feature_styles.expanded_content }}">
-                            <p class="{{ feature_styles.expanded_text }} mb-3">Cosmic connections:</p>
-                            <ul class="{{ feature_styles.expanded_text }} space-y-1">
-                                <li>• How does this celestial event reflect in your inner world?</li>
-                                <li>• What cycles are you experiencing right now?</li>
-                                <li>• How can you align with this cosmic energy?</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center justify-between mt-4">
-                        <span class="text-xs text-gray-500">Click to expand</span>
-                        <button class="{{ feature_styles.action_btn }}">
-                            🌟 Contemplate
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endif %}
-
-    <!-- Action Card -->
-    <div class="{{ feature_styles.action_container }}" onclick="toggleCard(this)">
-        <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
-                <div class="{{ feature_styles.icon_container }}">
-                    <svg class="{{ feature_styles.icon_class }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h4 class="{{ feature_styles.title }}">
-                    {% if active_mode.slug == "mystical" %}🔮 Suggested Action
-                    {% else %}⚡ Suggested Action{% endif %}
-                </h4>
-                <p class="{{ feature_styles.text }}">{{ feature_content.action }}</p>
-                
-                <div class="card-content-expanded">
-                    <div class="{{ feature_styles.expanded_content }}">
-                        <p class="{{ feature_styles.expanded_text }} mb-3">Action steps:</p>
-                        <ol class="{{ feature_styles.expanded_text }} space-y-2">
-                            <li>1. Set aside dedicated time</li>
-                            <li>2. Gather necessary materials</li>
-                            <li>3. Create a focused environment</li>
-                            <li>4. Document your process</li>
-                        </ol>
-                    </div>
-                </div>
-                
-                <div class="flex items-center justify-between mt-4">
-                    <span class="text-xs text-gray-500">Click to expand</span>
-                    <button class="{{ feature_styles.action_btn }}">
-                        ✅ Mark as done
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Fact/Insight Card -->
-    <div class="{{ feature_styles.fact_container }}" onclick="toggleCard(this)">
-        <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
-                <div class="{{ feature_styles.icon_container }}">
-                    <svg class="{{ feature_styles.icon_class }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
-                    </svg>
-                </div>
-            </div>
-            <div class="flex-1 min-w-0">
-                <h4 class="{{ feature_styles.title }}">
-                    {% if active_mode.slug == "mystical" %}📜 Mystical Fact of the Day
-                    {% else %}💡 Daily Insight{% endif %}
-                </h4>
-                <p class="{{ feature_styles.text }}">
-                    {% if active_mode.slug == "mystical" %}
-                        {{ feature_content.fact }}
-                    {% else %}
-                        {{ feature_content.fact_content }}
-                    {% endif %}
-                </p>
-                
-                <div class="card-content-expanded">
-                    <div class="{{ feature_styles.expanded_content }}">
-                        <p class="{{ feature_styles.expanded_text }} mb-3">
-                            {% if active_mode.slug == "mystical" %}Ancient wisdom:
-                            {% else %}Consider this:{% endif %}
-                        </p>
-                        <ul class="{{ feature_styles.expanded_text }} space-y-1">
-                            <li>• How does this knowledge apply to your current situation?</li>
-                            <li>• What patterns do you notice?</li>
-                            <li>• How can you integrate this insight?</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="flex items-center justify-between mt-4">
-                    <span class="text-xs text-gray-500">Click to expand</span>
-                    <button class="{{ feature_styles.action_btn }}">
-                        {% if active_mode.slug == "mystical" %}🔮 Integrate
-                        {% else %}✨ Apply insight{% endif %}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-{% else %}
-<div class="space-y-4">
-    <h4 class="font-medium text-gray-700">📝 Journal Features</h4>
-    <div class="bg-gray-50 rounded-lg p-4">
-        <p class="text-sm text-gray-600">
-            Select a mode above to see specialized features and insights.
-        </p>
-    </div>
-</div>
-{% endif %}
-
-<!-- JavaScript for Card Expansion -->
-<script>
-function toggleCard(cardElement) {
-    const clickHint = cardElement.querySelector('.text-xs.text-gray-500');
-    cardElement.classList.toggle('expanded');
-    
-    if (cardElement.classList.contains('expanded')) {
-        clickHint.textContent = 'Click to collapse';
-    } else {
-        clickHint.textContent = 'Click to expand';
-    }
-}
-
-// Ensure all cards start collapsed
-document.addEventListener('DOMContentLoaded', function() {
-    const cards = document.querySelectorAll('.expandable-card');
-    cards.forEach(card => card.classList.remove('expanded'));
-});
-</script>
-
-<!-- CSS for Enhanced Cards -->
 <style>
-/* Card animations and states */
-.expandable-card {
+/* Mystical Tab Navigation */
+.mystical-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: linear-gradient(145deg, rgba(30, 27, 75, 0.3), rgba(17, 24, 39, 0.4));
+    border-radius: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(139, 92, 246, 0.15);
+}
+
+.mystical-tab {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border: none;
+    border-radius: 0.75rem;
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    position: relative;
+    overflow: hidden;
 }
 
-.expandable-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+.mystical-tab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 0.75rem;
 }
 
-/* .expandable-card.expanded {
-    transform: translateY(0);
-} */
-
-.expandable-card.expanded .card-content-expanded {
-    max-height: 500px;   /* or a big enough value */
+.mystical-tab:hover::before {
     opacity: 1;
 }
 
-/* Card content transitions */
-.card-content-expanded {
-    transition: max-height 0.3s ease, opacity 0.3s ease;
-    overflow: hidden;
-    max-height: 0;   /* collapsed by default */
+.mystical-tab:hover {
+    color: #c4b5fd;
+}
+
+.mystical-tab.active {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3));
+    color: #ffffff;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.mystical-tab.active::before {
     opacity: 0;
 }
 
-/* Icon animations */
-.icon-float {
-    animation: iconFloat 3s ease-in-out infinite;
+.mystical-tab-icon {
+    font-size: 1rem;
+    filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.5));
 }
 
-.icon-pulse {
-    animation: iconPulse 2s ease-in-out infinite;
+/* Mystical Content Sections */
+.mystical-section {
+    display: none;
+    animation: fadeInUp 0.4s ease;
 }
 
-@keyframes iconFloat {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-3px); }
+.mystical-section.active {
+    display: block;
 }
 
-@keyframes iconPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.1); }
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* Action button hover effects */
-.action-btn {
-    transition: all 0.2s ease;
+/* Enhanced Loading States */
+.mystical-loading {
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
 }
 
-.action-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+.mystical-spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid rgba(139, 92, 246, 0.2);
+    border-top-color: #8b5cf6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-/* Content type indicators */
-.content-inquiry {
-    border-left: 4px solid transparent;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-.content-action {
-    position: relative;
+/* Mystical Card Styles (inherit from parent but ensure consistency) */
+.mystical-content-card {
+    background: linear-gradient(145deg, rgba(30, 27, 75, 0.4), rgba(17, 24, 39, 0.6));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
 }
 
-.content-action::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: linear-gradient(to bottom, currentColor, transparent);
-    opacity: 0.6;
+.mystical-content-card:hover {
+    border-color: rgba(139, 92, 246, 0.25);
+    box-shadow: 
+        0 12px 48px rgba(0, 0, 0, 0.5),
+        0 0 40px rgba(139, 92, 246, 0.1);
 }
 
-.content-insight {
-    position: relative;
-    overflow: hidden;
+/* Compact Section Headers */
+.mystical-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
 }
 
-.content-insight::after {
-    content: '';
-    position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 20px;
-    height: 20px;
-    background: linear-gradient(45deg, transparent 30%, currentColor 30%, currentColor 70%, transparent 70%);
-    opacity: 0.1;
+.mystical-section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.mystical-section-icon {
+    font-size: 1.25rem;
+    color: #8b5cf6;
+    filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
 }
 
 /* Responsive adjustments */
-@media (max-width: 640px) {
-    .expandable-card {
+@media (max-width: 768px) {
+    .mystical-tabs {
+        flex-direction: column;
+    }
+    
+    .mystical-tab {
         padding: 1rem;
     }
-    
-    .expandable-card .flex {
-        flex-direction: column;
-        space-y: 0.75rem;
-    }
-    
-    .expandable-card .flex-shrink-0 {
-        flex-shrink: 1;
-        align-self: flex-start;
-    }
+}
+
+/* Override mode-transition for mystical content */
+.mystical-section {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.mystical-section.active {
+    opacity: 1;
 }
 </style>
+
+<!-- Mystical Navigation Tabs -->
+<div class="mystical-tabs">
+    <button class="mystical-tab active" data-tab="cosmic" onclick="switchMysticalTab('cosmic')">
+        <span class="mystical-tab-icon">🌙</span>
+        <span>Cosmic</span>
+    </button>
+    <button class="mystical-tab" data-tab="astrology" onclick="switchMysticalTab('astrology')">
+        <span class="mystical-tab-icon">⭐</span>
+        <span>Astrology</span>
+    </button>
+    <button class="mystical-tab" data-tab="interactive" onclick="switchMysticalTab('interactive')">
+        <span class="mystical-tab-icon">🔮</span>
+        <span>Interactive</span>
+    </button>
+</div>
+
+<!-- Cosmic Dashboard Section -->
+<div class="mystical-section active" id="cosmic-section">
+    <div class="mystical-section-header">
+        <i class="fas fa-stars mystical-section-icon"></i>
+        <h3 class="mystical-section-title">Cosmic Dashboard</h3>
+    </div>
+    
+    <div id="cosmic-dashboard-content" 
+         hx-get="{% url 'deep_dive:moon_planets' %}" 
+         hx-trigger="load"
+         hx-swap="innerHTML">
+        <!-- Loading State -->
+        <div class="mystical-loading">
+            <div class="mystical-spinner"></div>
+            <p class="text-slate-400 text-sm">Loading cosmic data...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Astrology Section -->
+<div class="mystical-section" id="astrology-section">
+    <div class="mystical-section-header">
+        <i class="fas fa-chart-pie mystical-section-icon"></i>
+        <h3 class="mystical-section-title">Birth Chart & Readings</h3>
+    </div>
+    
+    <div id="astrology-content" 
+         hx-get="{% url 'deep_dive:astro_chart_reading' %}" 
+         hx-trigger="intersect once"
+         hx-swap="innerHTML">
+        <!-- Loading State -->
+        <div class="mystical-loading">
+            <div class="mystical-spinner"></div>
+            <p class="text-slate-400 text-sm">Preparing your chart...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Mystical Section -->
+<div class="mystical-section" id="interactive-section">
+    <div class="mystical-section-header">
+        <i class="fas fa-magic mystical-section-icon"></i>
+        <h3 class="mystical-section-title">Tarot & Insights</h3>
+    </div>
+    
+    <div id="interactive-content" 
+         hx-get="{% url 'deep_dive:interactive_mystical' %}" 
+         hx-trigger="intersect once"
+         hx-swap="innerHTML">
+        <!-- Loading State -->
+        <div class="mystical-loading">
+            <div class="mystical-spinner"></div>
+            <p class="text-slate-400 text-sm">Channeling mystical energies...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchMysticalTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.mystical-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Update content sections with smooth transition
+    document.querySelectorAll('.mystical-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    setTimeout(() => {
+        document.getElementById(`${tabName}-section`).classList.add('active');
+    }, 150);
+    
+    // Optional: Store active tab in session/localStorage
+    localStorage.setItem('activeMysticalTab', tabName);
+}
+
+// Restore last active tab on load
+document.addEventListener('DOMContentLoaded', function() {
+    const lastTab = localStorage.getItem('activeMysticalTab');
+    if (lastTab && lastTab !== 'cosmic') {
+        switchMysticalTab(lastTab);
+    }
+});
+</script>

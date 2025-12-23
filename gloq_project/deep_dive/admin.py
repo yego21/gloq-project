@@ -1,19 +1,21 @@
-# deep_dive/admin.py - ENHANCED VERSION WITH TAROT
+# deep_dive/admin.py - ENHANCED WITH DEBUGGING
 from django.contrib import admin
 from django.utils.html import format_html
 from django.utils import timezone
 from datetime import date
+import json
 from .models import AIReading, TarotCardDraw
 
 
 @admin.register(AIReading)
 class AIReadingAdmin(admin.ModelAdmin):
-    # Update list display to show information for all reading types
+    # Enhanced list display for debugging
     list_display = [
         'user',
         'reading_status',
         'total_transits',
         'latest_moon_phase',
+        'data_health',  # NEW: Check for data issues
         'is_any_reading_today',
         'last_updated',
     ]
@@ -32,38 +34,55 @@ class AIReadingAdmin(admin.ModelAdmin):
         'element_wisdom_text',
     ]
 
-    # Fields that should be read-only in the admin
+    # Enhanced readonly fields for debugging
     readonly_fields = [
         'user',
         'reading_status_detailed',
+        'data_debug_info',  # NEW: Debug panel
         'formatted_daily_reading',
+        'daily_overview_data_panel',  # NEW: Show cosmic context
         'formatted_transit_reading',
+        'transit_focus_data_panel',  # NEW: Show transit summaries
         'formatted_element_reading',
+        'element_wisdom_data_panel',  # NEW: Show elemental analysis
         'all_transits_display',
         'cosmic_weather',
         'created_at',
         'updated_at',
     ]
 
-    # Reorganize fieldsets to display all three reading types clearly
     fieldsets = (
         ('User Information', {
             'fields': ('user', 'reading_status_detailed', 'created_at', 'updated_at')
         }),
-        ('Daily Overview Reading', {
-            'fields': ('formatted_daily_reading', 'daily_overview_moon_phase', 'daily_overview_generated_at'),
-            'classes': ('wide',),
-            'description': 'Use admin actions below to delete this specific reading type.'
+        ('🐛 Debug Information', {
+            'fields': ('data_debug_info',),
+            'classes': ('collapse',),
+            'description': 'Technical data for debugging'
         }),
-        ('Transit Focus Reading', {
-            'fields': ('formatted_transit_reading', 'transit_focus_moon_phase', 'transit_focus_generated_at'),
+        ('📅 Daily Overview Reading', {
+            'fields': (
+                'formatted_daily_reading',
+                'daily_overview_data_panel',
+                'daily_overview_generated_at'
+            ),
             'classes': ('wide',),
-            'description': 'Use admin actions below to delete this specific reading type.'
         }),
-        ('Element Wisdom Reading', {
-            'fields': ('formatted_element_reading', 'element_wisdom_moon_phase', 'element_wisdom_generated_at'),
+        ('🔄 Transit Focus Reading', {
+            'fields': (
+                'formatted_transit_reading',
+                'transit_focus_data_panel',
+                'transit_focus_generated_at'
+            ),
             'classes': ('wide',),
-            'description': 'Use admin actions below to delete this specific reading type.'
+        }),
+        ('⚛️ Element Wisdom Reading', {
+            'fields': (
+                'formatted_element_reading',
+                'element_wisdom_data_panel',
+                'element_wisdom_generated_at'
+            ),
+            'classes': ('wide',),
         }),
         ('Cosmic Context', {
             'fields': ('cosmic_weather', 'all_transits_display'),
@@ -75,36 +94,32 @@ class AIReadingAdmin(admin.ModelAdmin):
         """Optimize database queries by prefetching related user data."""
         return super().get_queryset(request).select_related('user')
 
-    # ========== LIST DISPLAY METHODS ==========
+    # ========================================
+    # LIST DISPLAY METHODS
+    # ========================================
 
     def reading_status(self, obj):
         """Show which readings are present with color-coded badges."""
         badges = []
 
-        # Daily Overview badge
         if obj.daily_overview_text:
             badges.append(
                 '<span style="background-color: #fbbf24; color: black; padding: 2px 8px; border-radius: 10px; font-size: 10px;">📅 Daily</span>')
-
-        # Transit Focus badge
         if obj.transit_focus_text:
             badges.append(
                 '<span style="background-color: #a78bfa; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px;">🔄 Transit</span>')
-
-        # Element Wisdom badge
         if obj.element_wisdom_text:
             badges.append(
                 '<span style="background-color: #60a5fa; color: white; padding: 2px 8px; border-radius: 10px; font-size: 10px;">⚛️ Element</span>')
 
         if not badges:
             return format_html('<span style="color: #9ca3af;">No readings</span>')
-
         return format_html(' '.join(badges))
 
     reading_status.short_description = 'Readings'
 
     def total_transits(self, obj):
-        """Calculate total number of transits across all reading types."""
+        """Calculate total number of transits."""
         total = (len(obj.daily_overview_transits) +
                  len(obj.transit_focus_transits) +
                  len(obj.element_wisdom_transits))
@@ -117,27 +132,60 @@ class AIReadingAdmin(admin.ModelAdmin):
 
     def latest_moon_phase(self, obj):
         """Show the most recent moon phase from any reading."""
-        # Get all moon phases that exist, ordered by recency
         phases = []
-        if obj.element_wisdom_generated_at and obj.element_wisdom_moon_phase:
-            phases.append((obj.element_wisdom_generated_at, obj.element_wisdom_moon_phase))
+
+        if obj.element_wisdom_generated_at:
+            moon = obj.element_wisdom_moon_phase
+            if isinstance(moon, dict):
+                phases.append(
+                    (obj.element_wisdom_generated_at, f"{moon.get('emoji', '🌙')} {moon.get('phase', 'Unknown')}"))
+
         if obj.transit_focus_generated_at and obj.transit_focus_moon_phase:
             phases.append((obj.transit_focus_generated_at, obj.transit_focus_moon_phase))
-        if obj.daily_overview_generated_at and obj.daily_overview_moon_phase:
-            phases.append((obj.daily_overview_generated_at, obj.daily_overview_moon_phase))
+
+        if obj.daily_overview_generated_at:
+            moon = obj.daily_overview_moon_phase
+            if isinstance(moon, dict):
+                phases.append(
+                    (obj.daily_overview_generated_at, f"{moon.get('emoji', '🌙')} {moon.get('phase', 'Unknown')}"))
 
         if phases:
-            # Return the moon phase from the most recent reading
             latest_phase = max(phases, key=lambda x: x[0])[1]
             return format_html('<span style="font-weight: 600;">{}</span>', latest_phase)
         return format_html('<span style="color: #9ca3af;">—</span>')
 
     latest_moon_phase.short_description = 'Moon Phase'
 
+    def data_health(self, obj):
+        """NEW: Check for data integrity issues."""
+        issues = []
+
+        # Check Daily Overview
+        if obj.daily_overview_text:
+            if not isinstance(obj.daily_overview_moon_phase, dict):
+                issues.append('Daily moon_phase not dict')
+            if not isinstance(obj.daily_overview_element_dist, dict):
+                issues.append('Daily elements not dict')
+
+        # Check Transit Focus
+        if obj.transit_focus_text:
+            if not isinstance(obj.transit_focus_transit_summaries, list):
+                issues.append('Transit summaries not list')
+
+        # Check Element Wisdom
+        if obj.element_wisdom_text:
+            if not isinstance(obj.element_wisdom_current_elements, dict):
+                issues.append('Element data not dict')
+
+        if issues:
+            return format_html('<span style="color: #ef4444; font-weight: 600;">⚠️ {}</span>', len(issues))
+        return format_html('<span style="color: #10b981;">✓</span>')
+
+    data_health.short_description = 'Data OK'
+
     def is_any_reading_today(self, obj):
         """Check if any reading was generated today."""
         today = date.today()
-
         readings_today = [
             obj.daily_overview_generated_at.date() == today if obj.daily_overview_generated_at else False,
             obj.transit_focus_generated_at.date() == today if obj.transit_focus_generated_at else False,
@@ -147,7 +195,6 @@ class AIReadingAdmin(admin.ModelAdmin):
         if any(readings_today):
             return format_html('<span style="color: #10b981; font-weight: 600;">✓ Today</span>')
 
-        # Show the date of the most recent reading
         all_dates = [d for d in
                      [obj.daily_overview_generated_at, obj.transit_focus_generated_at, obj.element_wisdom_generated_at]
                      if d]
@@ -165,13 +212,15 @@ class AIReadingAdmin(admin.ModelAdmin):
 
     last_updated.short_description = 'Last Updated'
 
-    # ========== READONLY FIELD METHODS ==========
+    # ========================================
+    # READONLY FIELD METHODS
+    # ========================================
 
     def reading_status_detailed(self, obj):
         """Detailed reading status for the change form."""
         status_lines = []
 
-        # Daily Overview status
+        # Daily Overview
         if obj.daily_overview_text:
             date_str = obj.daily_overview_generated_at.strftime(
                 '%b %d, %Y %H:%M') if obj.daily_overview_generated_at else 'Unknown'
@@ -179,7 +228,7 @@ class AIReadingAdmin(admin.ModelAdmin):
         else:
             status_lines.append("📅 <strong>Daily Overview</strong>: <span style='color: #9ca3af;'>Not generated</span>")
 
-        # Transit Focus status
+        # Transit Focus
         if obj.transit_focus_text:
             date_str = obj.transit_focus_generated_at.strftime(
                 '%b %d, %Y %H:%M') if obj.transit_focus_generated_at else 'Unknown'
@@ -187,7 +236,7 @@ class AIReadingAdmin(admin.ModelAdmin):
         else:
             status_lines.append("🔄 <strong>Transit Focus</strong>: <span style='color: #9ca3af;'>Not generated</span>")
 
-        # Element Wisdom status
+        # Element Wisdom
         if obj.element_wisdom_text:
             date_str = obj.element_wisdom_generated_at.strftime(
                 '%b %d, %Y %H:%M') if obj.element_wisdom_generated_at else 'Unknown'
@@ -199,6 +248,164 @@ class AIReadingAdmin(admin.ModelAdmin):
         return format_html('<div style="line-height: 1.8;">{}</div>', '<br>'.join(status_lines))
 
     reading_status_detailed.short_description = 'Reading Status'
+
+    def data_debug_info(self, obj):
+        """NEW: Comprehensive debug panel showing all data structures."""
+        debug_sections = []
+
+        # Daily Overview Debug
+        if obj.daily_overview_text:
+            debug_sections.append('<h3 style="color: #fbbf24;">📅 Daily Overview Data</h3>')
+            debug_sections.append(self._format_json_data('Moon Phase', obj.daily_overview_moon_phase))
+            debug_sections.append(self._format_json_data('Element Distribution', obj.daily_overview_element_dist))
+            debug_sections.append(self._format_json_data('Modality Distribution', obj.daily_overview_modality_dist))
+            debug_sections.append(self._format_json_data('Sign Concentrations', obj.daily_overview_sign_concentrations))
+            debug_sections.append(self._format_json_data('Sky Conjunctions', obj.daily_overview_sky_conjunctions))
+            debug_sections.append(
+                f'<p><strong>Cosmic Weather:</strong> {obj.daily_overview_cosmic_weather or "None"}</p>')
+
+        # Transit Focus Debug
+        if obj.transit_focus_text:
+            debug_sections.append('<h3 style="color: #a78bfa;">🔄 Transit Focus Data</h3>')
+            debug_sections.append(
+                f'<p><strong>Transit Summaries Count:</strong> {len(obj.transit_focus_transit_summaries)}</p>')
+            if obj.transit_focus_transit_summaries:
+                debug_sections.append(
+                    self._format_json_data('First Transit Summary', obj.transit_focus_transit_summaries[0]))
+
+        # Element Wisdom Debug
+        if obj.element_wisdom_text:
+            debug_sections.append('<h3 style="color: #60a5fa;">⚛️ Element Wisdom Data</h3>')
+            debug_sections.append(self._format_json_data('Current Elements', obj.element_wisdom_current_elements))
+            debug_sections.append(self._format_json_data('Natal Elements', obj.element_wisdom_natal_elements))
+            debug_sections.append(self._format_json_data('Element Comparison', obj.element_wisdom_comparison))
+
+        if not debug_sections:
+            return format_html('<p style="color: #9ca3af; font-style: italic;">No readings to debug</p>')
+
+        return format_html('<div style="background: #f9fafb; padding: 16px; border-radius: 8px;">{}</div>',
+                           ''.join(debug_sections))
+
+    data_debug_info.short_description = '🐛 Debug Data'
+
+    def _format_json_data(self, label, data):
+        """Helper to format JSON data nicely."""
+        if not data:
+            return f'<p><strong>{label}:</strong> <span style="color: #9ca3af;">None</span></p>'
+
+        try:
+            json_str = json.dumps(data, indent=2)
+            return format_html(
+                '<div style="margin: 12px 0;">'
+                '<strong>{}:</strong>'
+                '<pre style="background: #1f2937; color: #10b981; padding: 12px; '
+                'border-radius: 6px; overflow-x: auto; font-size: 11px; margin-top: 4px;">{}</pre>'
+                '</div>',
+                label,
+                json_str
+            )
+        except Exception as e:
+            return f'<p><strong>{label}:</strong> <span style="color: #ef4444;">Error: {str(e)}</span></p>'
+
+    def daily_overview_data_panel(self, obj):
+        """NEW: Show Daily Overview cosmic context data."""
+        if not obj.daily_overview_text:
+            return format_html('<p style="color: #9ca3af; font-style: italic;">No daily overview generated</p>')
+
+        panels = []
+
+        # Moon Phase
+        moon = obj.daily_overview_moon_phase
+        if isinstance(moon, dict):
+            panels.append(format_html(
+                '<div style="background: #f3f4f6; padding: 12px; border-radius: 6px; margin-bottom: 12px;">'
+                '<strong>🌙 Moon Phase:</strong> {} {} ({}% illumination)'
+                '</div>',
+                moon.get('emoji', ''),
+                moon.get('phase', 'Unknown'),
+                moon.get('illumination', '?')
+            ))
+
+        # Elements
+        if obj.daily_overview_element_dist:
+            elem_str = ', '.join([f"{k}: {v}" for k, v in obj.daily_overview_element_dist.items()])
+            panels.append(format_html('<p><strong>🔥 Elements:</strong> {}</p>', elem_str))
+
+        # Modality
+        if obj.daily_overview_modality_dist:
+            mod_str = ', '.join([f"{k}: {v}" for k, v in obj.daily_overview_modality_dist.items()])
+            panels.append(format_html('<p><strong>⚡ Modality:</strong> {}</p>', mod_str))
+
+        # Sky Conjunctions
+        if obj.daily_overview_sky_conjunctions:
+            conj_list = []
+            for conj in obj.daily_overview_sky_conjunctions[:3]:
+                conj_list.append(f"{conj.get('planet1')} ∠ {conj.get('planet2')} ({conj.get('orb')}°)")
+            panels.append(format_html('<p><strong>✨ Conjunctions:</strong> {}</p>', ', '.join(conj_list)))
+
+        return format_html('<div>{}</div>', ''.join(panels))
+
+    daily_overview_data_panel.short_description = 'Cosmic Context Data'
+
+    def transit_focus_data_panel(self, obj):
+        """NEW: Show Transit Focus summaries."""
+        if not obj.transit_focus_text:
+            return format_html('<p style="color: #9ca3af; font-style: italic;">No transit focus generated</p>')
+
+        summaries = obj.transit_focus_transit_summaries
+        if not summaries:
+            return format_html('<p style="color: #9ca3af;">No transit summaries available</p>')
+
+        panels = []
+        for i, summary in enumerate(summaries[:3], 1):
+            panels.append(format_html(
+                '<div style="background: #f3f4f6; padding: 12px; border-radius: 6px; margin-bottom: 12px; border-left: 3px solid #a78bfa;">'
+                '<strong>Transit {}:</strong> {} {} {}<br>'
+                '<span style="color: #6b7280; font-size: 0.9em;">{}</span><br>'
+                '<em style="color: #8b5cf6;">{}</em>'
+                '</div>',
+                i,
+                summary.get('transit_planet', '?'),
+                summary.get('aspect_type', '?'),
+                summary.get('natal_planet', '?'),
+                summary.get('summary', ''),
+                summary.get('meaning', '')
+            ))
+
+        return format_html('<div>{}</div>', ''.join(panels))
+
+    transit_focus_data_panel.short_description = 'Transit Summaries'
+
+    def element_wisdom_data_panel(self, obj):
+        """NEW: Show Element Wisdom analysis."""
+        if not obj.element_wisdom_text:
+            return format_html('<p style="color: #9ca3af; font-style: italic;">No element wisdom generated</p>')
+
+        panels = []
+
+        # Current Elements
+        current = obj.element_wisdom_current_elements
+        if isinstance(current, dict) and 'distribution' in current:
+            dist = current.get('distribution', {})
+            elem_str = ', '.join([f"{k}: {v}" for k, v in dist.items()])
+            panels.append(format_html('<p><strong>🔥 Current Sky:</strong> {}</p>', elem_str))
+
+        # Natal Elements
+        natal = obj.element_wisdom_natal_elements
+        if isinstance(natal, dict) and 'distribution' in natal:
+            dist = natal.get('distribution', {})
+            elem_str = ', '.join([f"{k}: {v}" for k, v in dist.items()])
+            panels.append(format_html('<p><strong>⭐ Natal Chart:</strong> {}</p>', elem_str))
+
+        # Comparison
+        if obj.element_wisdom_comparison:
+            comp_str = ', '.join([f"{k}: {v}" for k, v in obj.element_wisdom_comparison.items()])
+            panels.append(format_html('<p><strong>📊 Comparison:</strong> {}</p>', comp_str))
+
+        return format_html('<div style="background: #f3f4f6; padding: 12px; border-radius: 6px;">{}</div>',
+                           ''.join(panels))
+
+    element_wisdom_data_panel.short_description = 'Elemental Analysis'
 
     def formatted_daily_reading(self, obj):
         """Format the daily overview reading for display."""
@@ -282,21 +489,22 @@ class AIReadingAdmin(admin.ModelAdmin):
 
     all_transits_display.short_description = 'All Transits'
 
-    # ========== ADMIN PERMISSIONS ==========
+    # ========================================
+    # ADMIN PERMISSIONS
+    # ========================================
 
     def has_add_permission(self, request):
-        """Disable manual adding - readings are generated by users."""
         return False
 
     def has_delete_permission(self, request, obj=None):
-        """Allow deletion for cleanup."""
         return True
 
     def has_change_permission(self, request, obj=None):
-        """Allow changes so actions work, but fields are read-only."""
         return True
 
-    # ========== CUSTOM ACTIONS ==========
+    # ========================================
+    # CUSTOM ACTIONS (keeping your existing ones)
+    # ========================================
 
     actions = [
         'delete_daily_overview_reading',
@@ -304,25 +512,60 @@ class AIReadingAdmin(admin.ModelAdmin):
         'delete_element_wisdom_reading',
         'delete_all_readings',
         'show_reading_summary',
+        'validate_data_structures',  # NEW
     ]
 
+    def validate_data_structures(self, request, queryset):
+        """NEW: Validate data structure integrity."""
+        for reading in queryset:
+            issues = []
+
+            # Check Daily Overview
+            if reading.daily_overview_text:
+                if not isinstance(reading.daily_overview_moon_phase, dict):
+                    issues.append(
+                        f"Daily moon_phase is {type(reading.daily_overview_moon_phase).__name__}, expected dict")
+                if not isinstance(reading.daily_overview_element_dist, dict):
+                    issues.append(
+                        f"Daily element_dist is {type(reading.daily_overview_element_dist).__name__}, expected dict")
+
+            # Check Transit Focus
+            if reading.transit_focus_text:
+                if not isinstance(reading.transit_focus_transit_summaries, list):
+                    issues.append(
+                        f"Transit summaries is {type(reading.transit_focus_transit_summaries).__name__}, expected list")
+
+            # Check Element Wisdom
+            if reading.element_wisdom_text:
+                if not isinstance(reading.element_wisdom_current_elements, dict):
+                    issues.append(
+                        f"Element current_elements is {type(reading.element_wisdom_current_elements).__name__}, expected dict")
+
+            if issues:
+                self.message_user(request, f"❌ {reading.user.username}: " + '; '.join(issues), level='error')
+            else:
+                self.message_user(request, f"✅ {reading.user.username}: All data structures valid", level='success')
+
+    validate_data_structures.short_description = "✅ Validate data structures"
+
+    # [Keep all your existing action methods here]
     def delete_daily_overview_reading(self, request, queryset):
-        """Delete only the Daily Overview reading type from selected records."""
         count = 0
         for reading in queryset:
             if reading.daily_overview_text:
                 reading.daily_overview_text = ''
                 reading.daily_overview_transits = []
-                reading.daily_overview_moon_phase = ''
+                reading.daily_overview_moon_phase = {}
                 reading.daily_overview_generated_at = None
+                reading.daily_overview_element_dist = {}
+                reading.daily_overview_modality_dist = {}
+                reading.daily_overview_sign_concentrations = []
+                reading.daily_overview_sky_conjunctions = []
+                reading.daily_overview_cosmic_weather = ''
                 reading.save()
                 count += 1
-
-        self.message_user(
-            request,
-            f"Successfully deleted Daily Overview reading from {count} record(s).",
-            level='success' if count > 0 else 'warning'
-        )
+        self.message_user(request, f"Successfully deleted Daily Overview reading from {count} record(s).",
+                          level='success' if count > 0 else 'warning')
 
     delete_daily_overview_reading.short_description = "🗑️ Delete Daily Overview readings"
 
