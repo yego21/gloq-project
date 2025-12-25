@@ -1,15 +1,13 @@
-<!-- This replaces the content inside #mode-features div when Mystical mode is active -->
-
 <style>
-/* Mystical Tab Navigation */
+/* Mystical Tab Navigation - Light Theme */
 .mystical-tabs {
     display: flex;
     gap: 0.5rem;
     padding: 0.5rem;
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.3), rgba(17, 24, 39, 0.4));
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
     border-radius: 1rem;
     margin-bottom: 1.5rem;
-    border: 1px solid rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
 .mystical-tab {
@@ -18,7 +16,7 @@
     background: transparent;
     border: none;
     border-radius: 0.75rem;
-    color: #94a3b8;
+    color: #64748b; /* Readable gray */
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -35,7 +33,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1));
     opacity: 0;
     transition: opacity 0.3s ease;
     border-radius: 0.75rem;
@@ -46,13 +44,14 @@
 }
 
 .mystical-tab:hover {
-    color: #c4b5fd;
+    color: #6366f1; /* Indigo on hover */
 }
 
 .mystical-tab.active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3));
-    color: #ffffff;
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    color: #6366f1; /* Indigo for active */
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
 }
 
 .mystical-tab.active::before {
@@ -61,7 +60,7 @@
 
 .mystical-tab-icon {
     font-size: 1rem;
-    filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.5));
+    filter: none; /* Remove glow effect */
 }
 
 /* Mystical Content Sections */
@@ -98,8 +97,8 @@
 .mystical-spinner {
     width: 48px;
     height: 48px;
-    border: 3px solid rgba(139, 92, 246, 0.2);
-    border-top-color: #8b5cf6;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -108,40 +107,41 @@
     to { transform: rotate(360deg); }
 }
 
-/* Mystical Card Styles (inherit from parent but ensure consistency) */
+/* Mystical Card Styles - Light Theme */
 .mystical-content-card {
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.4), rgba(17, 24, 39, 0.6));
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(249, 250, 251, 0.9));
     backdrop-filter: blur(20px);
     border: 1px solid rgba(139, 92, 246, 0.15);
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
     transition: all 0.3s ease;
 }
 
 .mystical-content-card:hover {
-    border-color: rgba(139, 92, 246, 0.25);
+    border-color: rgba(139, 92, 246, 0.3);
     box-shadow: 
-        0 12px 48px rgba(0, 0, 0, 0.5),
-        0 0 40px rgba(139, 92, 246, 0.1);
+        0 8px 24px rgba(0, 0, 0, 0.12),
+        0 0 20px rgba(139, 92, 246, 0.1);
+    transform: translateY(-2px);
 }
 
-/* Compact Section Headers */
+/* Compact Section Headers - Light Theme */
 .mystical-section-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    border-bottom: 2px solid rgba(139, 92, 246, 0.15);
 }
 
 .mystical-section-title {
     font-size: 1.25rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -150,7 +150,26 @@
 .mystical-section-icon {
     font-size: 1.25rem;
     color: #8b5cf6;
-    filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
+    filter: none; /* Remove glow */
+}
+
+/* Text colors for light background */
+.mystical-section p,
+.mystical-section span,
+.mystical-section div {
+    color: #334155; /* Slate-700 for readability */
+}
+
+.mystical-section h1,
+.mystical-section h2,
+.mystical-section h3,
+.mystical-section h4 {
+    color: #1e293b; /* Slate-800 for headings */
+}
+
+/* Loading text */
+.mystical-loading p {
+    color: #64748b; /* Slate-500 */
 }
 
 /* Responsive adjustments */
@@ -164,7 +183,7 @@
     }
 }
 
-/* Override mode-transition for mystical content */
+/* Section transitions */
 .mystical-section {
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -172,6 +191,24 @@
 
 .mystical-section.active {
     opacity: 1;
+}
+
+/* Additional utility classes for content inside */
+.mystical-text-primary {
+    color: #1e293b;
+}
+
+.mystical-text-secondary {
+    color: #64748b;
+}
+
+.mystical-text-accent {
+    color: #8b5cf6;
+}
+
+.mystical-bg-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.15);
 }
 </style>
 
@@ -204,7 +241,7 @@
          hx-swap="innerHTML">
         <div class="mystical-loading">
             <div class="mystical-spinner"></div>
-            <p class="text-slate-400 text-sm">Loading cosmic data...</p>
+            <p>Loading cosmic data...</p>
         </div>
     </div>
 </div>
@@ -222,7 +259,7 @@
          hx-swap="innerHTML">
         <div class="mystical-loading">
             <div class="mystical-spinner"></div>
-            <p class="text-slate-400 text-sm">Preparing your chart...</p>
+            <p>Preparing your chart...</p>
         </div>
     </div>
 </div>
@@ -240,32 +277,28 @@
          hx-swap="innerHTML">
         <div class="mystical-loading">
             <div class="mystical-spinner"></div>
-            <p class="text-slate-400 text-sm">Channeling mystical energies...</p>
+            <p>Channeling mystical energies...</p>
         </div>
     </div>
 </div>
 
-<!-- KEY FIX: Use a script that HTMX will process -->
 <script>
 (function() {
     'use strict';
     
-    // Initialize mystical tabs functionality
     function initMysticalTabs() {
         const tabButtons = document.querySelectorAll('.mystical-tab');
         const sections = document.querySelectorAll('.mystical-section');
         
-        if (tabButtons.length === 0) return; // Guard clause
+        if (tabButtons.length === 0) return;
         
         function switchTab(tabName) {
-            // Update tab buttons
             tabButtons.forEach(tab => tab.classList.remove('active'));
             const activeButton = document.querySelector(`.mystical-tab[data-tab="${tabName}"]`);
             if (activeButton) {
                 activeButton.classList.add('active');
             }
             
-            // Update content sections
             sections.forEach(section => section.classList.remove('active'));
             
             setTimeout(() => {
@@ -273,7 +306,6 @@
                 if (targetSection) {
                     targetSection.classList.add('active');
                     
-                    // Trigger lazy load if needed
                     const lazyContent = targetSection.querySelector('[hx-get]:not([data-loaded])');
                     if (lazyContent) {
                         htmx.trigger(lazyContent, 'intersect');
@@ -282,11 +314,9 @@
                 }
             }, 150);
             
-            // Persist selection
             localStorage.setItem('activeMysticalTab', tabName);
         }
         
-        // Attach click handlers
         tabButtons.forEach(button => {
             button.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -295,17 +325,14 @@
             });
         });
         
-        // Restore last active tab
         const lastTab = localStorage.getItem('activeMysticalTab');
         if (lastTab && lastTab !== 'cosmic') {
             switchTab(lastTab);
         }
     }
     
-    // Initialize immediately
     initMysticalTabs();
     
-    // Also initialize after HTMX processes (safety net)
     document.addEventListener('htmx:afterSettle', function(evt) {
         if (evt.detail.target.closest('#mode-features')) {
             initMysticalTabs();

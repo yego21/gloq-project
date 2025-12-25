@@ -23,7 +23,7 @@
 .floating-sidebar {
     position: fixed;
     top: 5rem;
-    right: -420px; /* Hidden by default */
+    right: -420px;
     width: 400px;
     height: calc(100vh - 6rem);
     background: rgba(255, 255, 255, 0.95);
@@ -216,16 +216,253 @@
     }
 }
 </style>
+
 <style>
-/* Mystical Tab Navigation */
+/* Status Bar Action Button */
+.status-bar-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.status-bar-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.status-bar-action-btn svg {
+    transition: transform 0.3s ease;
+}
+
+.status-bar-action-btn:hover svg {
+    transform: rotate(90deg);
+}
+
+/* Keep only Tools button floating now */
+.floating-tools-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    border-radius: 50%;
+    box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 3px solid white;
+    z-index: 50;
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.floating-tools-btn:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 8px 32px rgba(245, 158, 11, 0.7);
+}
+
+.floating-tools-btn svg {
+    transition: transform 0.3s ease;
+    color: white;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.floating-tools-btn.active svg {
+    transform: rotate(90deg);
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+    }
+    50% {
+        box-shadow: 0 6px 32px rgba(245, 158, 11, 0.7);
+    }
+
+
+}
+
+/* Tools Modal */
+.tools-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.tools-modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tools-modal {
+    background: white;
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tools-modal-overlay.active .tools-modal {
+    transform: scale(1) translateY(0);
+}
+
+.tools-modal-header {
+    padding: 2rem;
+    background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.tools-modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.tools-modal-close {
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tools-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+.tools-modal-body {
+    padding: 2rem;
+    max-height: calc(80vh - 120px);
+    overflow-y: auto;
+}
+
+/* Tools Grid */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+.tool-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, rgba(249, 250, 251, 1), rgba(243, 244, 246, 1));
+    border: 2px solid rgba(229, 231, 235, 1);
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.tool-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    border-color: rgba(99, 102, 241, 0.5);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(249, 250, 251, 1));
+}
+
+.tool-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+}
+
+.tool-card:hover .tool-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.tool-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #1f2937;
+    text-align: center;
+}
+
+.tool-description {
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .tools-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .floating-tools-btn {
+        bottom: 5rem;
+        right: 1.5rem;
+        width: 52px;
+        height: 52px;
+    }
+}
+
+/* Animation keyframes */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 6px 24px rgba(245, 158, 11, 0.5);
+    }
+    50% {
+        box-shadow: 0 6px 32px rgba(245, 158, 11, 0.7);
+    }
+}
+
+/* Remove the floating-actions-container styles */
+</style>
+
+<style>
+/* Mystical Tab Navigation - Light Theme */
 .mystical-tabs {
     display: flex;
     gap: 0.5rem;
     padding: 0.5rem;
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.3), rgba(17, 24, 39, 0.4));
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
     border-radius: 1rem;
     margin-bottom: 1.5rem;
-    border: 1px solid rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
 .mystical-tab {
@@ -234,7 +471,7 @@
     background: transparent;
     border: none;
     border-radius: 0.75rem;
-    color: #94a3b8;
+    color: #64748b; /* Readable gray */
     font-size: 0.875rem;
     font-weight: 500;
     cursor: pointer;
@@ -251,7 +488,7 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(59, 130, 246, 0.1));
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(99, 102, 241, 0.1));
     opacity: 0;
     transition: opacity 0.3s ease;
     border-radius: 0.75rem;
@@ -262,13 +499,14 @@
 }
 
 .mystical-tab:hover {
-    color: #c4b5fd;
+    color: #6366f1; /* Indigo on hover */
 }
 
 .mystical-tab.active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3));
-    color: #ffffff;
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+    color: #6366f1; /* Indigo for active */
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
 }
 
 .mystical-tab.active::before {
@@ -277,7 +515,7 @@
 
 .mystical-tab-icon {
     font-size: 1rem;
-    filter: drop-shadow(0 0 4px rgba(139, 92, 246, 0.5));
+    filter: none; /* Remove glow effect */
 }
 
 /* Mystical Content Sections */
@@ -314,8 +552,8 @@
 .mystical-spinner {
     width: 48px;
     height: 48px;
-    border: 3px solid rgba(139, 92, 246, 0.2);
-    border-top-color: #8b5cf6;
+    border: 3px solid rgba(99, 102, 241, 0.2);
+    border-top-color: #6366f1;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -324,40 +562,41 @@
     to { transform: rotate(360deg); }
 }
 
-/* Mystical Card Styles (inherit from parent but ensure consistency) */
+/* Mystical Card Styles - Light Theme */
 .mystical-content-card {
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.4), rgba(17, 24, 39, 0.6));
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(249, 250, 251, 0.9));
     backdrop-filter: blur(20px);
     border: 1px solid rgba(139, 92, 246, 0.15);
     border-radius: 1rem;
     padding: 1.5rem;
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
     transition: all 0.3s ease;
 }
 
 .mystical-content-card:hover {
-    border-color: rgba(139, 92, 246, 0.25);
+    border-color: rgba(139, 92, 246, 0.3);
     box-shadow: 
-        0 12px 48px rgba(0, 0, 0, 0.5),
-        0 0 40px rgba(139, 92, 246, 0.1);
+        0 8px 24px rgba(0, 0, 0, 0.12),
+        0 0 20px rgba(139, 92, 246, 0.1);
+    transform: translateY(-2px);
 }
 
-/* Compact Section Headers */
+/* Compact Section Headers - Light Theme */
 .mystical-section-header {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    border-bottom: 2px solid rgba(139, 92, 246, 0.15);
 }
 
 .mystical-section-title {
     font-size: 1.25rem;
-    font-weight: 600;
-    background: linear-gradient(135deg, #c4b5fd, #a78bfa);
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -366,7 +605,26 @@
 .mystical-section-icon {
     font-size: 1.25rem;
     color: #8b5cf6;
-    filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
+    filter: none; /* Remove glow */
+}
+
+/* Text colors for light background */
+.mystical-section p,
+.mystical-section span,
+.mystical-section div {
+    color: #334155; /* Slate-700 for readability */
+}
+
+.mystical-section h1,
+.mystical-section h2,
+.mystical-section h3,
+.mystical-section h4 {
+    color: #1e293b; /* Slate-800 for headings */
+}
+
+/* Loading text */
+.mystical-loading p {
+    color: #64748b; /* Slate-500 */
 }
 
 /* Responsive adjustments */
@@ -380,7 +638,7 @@
     }
 }
 
-/* Override mode-transition for mystical content */
+/* Section transitions */
 .mystical-section {
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -389,12 +647,27 @@
 .mystical-section.active {
     opacity: 1;
 }
+
+/* Additional utility classes for content inside */
+.mystical-text-primary {
+    color: #1e293b;
+}
+
+.mystical-text-secondary {
+    color: #64748b;
+}
+
+.mystical-text-accent {
+    color: #8b5cf6;
+}
+
+.mystical-bg-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(139, 92, 246, 0.15);
+}
 </style>
 
-
 </head>
-
-
 
 <div id="journal-body">
 <div id="journal_container" class="rounded-2xl bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen transition-all duration-300 relative">
@@ -414,69 +687,33 @@
     <div id="modal-root"></div>
     <div id="search-results" class="mt-6 space-y-3"></div>
     
-    
 <div class="max-w-7xl mx-auto px-6 py-8 main-content relative">
     
     <!-- MAIN CONTENT AREA - NOW FULL WIDTH -->
     <div class="space-y-4 flex flex-col min-h-[calc(100vh-8rem)]">
 
-        <!-- Enhanced Status Bar with Mode Indicator -->
-        <div class="status-bar fade-in shimmer relative">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div id="mode_banner"
-                         hx-post="{% url 'modes:mode_banner' %}" 
-                         hx-vals='{"slug": "{{ active_mode }}"}' 
-                         hx-trigger="load" 
-                         hx-swap="innerHTML">
-                    </div>
-                </div>
-                
-                <div class="flex items-center space-x-3">
-                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span class="text-xs font-medium text-gray-500 uppercase tracking-wide">Active</span>
-                    
-                    <!-- Enhanced Tools Menu -->
-                    <div class="three-dot-menu">
-                        <button id="tools-toggle" class="three-dot-btn hover:bg-white/20 backdrop-blur-sm">
-                            <svg class="w-4 h-4 text-gray-600 icon-float" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                        </button>
-                        
-                        <!-- Enhanced Tools Dropdown -->
-                        <div id="tools-dropdown" class="tools-dropdown backdrop-blur-lg bg-white/90 border border-white/20">
-                            <div class="tools-grid">
-                                <a href="{% url 'modes:mode_explorer' %}" class="tool-card hover:scale-105 transition-all duration-200">
-                                    <div class="tool-icon bg-gradient-to-br from-blue-400 to-indigo-500 text-white icon-pulse">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01"/>
-                                        </svg>
-                                    </div>
-                                    <div class="tool-title">Modes</div>
-                                    <div class="tool-description">Switch perspectives</div>
-                                </a>
-                                
-                                <button class="tool-card hover:scale-105 transition-all duration-200" hx-get="{% url 'journal:search_modal' %}" hx-target="#modal-root" hx-swap="innerHTML">
-                                    <div class="tool-icon bg-gradient-to-br from-amber-400 to-orange-500 text-white icon-pulse">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                                        </svg>
-                                    </div>
-                                    <div class="tool-title">Search</div>
-                                    <div class="tool-description">Find fragments</div>
-                                </button>
-                                
-                                <!-- Add other tools as needed -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <!-- Simplified Status Bar -->
+       <div class="status-bar fade-in shimmer relative">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+           
+            
+            <!-- New Entry Button in Status Bar -->
+            <button id="new-entry-btn" class="status-bar-action-btn group">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                <span>New Entry</span>
+            </button>
         </div>
+        
+        <div class="flex items-center space-x-3">
+            <span class="text-xs text-gray-500">{{ active_mode|default:"Default" }} Mode</span>
+        </div>
+    </div>
+</div>
 
-        <!-- Enhanced Main Content Area - NOW GETS FULL WIDTH -->
+        <!-- Enhanced Main Content Area -->
         <div class="enhanced-card fade-in flex-1 bg-white/80">
             <div class="enhanced-card-body flex-1 overflow-y-auto">
                 <div id="dynamic-content" class="space-y-4 mode-transition">
@@ -502,7 +739,7 @@
 <button class="sidebar-toggle-btn" id="sidebar-toggle">
     <span class="sidebar-badge" id="sidebar-badge">3</span>
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5l-7 7 7 7"/>
     </svg>
 </button>
 
@@ -614,40 +851,146 @@
                     <!-- Progress indicator -->
                     <div class="mt-4 text-center">
                         <div class="text-xs text-gray-500 mb-1">Today's Progress</div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500" style="width: 65%"></div>
+<div class="w-full bg-gray-200 rounded-full h-2">
+<div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500" style="width: 65%"></div>
+</div>
+<div class="text-xs text-gray-500 mt-1">65% of daily goal</div>
+</div>
+</div>
+</div>
+</div>
+    <!-- Quotes Tab -->
+    <div class="sidebar-tab-content" id="quotes-tab">
+        <div class="quote-carousel">
+            <div class="quote-slide active">
+                <div class="flex items-start space-x-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
+                            </svg>
                         </div>
-                        <div class="text-xs text-gray-500 mt-1">65% of daily goal</div>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Quotes Tab -->
-        <div class="sidebar-tab-content" id="quotes-tab">
-            <div class="quote-carousel">
-                <div class="quote-slide active">
-                    <div class="flex items-start space-x-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-4">
-                        <div class="flex-shrink-0">
-                            <div class="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-lg flex items-center justify-center">
-                                <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h4v10h-10z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="min-w-0 flex-1">
-                            <p class="text-gray-800 italic text-sm leading-relaxed mb-2">
-                                "The way to get started is to quit talking and begin doing."
-                            </p>
-                            <p class="text-xs text-gray-600 font-medium">— Walt Disney</p>
-                        </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-gray-800 italic text-sm leading-relaxed mb-2">
+                            "The way to get started is to quit talking and begin doing."
+                        </p>
+                        <p class="text-xs text-gray-600 font-medium">— Walt Disney</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
+</div>
+<!-- FLOATING ACTIONS CONTAINER -->
+<button class="floating-tools-btn" id="floating-tools-btn">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+    </svg>
+</button>
+<!-- TOOLS MODAL -->
+<div class="tools-modal-overlay" id="tools-modal-overlay">
+    <div class="tools-modal">
+        <div class="tools-modal-header">
+            <div class="tools-modal-title">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                </svg>
+                <span>Tools & Actions</span>
+            </div>
+            <button class="tools-modal-close" id="tools-modal-close">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+    <div class="tools-modal-body">
+        <div class="tools-grid">
+            <!-- Modes Tool -->
+            <a href="{% url 'modes:mode_explorer' %}" class="tool-card">
+                <div class="tool-icon bg-gradient-to-br from-blue-400 to-indigo-500 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Modes</div>
+                <div class="tool-description">Switch perspectives</div>
+            </a>
+            
+            <!-- Search Tool -->
+            <button class="tool-card tool-card-closeable" hx-get="{% url 'journal:search_modal' %}" hx-target="#modal-root" hx-swap="innerHTML">
+                <div class="tool-icon bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Search</div>
+                <div class="tool-description">Find fragments</div>
+            </button>
+            
+            <!-- Analytics Tool -->
+            <a href="#" class="tool-card">
+                <div class="tool-icon bg-gradient-to-br from-green-400 to-emerald-500 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Analytics</div>
+                <div class="tool-description">View insights</div>
+            </a>
+            
+            <!-- Tags Tool -->
+            <a href="#" class="tool-card">
+                <div class="tool-icon bg-gradient-to-br from-purple-400 to-pink-500 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Tags</div>
+                <div class="tool-description">Manage labels</div>
+            </a>
+            
+            <!-- Calendar Tool -->
+            <a href="#" class="tool-card">
+                <div class="tool-icon bg-gradient-to-br from-red-400 to-rose-500 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Calendar</div>
+                <div class="tool-description">Timeline view</div>
+            </a>
+            
+            <!-- Export Tool -->
+            <a href="#" class="tool-card">
+                <div class="tool-icon bg-gradient-to-br from-cyan-400 to-blue-500 text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                </div>
+                <div class="tool-title">Export</div>
+                <div class="tool-description">Download data</div>
+            </a>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Enhanced Entry Form Modal -->
+<div id="entry-modal" class="modal-overlay">
+    <button id="close-entry-modal" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+    </button>
+    <div id="entry-form-container">
+        {% include "journal/journal_form.html" %}
+    </div>
+</div>
+<div id="insight-panel" style="display: none;"></div>
+</div>
+</div>
 <script>
 // Floating Sidebar Functionality
 (function() {
@@ -663,7 +1006,6 @@
         overlay.classList.add('active');
         localStorage.setItem('sidebarOpen', 'true');
         
-        // Hide badge when opened
         if (badge) badge.style.display = 'none';
     }
     
@@ -682,12 +1024,10 @@
         }
     }
     
-    // Event listeners
     if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
     if (sidebarClose) sidebarClose.addEventListener('click', closeSidebar);
     if (overlay) overlay.addEventListener('click', closeSidebar);
     
-    // Restore state
     const isOpen = localStorage.getItem('sidebarOpen') === 'true';
     if (isOpen) openSidebar();
     
@@ -699,18 +1039,15 @@
         tab.addEventListener('click', function() {
             const tabName = this.getAttribute('data-sidebar-tab');
             
-            // Update active tab
             sidebarTabs.forEach(t => t.classList.remove('active'));
             this.classList.add('active');
             
-            // Update active content
             sidebarTabContents.forEach(content => content.classList.remove('active'));
             const targetContent = document.getElementById(`${tabName}-tab`);
             if (targetContent) targetContent.classList.add('active');
         });
     });
     
-    // Keyboard shortcut: Ctrl/Cmd + B to toggle
     document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
             e.preventDefault();
@@ -718,33 +1055,66 @@
         }
     });
 })();
+
+// Tools Modal Functionality
+(function() {
+    const toolsBtn = document.getElementById('floating-tools-btn');
+    const toolsModal = document.getElementById('tools-modal-overlay');
+    const toolsClose = document.getElementById('tools-modal-close');
+    
+    function openToolsModal() {
+        toolsModal.classList.add('active');
+        toolsBtn.classList.add('active');
+    }
+    
+    function closeToolsModal() {
+        toolsModal.classList.remove('active');
+        toolsBtn.classList.remove('active');
+    }
+    
+    if (toolsBtn) {
+        toolsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (toolsModal.classList.contains('active')) {
+                closeToolsModal();
+            } else {
+                openToolsModal();
+            }
+        });
+    }
+    
+    if (toolsClose) {
+        toolsClose.addEventListener('click', closeToolsModal);
+    }
+    
+    if (toolsModal) {
+        toolsModal.addEventListener('click', function(e) {
+            if (e.target === toolsModal) {
+                closeToolsModal();
+            }
+        });
+    }
+    
+    // Close modal when clicking any tool card with the closeable class
+    document.querySelectorAll('.tool-card-closeable').forEach(card => {
+        card.addEventListener('click', function() {
+            closeToolsModal();
+        });
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && toolsModal.classList.contains('active')) {
+            closeToolsModal();
+        }
+        
+        // Ctrl/Cmd + K to open tools
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            openToolsModal();
+        }
+    });
+})();
 </script>
-</div>
-
-<!-- Enhanced Floating Action Button -->
-<button id="floating-new-drop" class="floating-action-btn pulse-glow">
-    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="icon-pulse">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-    </svg>
-</button>
-
-<!-- Enhanced Entry Form Modal -->
-<div id="entry-modal" class="modal-overlay">
-    <button id="close-entry-modal" class="p-2 hover:bg-gray-100 rounded-full transition-colors">
-        <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-        </svg>
-    </button>
-    <div id="entry-form-container">
-        {% include "journal/journal_form.html" %}
-    </div>
-</div>
-
-<div id="insight-panel" style="display: none;"></div>
-
-</div>
-</div>
-
 <script>
 // Quote carousel functionality
 let currentQuoteIndex = 0;
@@ -756,7 +1126,6 @@ function nextQuote() {
     quotes[currentQuoteIndex].classList.add('active');
 }
 
-// Auto-rotate quotes every 10 seconds
 if (quotes.length > 1) {
     setInterval(nextQuote, 10000);
 }
@@ -765,26 +1134,23 @@ if (quotes.length > 1) {
 function updateModeBackground(modeSlug) {
     const container = document.getElementById('journal_container');
     const backgroundClasses = {
-        'visionary': 'bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50',
-        'analytical': 'bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50',
-        'creative': 'bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50',
-        'reflective': 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50',
-        'mystical': 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900'
+        // 'visionary': 'bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50',
+        // 'analytical': 'bg-gradient-to-br from-slate-50 via-gray-50 to-blue-50',
+        // 'creative': 'bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50',
+        // 'reflective': 'bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50',
+        // 'mystical': 'bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900'
     };
     
-    // Remove existing background classes
     container.className = container.className.replace(/bg-gradient-to-br[\s\w-]*/g, '');
     
-    // Add new background class with smooth transition
     const newBg = backgroundClasses[modeSlug] || 'bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50';
     container.className += ' ' + newBg + ' min-h-screen transition-all duration-500';    
 }
 
-// Theme & Panel Reload - Enhanced Django functionality
+// Theme & Panel Reload
 document.addEventListener('DOMContentLoaded', function() {
     console.log('=== DASHBOARD INITIALIZATION ===');
 
-    // Apply initial background styling
     const initialBackgroundClass = '{{ mode_styler.background_class }}';
     const container = document.getElementById('journal_container');
     
@@ -792,19 +1158,17 @@ document.addEventListener('DOMContentLoaded', function() {
         container.className = container.className.replace(/bg-\w+-\d+/g, '') + ' ' + initialBackgroundClass + ' min-h-screen transition-all duration-500 relative';
     }
 
-    // Enhanced mode change event listener
     document.body.addEventListener('updateTheme', function(event) {
         console.log('=== MODE CHANGE EVENT ===');
         console.log('Event detail:', event.detail);
         const { mode_slug, background_class } = event.detail;
-        // Update container styling with smooth transition
+        
         updateModeBackground(mode_slug);
         
-        // Load new mode features with transition effect
         const dynamicContent = document.getElementById('dynamic-content');
         if (dynamicContent) {
             dynamicContent.classList.remove('mode-transition');
-            void dynamicContent.offsetWidth; // Force reflow
+            void dynamicContent.offsetWidth;
             dynamicContent.classList.add('mode-transition');
         }
         
@@ -815,13 +1179,6 @@ document.addEventListener('DOMContentLoaded', function() {
             swap: 'innerHTML'
         }); 
 
-        // Reload mode banner
-        htmx.ajax('POST', '{% url "modes:mode_banner" %}', {
-            values: { slug: mode_slug },
-            target: '#mode_banner',
-            swap: 'innerHTML'
-        });
-
         console.log('=== MODE CHANGE COMPLETE ===');
     });
 
@@ -830,67 +1187,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Enhanced DOM event handlers
 document.addEventListener('DOMContentLoaded', function() {
-    // Modal functionality with enhanced effects
     const entryModal = document.getElementById('entry-modal');
-    const floatingNewDrop = document.getElementById('floating-new-drop');
+    const newEntryBtn = document.getElementById('new-entry-btn')
     const closeEntryModal = document.getElementById('close-entry-modal');
     
-    // Enhanced three-dot menu functionality
-    const toolsToggle = document.getElementById('tools-toggle');
-    const toolsDropdown = document.getElementById('tools-dropdown');
-    
-    // Toggle tools dropdown with smooth animation
-    if (toolsToggle && toolsDropdown) {
-        toolsToggle.addEventListener('click', function(e) {
-            e.stopPropagation();
-            toolsDropdown.classList.toggle('active');
-            
-            // Add ripple effect
-            const ripple = document.createElement('div');
-            ripple.className = 'absolute inset-0 bg-white/20 rounded-full scale-0 animate-ping';
-            toolsToggle.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 300);
-        });
+     if (newEntryBtn) {
+    newEntryBtn.addEventListener('click', function() {
+        const alertContainer = document.getElementById('form-alerts');
+        if (alertContainer) {
+            alertContainer.innerHTML = '';
+        }
         
-        // Close tools dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            if (toolsDropdown.classList.contains('active') && 
-                !toolsDropdown.contains(e.target) && 
-                !toolsToggle.contains(e.target)) {
-                toolsDropdown.classList.remove('active');
-            }
-        });
-    }
-    
-    // Enhanced Entry Modal functionality
-    if (floatingNewDrop) {
-        floatingNewDrop.addEventListener('click', function() {
-            // Clear any previous alerts
-            const alertContainer = document.getElementById('form-alerts');
-            if (alertContainer) {
-                alertContainer.innerHTML = '';
-            }
+        const entryModal = document.getElementById('entry-modal');
+        if (entryModal) {
+            entryModal.classList.add('active');
             
-            if (entryModal) {
-                entryModal.classList.add('active');
-                
-                // Enhanced focus with smooth animation
-                setTimeout(() => {
-                    const textarea = entryModal.querySelector('textarea');
-                    if (textarea) {
-                        textarea.focus();
-                        textarea.style.transform = 'scale(1.01)';
-                        setTimeout(() => textarea.style.transform = 'scale(1)', 200);
-                    }
-                }, 300);
-            }
-        });
-    }
+            setTimeout(() => {
+                const textarea = entryModal.querySelector('textarea');
+                if (textarea) {
+                    textarea.focus();
+                    textarea.style.transform = 'scale(1.01)';
+                    setTimeout(() => textarea.style.transform = 'scale(1)', 200);
+                }
+            }, 300);
+        }
+    });
+}
 
     if (closeEntryModal && entryModal) {
         closeEntryModal.addEventListener('click', function() {
             entryModal.classList.remove('active');
-            // Clear form with animation
             const form = document.getElementById('journal-form');
             if (form) {
                 form.style.opacity = '0.5';
@@ -902,7 +1228,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Enhanced modal overlay click handling
     if (entryModal) {
         entryModal.addEventListener('click', function(e) {
             if (e.target === entryModal) {
@@ -913,14 +1238,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Enhanced keyboard handling
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             if (entryModal) entryModal.classList.remove('active');
-            if (toolsDropdown) toolsDropdown.classList.remove('active');
         }
         
-        // Add keyboard shortcuts
         if (e.key === 'n' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
             if (floatingNewDrop) floatingNewDrop.click();
@@ -946,7 +1268,6 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
             const response = JSON.parse(xhr.responseText);
             
             if (xhr.status === 200 && response.success) {
-                // Success message
                 alertContainer.innerHTML = `
                     <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 fade-in animate-pulse">
                         <div class="flex items-center space-x-2">
@@ -958,7 +1279,6 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
                     </div>
                 `;
                 
-                // Reset form
                 const form = document.getElementById('journal-form');
                 if (form) {
                     form.style.transform = 'scale(0.95)';
@@ -972,7 +1292,6 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
                     setTimeout(() => entryModal.classList.remove('active'), 1000);
                 }
                 
-                // Refresh stream content
                 const streamContent = document.getElementById('stream-content');
                 if (streamContent) {
                     streamContent.style.opacity = '0.5';
@@ -985,7 +1304,6 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
                     }, 300);
                 }
                 
-                // Auto-hide success message
                 setTimeout(() => {
                     if (alertContainer) {
                         alertContainer.style.opacity = '0';
@@ -994,7 +1312,6 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
                 }, 5000);
                 
             } else {
-                // Error message
                 alertContainer.innerHTML = `
                     <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4 fade-in">
                         <div class="flex items-center space-x-2">
@@ -1006,7 +1323,6 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
                     </div>
                 `;
                 
-                // Shake animation on error
                 const form = document.getElementById('journal-form');
                 if (form) {
                     form.style.animation = 'shake 0.5s ease-in-out';
@@ -1029,10 +1345,8 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
     }
 });
 
-// Smooth scroll behavior
 document.documentElement.style.scrollBehavior = 'smooth';
 
-// Intersection observer for fade-in animations
 const observerOptions = {
     threshold: 0.1,
     rootMargin: '0px 0px -50px 0px'
@@ -1047,7 +1361,6 @@ const observer = new IntersectionObserver((entries) => {
     });
 }, observerOptions);
 
-// Observe all fade-in elements
 document.querySelectorAll('.fade-in').forEach(el => {
     observer.observe(el);
 });
@@ -1056,64 +1369,6 @@ console.log('🎨 Enhanced Journal Dashboard Loaded');
 </script>
 
 
-<style>
-/* Collapsible sidebar styles */
-#dashboard-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-}
 
-@media (min-width: 1280px) {
-    #dashboard-grid {
-        grid-template-columns: repeat(4, 1fr);
-    }
-    
-    #dashboard-grid.sidebar-collapsed {
-        grid-template-columns: 1fr auto;
-    }
-    
-    #dashboard-grid.sidebar-collapsed #sidebar-area {
-        width: 60px;
-        overflow: hidden;
-    }
-    
-    #dashboard-grid.sidebar-collapsed #sidebar-content {
-        opacity: 0;
-        pointer-events: none;
-    }
-    
-    #dashboard-grid.sidebar-collapsed #main-content-area {
-        grid-column: span 4;
-    }
-}
-</style>
 
-<script>
-// Collapsible sidebar functionality (add to your main script)
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebarToggle = document.getElementById('sidebar-toggle');
-    const dashboardGrid = document.getElementById('dashboard-grid');
-    const sidebarIcon = document.getElementById('sidebar-icon');
-    
-    if (sidebarToggle && dashboardGrid) {
-        // Restore saved state
-        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-        if (isCollapsed) {
-            dashboardGrid.classList.add('sidebar-collapsed');
-            sidebarIcon.style.transform = 'rotate(180deg)';
-        }
-        
-        sidebarToggle.addEventListener('click', function() {
-            dashboardGrid.classList.toggle('sidebar-collapsed');
-            const collapsed = dashboardGrid.classList.contains('sidebar-collapsed');
-            
-            // Rotate icon
-            sidebarIcon.style.transform = collapsed ? 'rotate(180deg)' : 'rotate(0deg)';
-            
-            // Save state
-            localStorage.setItem('sidebarCollapsed', collapsed);
-        });
-    }
-});
-</script>
 {% endblock %}
