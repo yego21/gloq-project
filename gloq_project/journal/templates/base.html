@@ -69,7 +69,7 @@
                     hx-post="{% url 'modes:switch_mode_dynamic' %}" 
                     hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                     hx-trigger="change"
-                    hx-target="#journal-body"
+                    hx-target="#journal_container"
                     hx-swap="none"
                     
                   >
@@ -164,7 +164,7 @@
 </body>
 
 <!-- Footer -->
-<footer class="bg-white border-t border-gray-200 mt-16">
+<footer class="bg-white border-t border-gray-200 mt-0">
   <div class="max-w-6xl mx-auto px-4 py-6 text-center text-sm text-gray-500">
     &copy; {{ year|default:2025 }} Gloq. All rights reserved.
   </div>

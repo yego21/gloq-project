@@ -1,96 +1,320 @@
-<!-- Cosmic Dashboard Layout -->
-<section class="space-y-6">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Central Moon Phase Card -->
-        <div class="lg:col-span-1 cosmic-border">
-            <div class="moon-card rounded-2xl p-8 text-center moon-glow">
+<!-- mystical_overview.html (moon_planets replacement) -->
+<div class="mystical-overview">
+    
+    <!-- Hero Section -->
+   <div class="mystical-hero">
+    <div class="mystical-hero-content">
+        <div class="mystical-hero-icon" style="display: flex; justify-content: center; align-items: center;">
+            <svg viewBox="0 0 200 200" width="10%" height="10%" xmlns="http://www.w3.org/2000/svg">
+                <!-- Outer circle -->
+                <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(167, 139, 250, 0.3)" stroke-width="2"/>
+                
+                <!-- Inner circle -->
+                <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(139, 92, 246, 0.5)" stroke-width="2"/>
+                
+                <!-- Center circle -->
+                <circle cx="100" cy="100" r="15" fill="rgba(139, 92, 246, 0.2)" stroke="rgba(167, 139, 250, 0.8)" stroke-width="2"/>
+                
+                <!-- 12 zodiac divisions (lines from center) -->
+                <g stroke="rgba(167, 139, 250, 0.4)" stroke-width="1.5">
+                    <line x1="100" y1="100" x2="100" y2="5"/>
+                    <line x1="100" y1="100" x2="141.96" y2="16.04"/>
+                    <line x1="100" y1="100" x2="168.3" y2="50"/>
+                    <line x1="100" y1="100" x2="173.21" y2="100"/>
+                    <line x1="100" y1="100" x2="168.3" y2="150"/>
+                    <line x1="100" y1="100" x2="141.96" y2="183.96"/>
+                    <line x1="100" y1="100" x2="100" y2="195"/>
+                    <line x1="100" y1="100" x2="58.04" y2="183.96"/>
+                    <line x1="100" y1="100" x2="31.7" y2="150"/>
+                    <line x1="100" y1="100" x2="26.79" y2="100"/>
+                    <line x1="100" y1="100" x2="31.7" y2="50"/>
+                    <line x1="100" y1="100" x2="58.04" y2="16.04"/>
+                </g>
+                
+                <!-- Decorative stars at cardinal points -->
+                <g fill="rgba(251, 191, 36, 0.8)">
+                    <path d="M100,10 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
+                    <path d="M185,100 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
+                    <path d="M100,185 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
+                    <path d="M15,100 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
+                </g>
+                
+                <!-- Mystical symbols (simplified zodiac representations) -->
+                <g fill="rgba(167, 139, 250, 0.9)" font-size="14" font-weight="bold" text-anchor="middle">
+                    <text x="100" y="30">♈</text>
+                    <text x="150" y="40">♉</text>
+                    <text x="180" y="75">♊</text>
+                    <text x="185" y="105">♋</text>
+                    <text x="180" y="135">♌</text>
+                    <text x="150" y="170">♍</text>
+                    <text x="100" y="180">♎</text>
+                    <text x="50" y="170">♏</text>
+                    <text x="20" y="135">♐</text>
+                    <text x="15" y="105">♑</text>
+                    <text x="20" y="75">♒</text>
+                    <text x="50" y="40">♓</text>
+                </g>
+                
+                <!-- Slow rotation animation -->
+                <animateTransform
+                    attributeName="transform"
+                    attributeType="XML"
+                    type="rotate"
+                    from="0 100 100"
+                    to="0 100 100"
+                    dur="120s"
+                    repeatCount="indefinite"/>
+            </svg>
+        </div>
+        <h2 class="mystical-hero-title">Welcome to the Mystical Realm</h2>
+        <p class="mystical-hero-subtitle">"The cosmos speaks in whispers, and the stars write your story"</p>
+    </div>
+    <div class="mystical-hero-date">
+        {{ current_date|date:"l, F j, Y" }}
+    </div>
+</div>
+
+    <!-- Quick Actions -->
+    <div class="mystical-quick-actions">
+        <button class="mystical-action-card" onclick="switchMysticalSection('tarot')">
+            <span class="action-icon">🔮</span>
+            <span class="action-label">Draw a Card</span>
+        </button>
+        <button class="mystical-action-card" onclick="switchMysticalSection('chart')">
+            <span class="action-icon">⭐</span>
+            <span class="action-label">View Chart</span>
+        </button>
+    </div>
+
+    <!-- Cosmic Weather Grid -->
+    <div class="mystical-weather-grid">
+        
+        <!-- Moon Phase Card -->
+        <div class="mystical-card mystical-moon-card cosmic-border">
+            <div class="moon-card p-8 text-center moon-glow">
                 <div class="flex justify-center mb-4">
                     <div class="moon-phase floating-orb" id="moon-phase-visual">
                         <div class="moon-shadow" id="moon-shadow"></div>
                     </div>
                 </div>                
-                <h3 class="text-xl font-bold mb-2">
-                    {{ moon_data.emoji|default:"🌙" }} {{ moon_data.phase|default:"Cosmic Moon" }}
+                <h3 class="text-xl font-bold mb-2" style="color: #fff;">
+                    {{ moon_data.emoji|default:"🌙" }} {{ moon_data.phase|default:"Full Moon" }}
                 </h3>
                 <p class="text-slate-400 text-sm mb-4">
-                    {{ moon_data.illumination|default:"50" }}% Illuminated
+                    {{ moon_data.illumination|default:"100" }}% Illuminated
                 </p>
                 <div class="w-full bg-slate-800 rounded-full h-2 mb-4">
                     <div class="bg-gradient-to-r from-indigo-500 to-blue-500 h-2 rounded-full transition-all duration-500"
-                         style="width: {{ moon_data.illumination|default:"50" }}%"></div>
+                         style="width: {{ moon_data.illumination|default:"100" }}%"></div>
                 </div>
-                <p class="text-slate-300 text-sm italic">
+                <div class="moon-details">
+                    <div class="moon-detail-item">
+                        <span class="detail-label">Sign:</span>
+                        <span class="detail-value">{{ moon_data.sign|default:"Pisces" }}</span>
+                    </div>
+                    <div class="moon-detail-item">
+                        <span class="detail-label">Next Phase:</span>
+                        <span class="detail-value">{{ moon_data.next_phase_days|default:"3" }} days</span>
+                    </div>
+                </div>
+                <p class="text-slate-300 text-sm italic mt-4">
                     "{{ moon_data.mystical_meaning|default:"Trust in cosmic timing" }}"
                 </p>
-                <div class="mt-4 text-xs text-slate-500">
-                    Next phase in {{ moon_data.next_phase_days|default:"3" }} days
-                </div>
             </div>
         </div>
 
-        <!-- Planetary Positions -->
-        <div class="lg:col-span-2 cosmic-border">
-            <div class="mystical-card rounded-2xl p-6">
-                <h3 class="text-lg font-bold mb-4 flex items-center">
+        <!-- Planetary Positions Card -->
+        <div class="mystical-card mystical-planets-card cosmic-border">
+            <div class="card-header">
+                <h3 class="flex items-center">
                     <i class="fas fa-globe-americas text-indigo-400 mr-3"></i>
                     Today's Celestial Positions
                 </h3>
-                <div class="mystical-divider"></div>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="planetary-grid">
+            </div>
+            <div class="mystical-divider"></div>
+            <div class="card-body">
+                <div class="planetary-grid" id="planetary-grid">
                     {% for planet in planetary_data.planetary_positions %}
-                    <div class="text-center p-3 bg-slate-800/30 rounded-xl zodiac-sign cursor-pointer"
+                    <div class="planet-card zodiac-sign" 
                          onclick="showPlanetDetails('{{ planet.name }}', '{{ planet.sign }}', '{{ planet.degree }}', '{{ planet.element }}')">
-                        <div class="planet-icon mb-1">{{ planet.symbol }}</div>
-                        <div class="text-sm font-semibold">{{ planet.name }}</div>
-                        <div class="text-slate-400 text-xs">{{ planet.sign }} {{ planet.degree }}°</div>
+                        <div class="planet-icon-large">{{ planet.symbol }}</div>
+                        <div class="planet-name">{{ planet.name }}</div>
+                        <div class="planet-position">{{ planet.sign }} {{ planet.degree }}°</div>
                     </div>
                     {% empty %}
                     <!-- Fallback planets -->
-                    <div class="text-center p-3 bg-slate-800/30 rounded-xl">
-                        <div class="planet-icon mb-1">☀️</div>
-                        <div class="text-sm font-semibold">Sun</div>
-                        <div class="text-slate-400 text-xs">Cosmic °</div>
+                    <div class="planet-card">
+                        <div class="planet-icon-large">☉</div>
+                        <div class="planet-name">Sun</div>
+                        <div class="planet-position">Capricorn 5°</div>
                     </div>
-                    <div class="text-center p-3 bg-slate-800/30 rounded-xl">
-                        <div class="planet-icon mb-1">🌙</div>
-                        <div class="text-sm font-semibold">Moon</div>
-                        <div class="text-slate-400 text-xs">Ethereal °</div>
+                    <div class="planet-card">
+                        <div class="planet-icon-large">☽</div>
+                        <div class="planet-name">Moon</div>
+                        <div class="planet-position">Pisces 22°</div>
                     </div>
-                    <div class="text-center p-3 bg-slate-800/30 rounded-xl">
-                        <div class="planet-icon mb-1">☿️</div>
-                        <div class="text-sm font-semibold">Mercury</div>
-                        <div class="text-slate-400 text-xs">Mystic °</div>
+                    <div class="planet-card">
+                        <div class="planet-icon-large">☿</div>
+                        <div class="planet-name">Mercury</div>
+                        <div class="planet-position">Sagittarius 28°</div>
                     </div>
-                    <div class="text-center p-3 bg-slate-800/30 rounded-xl">
-                        <div class="planet-icon mb-1">♀️</div>
-                        <div class="text-sm font-semibold">Venus</div>
-                        <div class="text-slate-400 text-xs">Divine °</div>
+                    <div class="planet-card">
+                        <div class="planet-icon-large">♀</div>
+                        <div class="planet-name">Venus</div>
+                        <div class="planet-position">Aquarius 12°</div>
                     </div>
-                    <div class="text-center p-3 bg-slate-800/30 rounded-xl">
-                        <div class="planet-icon mb-1">♂️</div>
-                        <div class="text-sm font-semibold">Mars</div>
-                        <div class="text-slate-400 text-xs">Sacred °</div>
+                    <div class="planet-card">
+                        <div class="planet-icon-large">♂</div>
+                        <div class="planet-name">Mars</div>
+                        <div class="planet-position">Leo 18°</div>
                     </div>
                     {% endfor %}
                 </div>
 
                 <!-- Cosmic Weather Summary -->
-                <div class="mt-6 p-4 bg-slate-800/20 rounded-xl">
-                    <h4 class="text-sm font-bold mb-2 flex items-center">
+                <div class="cosmic-weather-summary">
+                    <h4 class="cosmic-weather-title">
                         <i class="fas fa-cloud-sun text-purple-400 mr-2"></i>
                         Cosmic Weather
                     </h4>
-                    <p class="text-sm text-slate-300">
-                        {{ planetary_data.cosmic_weather|default:"The celestial dance continues in mysterious ways" }}
+                    <p class="cosmic-weather-text">
+                        {{ planetary_data.cosmic_weather|default:"The celestial dance continues - Moon in Pisces heightens intuition while Mars in Leo fuels creative passion. A harmonious blend of reflection and action." }}
                     </p>
                 </div>
             </div>
         </div>
+
     </div>
-</section>
+
+    <!-- Daily Mystical Energy -->
+    <div class="mystical-card mystical-energy-card">
+        <div class="card-header">
+            <h3>💫 Today's Mystical Energy</h3>
+        </div>
+        <div class="card-body">
+            <p class="energy-description">
+                {{ daily_energy|default:"The celestial dance today brings a harmonious blend of intuition and action. Perfect time for introspection and bold creative expression. The veil between worlds is thin - trust your instincts." }}
+            </p>
+            <div class="energy-tags">
+                <span class="energy-tag">Intuitive</span>
+                <span class="energy-tag">Creative</span>
+                <span class="energy-tag">Reflective</span>
+            </div>
+        </div>
+    </div>
+
+</div>
 
 <style>
-    .moon-phase {
+/* Overview Animation */
+.mystical-overview {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Hero Section */
+.mystical-hero {
+    text-align: center;
+    padding: 2rem 1rem;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.mystical-hero-content {
+    position: relative;
+    z-index: 1;
+}
+
+.mystical-hero-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.6));
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.mystical-hero-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 2px 10px rgba(139, 92, 246, 0.5);
+}
+
+.mystical-hero-subtitle {
+    font-size: 1rem;
+    color: #cbd5e1;
+    font-style: italic;
+    margin-bottom: 1rem;
+}
+
+.mystical-hero-date {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-top: 0.5rem;
+}
+
+/* Quick Actions */
+.mystical-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mystical-action-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #e0e7ff;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.mystical-action-card:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.6);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
+.mystical-action-card .action-icon {
+    font-size: 1.5rem;
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Weather Grid */
+.mystical-weather-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Cosmic Border */
+.cosmic-border {
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 1rem;
+    position: relative;
+}
+
+/* Moon Phase Styling */
+.moon-card {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.moon-phase {
     width: 180px;
     height: 180px;
     border-radius: 50%;
@@ -104,7 +328,6 @@
     margin: 0 auto;
 }
 
-/* Moon surface texture */
 .moon-phase::before {
     content: '';
     position: absolute;
@@ -129,16 +352,17 @@
     height: 100%;
     border-radius: 50%;
     background: rgba(15, 23, 42, 0.95);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    /* Start with no shadow for full moon, will be updated by JS */
+    clip-path: circle(0% at 50% 50%);
     transition: all 0.5s ease;
     z-index: 2;
 }
 
 .moon-glow {
-    animation: pulse 4s ease-in-out infinite;
+    animation: moonPulse 4s ease-in-out infinite;
 }
 
-@keyframes pulse {
+@keyframes moonPulse {
     0%, 100% {
         box-shadow: 0 0 30px rgba(99, 102, 241, 0.2);
     }
@@ -148,10 +372,10 @@
 }
 
 .floating-orb {
-    animation: float 6s ease-in-out infinite;
+    animation: floatOrb 6s ease-in-out infinite;
 }
 
-@keyframes float {
+@keyframes floatOrb {
     0%, 100% {
         transform: translateY(0px);
     }
@@ -159,9 +383,167 @@
         transform: translateY(-10px);
     }
 }
+
+/* Moon Details */
+.moon-details {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.moon-detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0.5rem;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: #94a3b8;
+}
+
+.detail-value {
+    font-size: 0.875rem;
+    color: #e0e7ff;
+    font-weight: 500;
+}
+
+/* Planetary Grid */
+.planetary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.planet-card {
+    text-align: center;
+    padding: 1rem;
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.planet-card:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.5);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+}
+
+.planet-icon-large {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+.planet-name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e0e7ff;
+    margin-bottom: 0.25rem;
+}
+
+.planet-position {
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
+
+/* Cosmic Weather Summary */
+.cosmic-weather-summary {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(30, 41, 59, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 0.75rem;
+}
+
+.cosmic-weather-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #e0e7ff;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.cosmic-weather-text {
+    font-size: 0.875rem;
+    color: #cbd5e1;
+    line-height: 1.6;
+}
+
+/* Energy Card */
+.mystical-energy-card {
+    grid-column: 1 / -1;
+}
+
+.energy-description {
+    color: #cbd5e1;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.energy-tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.energy-tag {
+    padding: 0.375rem 0.875rem;
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    color: #e0e7ff;
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mystical-hero-icon {
+        font-size: 3rem;
+    }
+    
+    .mystical-hero-title {
+        font-size: 1.5rem;
+    }
+    
+    .mystical-hero-subtitle {
+        font-size: 0.875rem;
+    }
+    
+    .mystical-weather-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .mystical-quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .planetary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
 </style>
 
 <script>
+// Helper function to switch sections (called from quick actions)
+function switchMysticalSection(sectionName) {
+    const pill = document.querySelector(`.mystical-pill[data-section="${sectionName}"]`);
+    if (pill) {
+        pill.click();
+    }
+}
+
+// Planet details modal
 function showPlanetDetails(name, sign, degree, element) {
     const descriptions = {
         'Fire': 'passionate, dynamic, and transformative',
@@ -179,8 +561,6 @@ function showPlanetDetails(name, sign, degree, element) {
 /**
  * Updates moon visual shadow based on illumination percentage and phase
  * Uses clip-path to create proper gibbous phase curves
- * @param {number} illuminationDecimal - Value between 0 and 1 representing moon illumination
- * @param {string} phaseName - Name of the moon phase to determine waxing/waning
  */
 function updateMoonVisual(illuminationDecimal, phaseName) {
     const moonShadow = document.getElementById('moon-shadow');
@@ -204,26 +584,50 @@ function updateMoonVisual(illuminationDecimal, phaseName) {
     } else if (isWaxing) {
         // Waxing phases - light on RIGHT, shadow on LEFT
         if (illuminationDecimal > 0.5) {
-            // Waxing Gibbous - shadow retreats to left with convex curve
             moonShadow.style.clipPath = `ellipse(${shadowPercentage}% 100% at 0% 50%)`;
         } else {
-            // Waxing Crescent - shadow on left with concave curve
             moonShadow.style.clipPath = `ellipse(${shadowPercentage}% 100% at 0% 50%)`;
         }
     } else {
         // Waning phases - light on LEFT, shadow on RIGHT
         if (illuminationDecimal > 0.5) {
-            // Waning Gibbous - shadow advances from right with convex curve
             moonShadow.style.clipPath = `ellipse(${shadowPercentage}% 100% at 100% 50%)`;
         } else {
-            // Waning Crescent - shadow on right with concave curve
             moonShadow.style.clipPath = `ellipse(${shadowPercentage}% 100% at 100% 50%)`;
         }
     }
 }
 
-// Initialize moon visual with actual data from Django context
-updateMoonVisual(
-    {{ moon_data.illumination_decimal|default:0.5 }},
-    "{{ moon_data.phase|default:'Full Moon' }}"
-);
+// Initialize moon visual with Django context data
+(function() {
+    // Wait for element to be available
+    function initMoon() {
+        const moonShadow = document.getElementById('moon-shadow');
+        if (!moonShadow) {
+            // Element not ready yet, try again
+            setTimeout(initMoon, 50);
+            return;
+        }
+        
+        // Get illumination from data attribute or context
+        const illumination = {{ moon_data.illumination|default:100 }};
+        const illuminationDecimal = illumination / 100;
+        const phaseName = "{{ moon_data.phase|default:'Full Moon' }}";
+        
+        console.log('Initializing moon visual:', {
+            illumination,
+            illuminationDecimal,
+            phaseName
+        });
+        
+        updateMoonVisual(illuminationDecimal, phaseName);
+    }
+    
+    // Start initialization
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initMoon);
+    } else {
+        initMoon();
+    }
+})();
+</script>
