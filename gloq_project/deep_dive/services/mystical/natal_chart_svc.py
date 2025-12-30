@@ -1,3 +1,4 @@
+# journal/services/natal_chart_svc.py - Updated with Houses Support
 from datetime import datetime, date
 from typing import Dict, Optional, Tuple, List
 import pytz
@@ -13,6 +14,9 @@ except ImportError:
     print("Skyfield not installed. Install with: pip install skyfield")
     load = Topos = moon_phases = almanac = np = None
 
+from .astronomical_svc import AstronomicalService
+
+
 class NatalChartService:
     """
     Service for calculating natal (birth) charts.
@@ -20,7 +24,7 @@ class NatalChartService:
     Architecture:
     - Uses Skyfield for accurate planetary positions
     - Calculates aspects (planetary relationships)
-    - NO house calculations (future enhancement)
+    - Calculates houses/ascendant when birth_time is available
     - Returns structured data matching NatalChartSchema
 
     Usage:
@@ -56,6 +60,9 @@ class NatalChartService:
         self.neptune = self.eph['neptune barycenter']
         self.pluto = self.eph['pluto barycenter']
         self.earth = self.eph['earth']
+
+        # Initialize astronomical service for house calculations
+        self.astro_service = AstronomicalService()
 
         # Convert birth datetime to Skyfield time
         self.birth_time = self._get_birth_time()
@@ -200,25 +207,38 @@ class NatalChartService:
 
         return aspects
 
-    def _calculate_dominant_element(self, planetary_positions: List[Dict]) -> str:
+    def _calculate_dominant_element(self, planetary_positions: List[Dict], ascendant: Optional[Dict] = None) -> str:
         """
         Determine which element (Fire/Earth/Air/Water) is strongest.
-        Based on planetary distribution across signs.
+        Based on planetary distribution across signs + Ascendant.
+
+        Args:
+            planetary_positions: List of planet dicts
+            ascendant: Optional ascendant dict with 'sign' key
         """
         element_count = {'Fire': 0, 'Earth': 0, 'Air': 0, 'Water': 0}
 
         # Count planets in each element
-        # Give extra weight to Sun, Moon, and Rising (when we add it)
+        # Give extra weight to Sun, Moon, and Ascendant (Big 3)
         for planet in planetary_positions:
             weight = 2 if planet['name'] in ['Sun', 'Moon'] else 1
             element_count[planet['element']] += weight
 
+        # Add Ascendant with heavy weight (part of Big 3)
+        if ascendant and 'sign' in ascendant:
+            asc_element = self._get_element(ascendant['sign'])
+            element_count[asc_element] += 2  # Same weight as Sun/Moon
+
         # Return dominant element
         return max(element_count, key=element_count.get)
 
-    def _calculate_dominant_modality(self, planetary_positions: List[Dict]) -> str:
+    def _calculate_dominant_modality(self, planetary_positions: List[Dict], ascendant: Optional[Dict] = None) -> str:
         """
         Determine dominant modality (Cardinal/Fixed/Mutable).
+
+        Args:
+            planetary_positions: List of planet dicts
+            ascendant: Optional ascendant dict with 'sign' key
 
         Modalities:
         - Cardinal: Aries, Cancer, Libra, Capricorn (initiating)
@@ -233,11 +253,19 @@ class NatalChartService:
 
         modality_count = {'Cardinal': 0, 'Fixed': 0, 'Mutable': 0}
 
+        # Count planets
         for planet in planetary_positions:
             for modality, signs in modality_map.items():
                 if planet['sign'] in signs:
                     weight = 2 if planet['name'] in ['Sun', 'Moon'] else 1
                     modality_count[modality] += weight
+                    break
+
+        # Add Ascendant with heavy weight (part of Big 3)
+        if ascendant and 'sign' in ascendant:
+            for modality, signs in modality_map.items():
+                if ascendant['sign'] in signs:
+                    modality_count[modality] += 2  # Same weight as Sun/Moon
                     break
 
         return max(modality_count, key=modality_count.get)
@@ -255,21 +283,51 @@ class NatalChartService:
         # Calculate aspects between planets
         aspects = self.calculate_aspects(planets)
 
-        # Calculate dominant characteristics
-        dominant_element = self._calculate_dominant_element(planets)
-        dominant_modality = self._calculate_dominant_modality(planets)
+        # Initialize house/angle data
+        houses_data = None
+        ascendant = None
+        midheaven = None
+        has_houses = False
+
+        # Calculate houses/angles ONLY if birth_time is available
+        if self.birth_profile.has_birth_time:
+            try:
+                birth_dt = self.birth_profile.get_birth_datetime()
+
+                # Call AstronomicalService for house calculations
+                natal_data = self.astro_service.get_natal_chart_data(
+                    birth_datetime=birth_dt,
+                    birth_lat=float(self.birth_profile.birth_latitude),
+                    birth_lon=float(self.birth_profile.birth_longitude),
+                    timezone=self.birth_profile.birth_timezone,
+                    house_system='placidus'
+                )
+
+                # Extract results
+                ascendant = natal_data['ascendant']
+                midheaven = natal_data['midheaven']
+                houses_data = natal_data['houses']
+                has_houses = True
+
+            except Exception as e:
+                print(f"House calculation error: {e}")
+                # Continue without houses - not critical
+
+        # Calculate dominant characteristics (including Ascendant if available)
+        dominant_element = self._calculate_dominant_element(planets, ascendant)
+        dominant_modality = self._calculate_dominant_modality(planets, ascendant)
 
         # Build complete chart structure
         natal_chart = {
             'planets': planets,
-            'houses': None,  # Future enhancement
+            'houses': houses_data,
             'aspects': aspects,
-            'ascendant': None,  # Requires birth time + house calculations
-            'midheaven': None,  # Requires birth time + house calculations
+            'ascendant': ascendant,
+            'midheaven': midheaven,
             'dominant_element': dominant_element,
             'dominant_modality': dominant_modality,
             'calculated_at': datetime.now(pytz.UTC).isoformat(),
-            'has_houses': False  # Will be True when we add house support
+            'has_houses': has_houses
         }
 
         return natal_chart
@@ -306,7 +364,6 @@ class NatalChartService:
         return 'Unknown'
 
 
-
 # Convenience function for easy import
 def get_natal_chart(birth_profile) -> Dict:
     """
@@ -319,7 +376,7 @@ def get_natal_chart(birth_profile) -> Dict:
         Complete natal chart dictionary
 
     Usage:
-        from journal.services.astronomical_svc import get_natal_chart
+        from journal.services.natal_chart_svc import get_natal_chart
         chart = get_natal_chart(user.birth_profile)
     """
     try:
@@ -332,28 +389,10 @@ def get_natal_chart(birth_profile) -> Dict:
             'planets': [],
             'houses': None,
             'aspects': [],
+            'ascendant': None,
+            'midheaven': None,
             'dominant_element': 'Unknown',
             'dominant_modality': 'Unknown',
             'calculated_at': datetime.now(pytz.UTC).isoformat(),
             'has_houses': False
         }
-
-# def get_natal_chart(birth_datetime: datetime, latitude: float, longitude: float) -> Dict[str, any]:
-#     """Calculate complete natal chart for given birth data."""
-#     try:
-#         service = NatalChartService(birth_datetime, latitude, longitude)
-#         return service.generate_natal_chart()
-#     except Exception as e:
-#         print(f"Natal chart service error: {e}")
-#         return {
-#             'birth_info': {'error': 'Unable to calculate chart'},
-#             'planets': [],
-#             'houses': [],
-#             'aspects': [],
-#             'chart_patterns': ['Mystical Configuration'],
-#             'element_distribution': {'Fire': 2, 'Earth': 2, 'Air': 3, 'Water': 3},
-#             'modality_distribution': {'Cardinal': 3, 'Fixed': 4, 'Mutable': 3},
-#             'interpretation': {
-#                 'overall_theme': 'Your cosmic blueprint holds mysteries beyond current calculation'
-#             }
-#         }

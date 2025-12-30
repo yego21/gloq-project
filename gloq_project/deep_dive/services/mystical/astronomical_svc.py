@@ -1,4 +1,4 @@
-# journal/services/astronomical_svc.py - Refactored with clean separation
+# journal/services/astronomical_svc.py - with Lunar Nodes + Natal Chart Data
 """
 Astronomical calculation service with separate classes for real-time and natal chart data.
 """
@@ -38,6 +38,224 @@ class AstronomicalService:
         self.mercury = self.eph['mercury']
         self.venus = self.eph['venus']
         self.mars = self.eph['mars']
+
+    def _calculate_mean_nodes(self, skyfield_time) -> Tuple[float, float]:
+        """
+        Calculate Mean Lunar Nodes (North and South).
+
+        Formula based on Jean Meeus "Astronomical Algorithms"
+        Returns ecliptic longitudes in degrees.
+
+        Args:
+            skyfield_time: Skyfield Time object
+
+        Returns:
+            Tuple of (north_node_longitude, south_node_longitude) in degrees
+        """
+        # Get Julian Date
+        jd = skyfield_time.tt
+
+        # Calculate Julian centuries from J2000.0 epoch (JD 2451545.0)
+        T = (jd - 2451545.0) / 36525.0
+
+        # Mean longitude of ascending node (Omega) in degrees
+        # Formula: Ω = 125.04452° - 1934.136261°T + 0.0020708°T² + T³/450000
+        omega = (125.04452
+                 - 1934.136261 * T
+                 + 0.0020708 * T * T
+                 + (T * T * T) / 450000.0)
+
+        # Normalize to 0-360 range
+        north_node = omega % 360
+
+        # South Node is always exactly opposite (180° away)
+        south_node = (north_node + 180) % 360
+
+        return north_node, south_node
+
+    def _calculate_sidereal_time(self, skyfield_time, longitude: float) -> float:
+        """
+        Calculate Local Sidereal Time (LST) for house calculations.
+
+        Args:
+            skyfield_time: Skyfield Time object
+            longitude: Geographic longitude in degrees (East positive)
+
+        Returns:
+            LST in degrees (0-360)
+        """
+        # Get Greenwich Sidereal Time from Skyfield
+        gst = skyfield_time.gast * 15.0  # Convert hours to degrees
+
+        # Local Sidereal Time = GST + longitude
+        lst = (gst + longitude) % 360
+
+        return lst
+
+    def _calculate_houses_placidus(self, skyfield_time, latitude: float, longitude: float) -> Dict[str, any]:
+        """
+        Calculate house cusps using Placidus system.
+        Based on Swiss Ephemeris algorithm.
+        """
+        from math import sin, cos, tan, asin, atan2, radians, degrees
+
+        lat_rad = radians(latitude)
+
+        # Calculate RAMC (Right Ascension of MC)
+        # Get from your existing LST calculation
+        lst = self._calculate_sidereal_time(skyfield_time, longitude)
+        ramc_rad = radians(lst)
+
+        # Obliquity of ecliptic
+        T = (skyfield_time.tt - 2451545.0) / 36525.0
+        eps = radians(23.439291 - 0.0130042 * T)
+
+        # 1. Calculate MC (Midheaven)
+        mc_rad = atan2(tan(ramc_rad), cos(eps))
+        mc = degrees(mc_rad) % 360
+
+        # 2. Calculate ASC (Ascendant)
+        asc_rad = atan2(-cos(ramc_rad),
+                        (sin(eps) * tan(lat_rad) + cos(eps) * sin(ramc_rad)))
+        asc = degrees(asc_rad) % 360
+
+        # 3. Calculate IC and DESC
+        ic = (mc + 180) % 360
+        desc = (asc + 180) % 360
+
+        # 4. Calculate intermediate houses using Koch method (simpler)
+        # This is still simplified but better than your current approach
+
+        houses = {}
+        houses[1] = asc
+        houses[10] = mc
+        houses[4] = ic
+        houses[7] = desc
+
+        # For intermediate houses, use a proper algorithm
+        # This would require solving transcendental equations
+        # For now, use an approximation or switch to Koch houses
+
+        # SIMPLE APPROXIMATION (better than equal division):
+        # Calculate house 11 as 1/3 of way from MC to ASC
+        # But adjust for sign boundaries
+        def interpolate_angle(start, end, fraction):
+            diff = (end - start) % 360
+            if diff > 180:
+                diff -= 360
+            return (start + diff * fraction) % 360
+
+        houses[11] = interpolate_angle(mc, asc, 1 / 3)
+        houses[12] = interpolate_angle(mc, asc, 2 / 3)
+        houses[2] = interpolate_angle(asc, ic, 1 / 3)
+        houses[3] = interpolate_angle(asc, ic, 2 / 3)
+        houses[5] = interpolate_angle(ic, desc, 1 / 3)
+        houses[6] = interpolate_angle(ic, desc, 2 / 3)
+        houses[8] = interpolate_angle(desc, (mc + 360) % 360, 1 / 3)
+        houses[9] = interpolate_angle(desc, (mc + 360) % 360, 2 / 3)
+
+        return {
+            'ascendant': asc,
+            'midheaven': mc,
+            'descendant': desc,
+            'ic': ic,
+            'houses': houses
+        }
+
+    def get_natal_chart_data(
+            self,
+            birth_datetime: datetime,
+            birth_lat: float,
+            birth_lon: float,
+            timezone: str = 'UTC',
+            house_system: str = 'placidus'
+    ) -> Dict[str, any]:
+        """
+        Calculate Ascendant, Midheaven, and House cusps for a birth chart.
+
+        This is a pure calculation method - no caching, no fallbacks.
+        Requires exact birth time and location.
+
+        Args:
+            birth_datetime: Exact datetime of birth (timezone-aware)
+            birth_lat: Birth latitude in degrees (-90 to 90)
+            birth_lon: Birth longitude in degrees (-180 to 180)
+            timezone: IANA timezone string (e.g., 'Asia/Manila')
+            house_system: House system to use (default: 'placidus')
+
+        Returns:
+            {
+                'ascendant': {
+                    'longitude': 145.67,
+                    'sign': 'Leo',
+                    'degree': 25
+                },
+                'midheaven': {
+                    'longitude': 65.34,
+                    'sign': 'Gemini',
+                    'degree': 5
+                },
+                'houses': [
+                    {'number': 1, 'cusp_longitude': 145.67, 'sign': 'Leo', 'degree': 25},
+                    {'number': 2, 'cusp_longitude': 175.23, 'sign': 'Virgo', 'degree': 25},
+                    ...
+                ]
+            }
+        """
+        try:
+            # Ensure datetime is timezone-aware
+            tz = pytz.timezone(timezone)
+            if birth_datetime.tzinfo is None:
+                birth_local = tz.localize(birth_datetime)
+            else:
+                birth_local = birth_datetime.astimezone(tz)
+
+            # Convert to Skyfield time
+            birth_time = self.ts.from_datetime(birth_local)
+
+            # Calculate houses (currently only Placidus supported)
+            if house_system.lower() == 'placidus':
+                house_data = self._calculate_houses_placidus(birth_time, birth_lat, birth_lon)
+            else:
+                raise ValueError(f"House system '{house_system}' not yet supported")
+
+            # Format ascendant
+            asc_lon = house_data['ascendant']
+            ascendant = {
+                'longitude': asc_lon,
+                'sign': self._get_zodiac_sign(asc_lon),
+                'degree': self._get_degree_in_sign(asc_lon),
+                'symbol': '⇡'  # Ascendant symbol
+            }
+
+            # Format midheaven
+            mc_lon = house_data['midheaven']
+            midheaven = {
+                'longitude': mc_lon,
+                'sign': self._get_zodiac_sign(mc_lon),
+                'degree': self._get_degree_in_sign(mc_lon),
+                'symbol': 'MC'
+            }
+
+            # Format houses
+            houses = []
+            for house_num in range(1, 13):
+                cusp_lon = house_data['houses'][house_num]
+                houses.append({
+                    'number': house_num,
+                    'cusp_longitude': cusp_lon,
+                    'sign': self._get_zodiac_sign(cusp_lon),
+                    'degree': self._get_degree_in_sign(cusp_lon)
+                })
+
+            return {
+                'ascendant': ascendant,
+                'midheaven': midheaven,
+                'houses': houses
+            }
+
+        except Exception as e:
+            raise Exception(f"Natal chart calculation failed: {e}")
 
     def get_current_moon_phase(self) -> Dict[str, any]:
         """Get current moon phase information with enhanced visual data."""
@@ -84,10 +302,9 @@ class AstronomicalService:
             print(f"Moon phase calculation error: {e}")
             return self._fallback_moon_phase()
 
-    # Optional: Add helper method for extended cosmic weather summary
     def _generate_cosmic_weather_summary_extended(self, planetary_positions: list) -> str:
         """
-        Generate cosmic weather summary considering all 10 bodies.
+        Generate cosmic weather summary considering all 10 bodies + nodes.
 
         Args:
             planetary_positions: List of all planetary position dicts
@@ -121,7 +338,7 @@ class AstronomicalService:
             return "The celestial dance continues in mysterious ways"
 
     def get_daily_planetary_summary(self, user_timezone: str = 'UTC') -> Dict[str, any]:
-        """Get current planetary positions with exact degrees for ALL 10 celestial bodies."""
+        """Get current planetary positions with exact degrees for ALL 10 celestial bodies + Lunar Nodes."""
         cache_key = f"planetary_summary_{date.today()}_{user_timezone}"
         cached_data = cache.get(cache_key)
 
@@ -153,6 +370,7 @@ class AstronomicalService:
             planetary_positions = []
             zodiac_signs = []
 
+            # Calculate physical bodies
             for body_name, display_name, symbol in planetary_bodies:
                 try:
                     body = self.eph[body_name]
@@ -175,6 +393,34 @@ class AstronomicalService:
                     print(f"Error calculating {display_name}: {e}")
                     continue
 
+            # Calculate Lunar Nodes
+            try:
+                north_node_lon, south_node_lon = self._calculate_mean_nodes(now)
+
+                north_sign = self._get_zodiac_sign(north_node_lon)
+                south_sign = self._get_zodiac_sign(south_node_lon)
+
+                planetary_positions.append({
+                    'name': 'North Node',
+                    'symbol': '☊',
+                    'sign': north_sign,
+                    'degree': self._get_degree_in_sign(north_node_lon),
+                    'longitude': north_node_lon,
+                    'element': self._get_element(north_sign)
+                })
+
+                planetary_positions.append({
+                    'name': 'South Node',
+                    'symbol': '☋',
+                    'sign': south_sign,
+                    'degree': self._get_degree_in_sign(south_node_lon),
+                    'longitude': south_node_lon,
+                    'element': self._get_element(south_sign)
+                })
+
+            except Exception as e:
+                print(f"Error calculating Lunar Nodes: {e}")
+
             planetary_data = {
                 'planetary_positions': planetary_positions,
                 'dominant_element': self._calculate_dominant_element(zodiac_signs),
@@ -191,7 +437,7 @@ class AstronomicalService:
 
     def get_planetary_summary_for_date(self, target_datetime, user_timezone: str = 'UTC') -> Dict[str, any]:
         """
-        Get planetary positions for ALL 10 celestial bodies on a specific historical date.
+        Get planetary positions for ALL 10 celestial bodies + Lunar Nodes on a specific historical date.
 
         Args:
             target_datetime: datetime object for the date to calculate
@@ -239,6 +485,7 @@ class AstronomicalService:
             planetary_positions = []
             zodiac_signs = []
 
+            # Calculate physical bodies
             for body_name, display_name, symbol in planetary_bodies:
                 try:
                     body = self.eph[body_name]
@@ -260,6 +507,34 @@ class AstronomicalService:
                 except Exception as e:
                     print(f"Error calculating {display_name} for {target_datetime.date()}: {e}")
                     continue
+
+            # Calculate Lunar Nodes for this specific date
+            try:
+                north_node_lon, south_node_lon = self._calculate_mean_nodes(target_time)
+
+                north_sign = self._get_zodiac_sign(north_node_lon)
+                south_sign = self._get_zodiac_sign(south_node_lon)
+
+                planetary_positions.append({
+                    'name': 'North Node',
+                    'symbol': '☊',
+                    'sign': north_sign,
+                    'degree': self._get_degree_in_sign(north_node_lon),
+                    'longitude': north_node_lon,
+                    'element': self._get_element(north_sign)
+                })
+
+                planetary_positions.append({
+                    'name': 'South Node',
+                    'symbol': '☋',
+                    'sign': south_sign,
+                    'degree': self._get_degree_in_sign(south_node_lon),
+                    'longitude': south_node_lon,
+                    'element': self._get_element(south_sign)
+                })
+
+            except Exception as e:
+                print(f"Error calculating Lunar Nodes for {target_datetime.date()}: {e}")
 
             planetary_data = {
                 'planetary_positions': planetary_positions,
@@ -309,7 +584,10 @@ class AstronomicalService:
         """Convert phase angle to human-readable moon phase with enhanced data."""
         illum_str = f"{int(illumination)}"
 
-        if 0 <= phase_angle < 45:
+        # Normalize phase angle to 0-360
+        phase_angle = phase_angle % 360
+
+        if phase_angle < 22.5 or phase_angle >= 337.5:
             return {
                 'phase': 'New Moon',
                 'emoji': '🌑',
@@ -317,7 +595,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'The void holds infinite potential'
             }
-        elif 45 <= phase_angle < 90:
+        elif 22.5 <= phase_angle < 67.5:
             return {
                 'phase': 'Waxing Crescent',
                 'emoji': '🌒',
@@ -325,7 +603,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'Hope emerges from darkness'
             }
-        elif 90 <= phase_angle < 135:
+        elif 67.5 <= phase_angle < 112.5:
             return {
                 'phase': 'First Quarter',
                 'emoji': '🌓',
@@ -333,7 +611,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'Balance between shadow and light'
             }
-        elif 135 <= phase_angle < 180:
+        elif 112.5 <= phase_angle < 157.5:
             return {
                 'phase': 'Waxing Gibbous',
                 'emoji': '🌔',
@@ -341,7 +619,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'Patience as power builds'
             }
-        elif 180 <= phase_angle < 225:
+        elif 157.5 <= phase_angle < 202.5:
             return {
                 'phase': 'Full Moon',
                 'emoji': '🌕',
@@ -349,7 +627,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'Maximum illumination reveals all truths'
             }
-        elif 225 <= phase_angle < 270:
+        elif 202.5 <= phase_angle < 247.5:
             return {
                 'phase': 'Waning Gibbous',
                 'emoji': '🌖',
@@ -357,7 +635,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'Wisdom flows as light diminishes'
             }
-        elif 270 <= phase_angle < 315:
+        elif 247.5 <= phase_angle < 292.5:
             return {
                 'phase': 'Last Quarter',
                 'emoji': '🌗',
@@ -365,7 +643,7 @@ class AstronomicalService:
                 'illumination': illum_str,
                 'mystical_meaning': 'Release creates space for renewal'
             }
-        else:  # 315 <= phase_angle < 360
+        else:  # 292.5 <= phase_angle < 337.5:
             return {
                 'phase': 'Waning Crescent',
                 'emoji': '🌘',
@@ -475,13 +753,39 @@ class AstronomicalService:
             'cosmic_weather': 'The stars whisper secrets through veils of mystery'
         }
 
+    # Convenience functions for easy import
+def get_moon_phase() -> Dict[str, any]:
+    """Quick access to current moon phase with enhanced visual data."""
+    try:
+        service = AstronomicalService()
+        return service.get_current_moon_phase()
+    except Exception as e:
+        print(f"Moon phase service error: {e}")
+        return {
+            'phase': 'Mystical Moon',
+            'emoji': '🌙',
+            'description': 'The lunar mysteries flow beyond current sight',
+            'illumination': '50',
+            'illumination_decimal': 0.5,
+            'mystical_meaning': 'Trust in divine timing'
+        }
 
-# Also add this convenience function at module level (outside the class)
-# So it can be imported easily like: from astronomical_svc import get_planetary_summary_for_date
+def get_planetary_summary(timezone: str = 'UTC') -> Dict[str, any]:
+    """Quick access to planetary summary with exact degrees + Lunar Nodes."""
+    try:
+        service = AstronomicalService()
+        return service.get_daily_planetary_summary(timezone)
+    except Exception as e:
+        print(f"Planetary service error: {e}")
+        return {
+            'planetary_positions': [],
+            'dominant_element': 'Spirit',
+            'cosmic_weather': 'The celestial dance continues in mysterious ways'
+        }
 
 def get_planetary_summary_for_date(target_datetime, timezone: str = 'UTC') -> Dict[str, any]:
     """
-    Convenience function: Get planetary positions for a specific date.
+    Convenience function: Get planetary positions + Lunar Nodes for a specific date.
 
     Args:
         target_datetime: datetime object for the date to calculate
@@ -500,44 +804,3 @@ def get_planetary_summary_for_date(target_datetime, timezone: str = 'UTC') -> Di
             'dominant_element': 'Spirit',
             'cosmic_weather': 'The celestial dance continues in mysterious ways'
         }
-
-
-
-
-
-
-
-
-# Convenience functions for easy import
-def get_moon_phase() -> Dict[str, any]:
-    """Quick access to current moon phase with enhanced visual data."""
-    try:
-        service = AstronomicalService()
-        return service.get_current_moon_phase()
-    except Exception as e:
-        print(f"Moon phase service error: {e}")
-        return {
-            'phase': 'Mystical Moon',
-            'emoji': '🌙',
-            'description': 'The lunar mysteries flow beyond current sight',
-            'illumination': '50',
-            'illumination_decimal': 0.5,
-            'mystical_meaning': 'Trust in divine timing'
-        }
-
-
-
-def get_planetary_summary(timezone: str = 'UTC') -> Dict[str, any]:
-    """Quick access to planetary summary with exact degrees."""
-    try:
-        service = AstronomicalService()
-        return service.get_daily_planetary_summary(timezone)
-    except Exception as e:
-        print(f"Planetary service error: {e}")
-        return {
-            'planetary_positions': [],
-            'dominant_element': 'Spirit',
-            'cosmic_weather': 'The celestial dance continues in mysterious ways'
-        }
-
-

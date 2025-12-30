@@ -2,90 +2,8 @@
 <div class="mystical-overview">
     
     <!-- Hero Section -->
-   <div class="mystical-hero">
-    <div class="mystical-hero-content">
-        <div class="mystical-hero-icon" style="display: flex; justify-content: center; align-items: center;">
-            <svg viewBox="0 0 200 200" width="10%" height="10%" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer circle -->
-                <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(167, 139, 250, 0.3)" stroke-width="2"/>
-                
-                <!-- Inner circle -->
-                <circle cx="100" cy="100" r="75" fill="none" stroke="rgba(139, 92, 246, 0.5)" stroke-width="2"/>
-                
-                <!-- Center circle -->
-                <circle cx="100" cy="100" r="15" fill="rgba(139, 92, 246, 0.2)" stroke="rgba(167, 139, 250, 0.8)" stroke-width="2"/>
-                
-                <!-- 12 zodiac divisions (lines from center) -->
-                <g stroke="rgba(167, 139, 250, 0.4)" stroke-width="1.5">
-                    <line x1="100" y1="100" x2="100" y2="5"/>
-                    <line x1="100" y1="100" x2="141.96" y2="16.04"/>
-                    <line x1="100" y1="100" x2="168.3" y2="50"/>
-                    <line x1="100" y1="100" x2="173.21" y2="100"/>
-                    <line x1="100" y1="100" x2="168.3" y2="150"/>
-                    <line x1="100" y1="100" x2="141.96" y2="183.96"/>
-                    <line x1="100" y1="100" x2="100" y2="195"/>
-                    <line x1="100" y1="100" x2="58.04" y2="183.96"/>
-                    <line x1="100" y1="100" x2="31.7" y2="150"/>
-                    <line x1="100" y1="100" x2="26.79" y2="100"/>
-                    <line x1="100" y1="100" x2="31.7" y2="50"/>
-                    <line x1="100" y1="100" x2="58.04" y2="16.04"/>
-                </g>
-                
-                <!-- Decorative stars at cardinal points -->
-                <g fill="rgba(251, 191, 36, 0.8)">
-                    <path d="M100,10 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
-                    <path d="M185,100 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
-                    <path d="M100,185 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
-                    <path d="M15,100 l2,6 l6,0 l-5,4 l2,6 l-5,-3 l-5,3 l2,-6 l-5,-4 l6,0 z"/>
-                </g>
-                
-                <!-- Mystical symbols (simplified zodiac representations) -->
-                <g fill="rgba(167, 139, 250, 0.9)" font-size="14" font-weight="bold" text-anchor="middle">
-                    <text x="100" y="30">♈</text>
-                    <text x="150" y="40">♉</text>
-                    <text x="180" y="75">♊</text>
-                    <text x="185" y="105">♋</text>
-                    <text x="180" y="135">♌</text>
-                    <text x="150" y="170">♍</text>
-                    <text x="100" y="180">♎</text>
-                    <text x="50" y="170">♏</text>
-                    <text x="20" y="135">♐</text>
-                    <text x="15" y="105">♑</text>
-                    <text x="20" y="75">♒</text>
-                    <text x="50" y="40">♓</text>
-                </g>
-                
-                <!-- Slow rotation animation -->
-                <animateTransform
-                    attributeName="transform"
-                    attributeType="XML"
-                    type="rotate"
-                    from="0 100 100"
-                    to="0 100 100"
-                    dur="120s"
-                    repeatCount="indefinite"/>
-            </svg>
-        </div>
-        <h2 class="mystical-hero-title">Welcome to the Mystical Realm</h2>
-        <p class="mystical-hero-subtitle">"The cosmos speaks in whispers, and the stars write your story"</p>
-    </div>
-    <div class="mystical-hero-date">
-        {{ current_date|date:"l, F j, Y" }}
-    </div>
-</div>
 
-    <!-- Quick Actions -->
-    <div class="mystical-quick-actions">
-        <button class="mystical-action-card" onclick="switchMysticalSection('tarot')">
-            <span class="action-icon">🔮</span>
-            <span class="action-label">Draw a Card</span>
-        </button>
-        <button class="mystical-action-card" onclick="switchMysticalSection('chart')">
-            <span class="action-icon">⭐</span>
-            <span class="action-label">View Chart</span>
-        </button>
-    </div>
-
+    
     <!-- Cosmic Weather Grid -->
     <div class="mystical-weather-grid">
         
@@ -172,7 +90,7 @@
                 </div>
 
                 <!-- Cosmic Weather Summary -->
-                <div class="cosmic-weather-summary">
+                <!-- <div class="cosmic-weather-summary">
                     <h4 class="cosmic-weather-title">
                         <i class="fas fa-cloud-sun text-purple-400 mr-2"></i>
                         Cosmic Weather
@@ -180,7 +98,7 @@
                     <p class="cosmic-weather-text">
                         {{ planetary_data.cosmic_weather|default:"The celestial dance continues - Moon in Pisces heightens intuition while Mars in Leo fuels creative passion. A harmonious blend of reflection and action." }}
                     </p>
-                </div>
+                </div> -->
             </div>
         </div>
 
