@@ -125,7 +125,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             <!-- Chart Ruler -->
-            {% if natal_chart.chart_ruler %}
+            {% if natal_chart_data.chart_ruler %}
             <div class="bg-gradient-to-br from-purple-900/30 to-indigo-900/20 rounded-xl p-4 border border-purple-500/20 hover:border-purple-500/40 transition-all">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center">
@@ -135,23 +135,23 @@
                 </div>
                 <div class="space-y-2">
                     <p class="text-base font-bold text-white">
-                        {{ natal_chart.chart_ruler.planet.symbol }} {{ natal_chart.chart_ruler.planet.name }}
+                        {{ natal_chart_data.chart_ruler.planet.symbol }} {{ natal_chart.chart_ruler.planet.name }}
                     </p>
                     <p class="text-sm text-slate-300">
-                        in {{ natal_chart.chart_ruler.planet.sign }}
-                        {% if natal_chart.chart_ruler.planet.is_retrograde %}
+                        in {{ natal_chart_data.chart_ruler.planet.sign }}
+                        {% if natal_chart_data.chart_ruler.planet.is_retrograde %}
                         <span class="text-rose-400 ml-1">℞</span>
                         {% endif %}
                     </p>
                     <p class="text-xs text-slate-400">
-                        Rules {{ natal_chart.chart_ruler.rules }} Rising
+                        Rules {{ natal_chart_data.chart_ruler.rules }} Rising
                     </p>
                 </div>
             </div>
             {% endif %}
 
             <!-- Stelliums -->
-            {% if natal_chart.stelliums %}
+            {% if natal_chart_data.stelliums %}
             <div class="bg-gradient-to-br from-orange-900/30 to-yellow-900/20 rounded-xl p-4 border border-orange-500/20 hover:border-orange-500/40 transition-all">
                 <div class="flex items-center gap-2 mb-3">
                     <div class="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center">
@@ -160,7 +160,7 @@
                     <h5 class="font-semibold text-sm text-orange-300">Stelliums</h5>
                 </div>
                 <div class="space-y-2">
-                    {% for stellium in natal_chart.stelliums %}
+                    {% for stellium in natal_chart_data.stelliums %}
                     <div class="bg-slate-900/30 rounded-lg p-2">
                         <p class="text-sm font-bold text-white">
                             {{ stellium.count }} in 
@@ -180,6 +180,8 @@
                     {% endfor %}
                 </div>
             </div>
+            {% else %}
+            AWWWW
             {% endif %}
 
             <!-- Elements & Singletons -->
@@ -208,10 +210,10 @@
                         <p class="text-base font-bold text-cyan-400" id="water-count">-</p>
                     </div>
                 </div>
-                {% if natal_chart.singletons %}
+                {% if natal_chart_data.singletons %}
                 <div class="pt-2 border-t border-emerald-500/20">
                     <p class="text-xs text-slate-400 mb-1">Unique:</p>
-                    {% for singleton in natal_chart.singletons %}
+                    {% for singleton in natal_chart_data.singletons %}
                     <p class="text-xs text-emerald-300">
                         {{ singleton.planet }} (Only {{ singleton.category }})
                     </p>
@@ -228,9 +230,9 @@
                     </div>
                     <h5 class="font-semibold text-sm text-rose-300">Retrogrades</h5>
                 </div>
-                {% if natal_chart.retrogrades %}
+                {% if natal_chart_data.retrogrades %}
                 <div class="space-y-2 mb-3">
-                    {% for planet in natal_chart.retrogrades %}
+                    {% for planet in natal_chart_data.retrogrades %}
                     <div class="flex items-center justify-between bg-slate-900/30 rounded-lg px-3 py-2">
                         <span class="text-sm text-slate-200">{{ planet }}</span>
                         <span class="text-rose-400 font-bold">℞</span>

@@ -350,6 +350,85 @@ class ReadingWrapper:
 
 # Add this to your deep_dive/views.py file
 
+@login_required
+def birth_chart_view(request):
+    """
+    Main natal chart view - handles everything in one place.
+    No need for separate unified_chart_modal view.
+    """
+    try:
+        # Get user's birth profile
+        birth_profile = BirthProfile.objects.get(user=request.user)
+
+        # Get natal chart data
+        natal_chart_data = birth_profile.cached_chart_data
+
+        if not natal_chart_data:
+            return render(request, 'deep_dive/mystical/astrology/birth_chart_container.html', {
+                'error': 'No natal chart data available. Please generate your chart first.',
+                'has_chart': False,
+                'birth_setup_url': reverse('userprofile:birth_profile_setup'),
+            })
+
+        # Extract Big Three for summary
+        sun_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Sun'), None)
+        moon_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Moon'), None)
+        rising_sign = natal_chart_data.get('ascendant', {}).get('sign', 'Unknown')
+
+        # Prepare complete context
+        context = {
+            'birth_profile': birth_profile,
+            'natal_chart': natal_chart_data,  # Contains: planets, aspects, houses, stelliums, retrogrades, chart_ruler, singletons, etc.
+            'has_chart': True,
+            'chart_info': {
+                'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
+                'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
+                'rising_sign': rising_sign,
+                'planet_count': len(natal_chart_data.get('planets', [])),
+                'aspect_count': len(natal_chart_data.get('aspects', [])),
+                'dominant_element': natal_chart_data.get('dominant_element', 'Spirit'),
+            }
+        }
+
+        # Render EVERYTHING in one template
+        return render(request, 'deep_dive/mystical/astrology/birth_chart_container.html', context)
+
+    except BirthProfile.DoesNotExist:
+        return render(request, 'deep_dive/mystical/astrology/birth_chart_container.html', {
+            'error': 'No birth profile found. Please create your birth profile first.',
+            'has_chart': False,
+            'birth_setup_url': reverse('userprofile:birth_profile_setup')
+        })
+    except Exception as e:
+        return render(request, 'deep_dive/mystical/astrology/birth_chart_container.html', {
+            'error': f'Error loading chart data: {str(e)}',
+            'has_chart': False,
+            'birth_setup_url': reverse('userprofile:birth_profile_setup')
+        })
+
+
+# ============================================
+# PLANET DETAIL VIEWS (for HTMX in modal)
+# ============================================
+
+@login_required
+def planet_meaning(request, planet_name):
+    """Loads planet interpretation via HTMX"""
+    # (Keep as-is from previous artifact)
+    pass
+
+@login_required
+def planet_journals(request, planet_name):
+    """Loads planet journals via HTMX"""
+    # (Keep as-is from previous artifact)
+    pass
+
+@login_required
+def save_planet_note(request, planet_name):
+    """Saves planet note via HTMX"""
+    # (Keep as-is from previous artifact)
+    pass
+
 
 def astro_birth_chart(request):
     """
@@ -393,7 +472,8 @@ def astro_birth_chart(request):
         'has_birth_profile': has_birth_profile,
         'has_chart': natal_chart is not None,
         'has_birth_time': has_birth_time,
-        'natal_chart': json.dumps(natal_chart) if natal_chart else None,
+        'natal_chart_data': natal_chart,  # Keep as Python dict for template
+        'natal_chart': json.dumps(natal_chart) if natal_chart else None,  # JSON for JS
         'chart_info': chart_context,
         'birth_setup_url': reverse('userprofile:birth_profile_setup')
     })
