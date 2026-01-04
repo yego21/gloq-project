@@ -1,0 +1,179 @@
+<!-- AI Reading Dashboard Section -->
+<div class="space-y-4">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-2">
+        <h3 class="text-lg font-bold flex items-center">
+            <i class="fas fa-robot text-indigo-400 mr-3"></i>
+            AI Cosmic Readings
+        </h3>
+    </div>
+    
+    <div class="mystical-divider mb-6"></div>
+
+    <!-- Dashboard Content -->
+    <div id="ai-reading-content">
+        {% if has_chart %}
+                {% include 'deep_dive/mystical/astrology/includes/ai_reading_dashboard.html' with daily_reading=daily_reading transit_reading=transit_reading element_reading=element_reading %}
+        {% else %}
+            <!-- Empty State for AI Readings -->
+            <div class="flex flex-col items-center justify-center text-center py-12">
+                <div class="mb-6">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-indigo-500/10 flex items-center justify-center pulse-slow">
+                        <i class="fas fa-magic text-4xl text-indigo-400/40"></i>
+                    </div>
+                    <h4 class="text-lg font-semibold mb-2">Unlock AI Cosmic Insights</h4>
+                    <p class="text-slate-400 text-sm max-w-md">
+                        Generate your natal chart to receive personalized AI-powered readings based on your unique cosmic blueprint and current planetary transits.
+                    </p>
+                </div>
+                
+                <!-- Feature Pills -->
+                <div class="flex flex-wrap gap-2 justify-center max-w-md">
+                    <span class="px-3 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-xs">
+                        <i class="fas fa-calendar-day mr-1"></i>Daily Guidance
+                    </span>
+                    <span class="px-3 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400 text-xs">
+                        <i class="fas fa-arrows-rotate mr-1"></i>Transit Analysis
+                    </span>
+                    <span class="px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs">
+                        <i class="fas fa-atom mr-1"></i>Element Wisdom
+                    </span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+/* Smooth pulse animation */
+@keyframes pulse-slow {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+.pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+}
+</style>
+
+<script>
+// Open reading modal - uses global modal outside this component
+function openReadingModal(readingType) {
+    // Use HTMX to fetch reading content into the global modal
+    htmx.ajax('GET', `/deep_dives/view-reading/${readingType}/`, {
+        target: '#reading-view-modal',
+        swap: 'innerHTML'
+    }).then(() => {
+        // Show the global modal
+        const modal = document.getElementById('reading-view-modal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    });
+}
+
+// Generate All functionality
+// function confirmGenerateAll() {
+//     const readingsToGenerate = [];
+    
+//     // Check each reading card
+//     const cards = document.querySelectorAll('#ai_reading_dashboard > div[class*="bg-gradient"]');
+    
+//     cards.forEach(card => {
+//         const badge = card.querySelector('span[class*="rounded-full"]');
+//         const badgeText = badge ? badge.textContent.trim() : '';
+        
+//         let readingType = null;
+//         let readingName = '';
+//         let icon = '';
+//         let color = '';
+        
+//         if (card.querySelector('.fa-calendar-day')) {
+//             readingType = 'daily_overview';
+//             readingName = 'Daily Overview';
+//             icon = 'fa-calendar-day';
+//             color = 'yellow';
+//         } else if (card.querySelector('.fa-arrows-rotate')) {
+//             readingType = 'transit_focus';
+//             readingName = 'Transit Focus';
+//             icon = 'fa-arrows-rotate';
+//             color = 'purple';
+//         } else if (card.querySelector('.fa-atom')) {
+//             readingType = 'element_wisdom';
+//             readingName = 'Element Wisdom';
+//             icon = 'fa-atom';
+//             color = 'blue';
+//         }
+        
+//         if (readingType && (badgeText.includes('Outdated') || badgeText.includes('Not generated'))) {
+//             readingsToGenerate.push({
+//                 type: readingType,
+//                 name: readingName,
+//                 icon: icon,
+//                 color: color
+//             });
+//         }
+//     });
+    
+//     if (readingsToGenerate.length === 0) {
+//         alert('All readings are already up to date!');
+//         return;
+//     }
+    
+//     // Update global modal content
+//     document.getElementById('readings-to-generate-count').textContent = readingsToGenerate.length;
+    
+//     const listContainer = document.getElementById('readings-to-generate-list');
+//     listContainer.innerHTML = readingsToGenerate.map(reading => `
+//         <div class="flex items-center space-x-2 text-xs text-slate-300 bg-slate-800/30 rounded-lg p-2 border border-slate-700/30">
+//             <i class="fas ${reading.icon} text-${reading.color}-400"></i>
+//             <span>${reading.name}</span>
+//         </div>
+//     `).join('');
+    
+//     window.readingsToGenerate = readingsToGenerate;
+    
+//     // Show global modal
+//     const modal = document.getElementById('generate-all-modal');
+//     if (modal) {
+//         modal.classList.remove('hidden');
+//         modal.classList.add('flex');
+//     }
+// }
+
+// function closeGenerateAllModal() {
+//     const modal = document.getElementById('generate-all-modal');
+//     if (modal) {
+//         modal.classList.add('hidden');
+//         modal.classList.remove('flex');
+//     }
+// }
+
+// function executeGenerateAll() {
+//     closeGenerateAllModal();
+    
+//     const readings = window.readingsToGenerate || [];
+    
+//     readings.forEach((reading, index) => {
+//         setTimeout(() => {
+//             const form = document.querySelector(`form input[name="reading_type"][value="${reading.type}"]`)?.closest('form');
+            
+//             if (form) {
+//                 const submitButton = form.querySelector('button[type="submit"]');
+//                 if (submitButton) {
+//                     submitButton.click();
+//                 }
+//             }
+//         }, index * 3000);
+//     });
+// }
+
+// // Listen for refresh event triggered from birth chart generation
+// document.body.addEventListener('refresh-readings', function(event) {
+//     console.log('Refreshing AI readings after chart generation...');
+//     htmx.ajax('GET', '{% url "deep_dive:astro_ai_readings" %}', {
+//         target: '#ai-readings-section .mystical-section',
+//         swap: 'innerHTML'
+//     });
+// });
+// </script>

@@ -1,3 +1,4 @@
+
 <div id="mode-features">
 <!-- Integrated mystical_mode_features.html -->
 <div class="mystical-container">
@@ -36,6 +37,7 @@
                 <path d="M30,80 L70,80 M30,95 L70,95 M30,110 L70,110" stroke="currentColor" stroke-width="2" opacity="0.6"/>
             </svg>
             <span class="main-btn-label">Tarot</span>
+
         </button>
         <button class="mystical-main-btn" data-main-section="alchemy" title="Alchemy">
             <svg viewBox="0 0 100 100" width="18" height="18">
@@ -115,10 +117,9 @@
                 <!-- Birth Chart Section -->
                 <div class="mystical-section" id="chart-section">
                   <div id = "birth-chart-container">
-                    <div hx-get="{% url 'deep_dive:astro_chart_reading' %}"
+                    <div hx-get="{% url 'deep_dive:astro_birth_chart' %}"
                          hx-trigger="intersect once"
-                         hx-swap="innerHTML"
-                         hx-indicator=".chart-loading">
+                         hx-swap="innerHTML">                      
                         <div class="mystical-loading chart-loading">
                             <div class="loading-spinner"></div>
                             <p>Generating your birth chart...</p>
@@ -129,7 +130,7 @@
 
                 <!-- AI Readings Section -->
                 <div class="mystical-section" id="ai-readings-section">
-                    <div hx-get="{% url 'deep_dive:astro_chart_reading' %}"
+                    <div hx-get="{% url 'deep_dive:astro_ai_readings' %}"
                          hx-trigger="intersect once"
                          hx-swap="innerHTML"
                          hx-indicator=".ai-loading">
@@ -229,6 +230,161 @@
     </div>
 </div>
 </div>
+
+ <!-- Unified Chart Modal -->
+<div class="modal-overlay" id="chart-modal">
+    <div class="modal-content cosmic-border w-11/12 max-w-7xl my-8">
+        <div class="mystical-card relative rounded-3xl p-8">
+            <!-- Close Button -->
+            <button class="absolute top-6 right-6 text-slate-400 hover:text-purple-300 transition-colors z-50 
+                           w-10 h-10 rounded-full bg-slate-800/50 hover:bg-slate-700/50 
+                           flex items-center justify-center border border-purple-500/20 hover:border-purple-400/40"
+                    onclick="document.getElementById('chart-modal').classList.remove('active')">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+
+            <!-- Modal Body -->
+            <div id="chart-modal-content" class="min-h-[400px] relative">
+                <!-- This will be replaced by HTMX -->
+            </div>
+            
+            <!-- Loading Indicator (shown during HTMX request) -->
+            <div class="htmx-indicator absolute inset-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm rounded-3xl">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin text-5xl text-purple-400 mb-6"></i>
+                    <p class="text-slate-300 text-lg">Loading chart data...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Reading View Modal (Global) -->
+<div id="reading-view-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl border border-purple-500/30 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden relative">
+        <!-- Close Button -->
+        <button onclick="closeReadingModal()" 
+                class="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 border border-slate-600/50 flex items-center justify-center text-slate-300 hover:text-white transition-all">
+            <i class="fas fa-times text-lg"></i>
+        </button>
+        
+        <!-- Modal Content (populated by HTMX) -->
+        <div id="reading-modal-content" class="overflow-y-auto max-h-[90vh]">
+            <!-- Loading state -->
+            <div class="flex items-center justify-center min-h-[400px]">
+                <div class="text-center">
+                    <i class="fas fa-spinner fa-spin text-4xl text-indigo-400 mb-4"></i>
+                    <p class="text-slate-300">Loading reading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Generate All Confirmation Modal (Global) -->
+<div id="generate-all-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9998] hidden items-center justify-center p-4">
+    <div class="bg-slate-800 rounded-2xl border border-indigo-500/30 shadow-2xl max-w-md w-full overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-900/30 to-violet-900/30 p-4 border-b border-indigo-500/20">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                    <i class="fas fa-stars"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-semibold text-indigo-300">Generate All Readings</h3>
+                    <p class="text-xs text-slate-400">Confirm bulk generation</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="p-5 space-y-4">
+            <p class="text-sm text-slate-300">
+                This will generate <strong class="text-indigo-400" id="readings-to-generate-count">0</strong> reading(s) that are either missing or outdated:
+            </p>
+            
+            <div id="readings-to-generate-list" class="space-y-2">
+                <!-- Populated by JavaScript -->
+            </div>
+
+            <div class="bg-amber-900/10 border border-amber-500/20 rounded-lg p-3">
+                <div class="flex items-start space-x-2">
+                    <i class="fas fa-exclamation-triangle text-amber-400 text-xs mt-0.5"></i>
+                    <p class="text-xs text-amber-300/80">
+                        This may take a few moments. Each reading will be generated sequentially.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <!-- <div class="p-4 bg-slate-900/30 border-t border-slate-700/30 flex items-center justify-end space-x-3">
+            <button onclick="closeGenerateAllModal()" 
+                    class="text-xs px-4 py-2 rounded-full bg-slate-700/50 hover:bg-slate-700 border border-slate-600/50 transition-all text-slate-300">
+                Cancel
+            </button>
+            <button onclick="executeGenerateAll()" 
+                    class="text-xs px-4 py-2 rounded-full bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 transition-all text-indigo-300 font-medium">
+                <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate All
+            </button>
+        </div> -->
+    </div>
+</div>
+<script>
+// Global modal control functions
+function closeReadingModal() {
+    const modal = document.getElementById('reading-view-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('active');
+    }
+}
+
+// Close modals on outside click
+document.getElementById('reading-view-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReadingModal();
+    }
+});
+
+document.getElementById('generate-all-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeGenerateAllModal();
+    }
+});
+
+// Close modals on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeReadingModal();
+        closeGenerateAllModal();
+    }
+});
+</script>
+
+<style>
+/* Ensure modals appear above everything */
+.z-\[9999\] {
+    z-index: 9999;
+}
+
+.z-\[9998\] {
+    z-index: 9998;
+}
+
+/* Smooth modal transitions */
+#reading-view-modal,
+#generate-all-modal {
+    transition: opacity 0.2s ease-in-out;
+}
+
+#reading-view-modal.active,
+#generate-all-modal.flex {
+    display: flex !important;
+}
+</style>
+
 
 <script>
 (function() {

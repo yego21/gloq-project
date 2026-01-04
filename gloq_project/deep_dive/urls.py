@@ -6,10 +6,11 @@ app_name = "deep_dive"
 
 
 urlpatterns = [
-
     path("mystical/", mystical_views.mystical, name="mystical"),    
     path('mystical/moon_planet/', mystical_views.moon_planets, name='moon_planets'),
-    path('mystical/astro_chart_reading/', mystical_views.astro_chart_reading, name='astro_chart_reading'),
+    # path('mystical/astro_chart_reading/', mystical_views.astro_chart_reading, name='astro_chart_reading'),
+    path('mystical/astro_birth_chart/', mystical_views.astro_birth_chart, name='astro_birth_chart'),
+    path('mystical/astro_ai_readings/', mystical_views.astro_ai_readings, name='astro_ai_readings'),
     path('mystical/mystical/', mystical_views.interactive_mystical, name='interactive_mystical'),
     path('mystical/generate-natal-chart/', mystical_views.generate_natal_chart, name='generate_natal_chart'),
     path('chart/unified/', mystical_views.unified_chart_modal, name='unified_chart_modal'),

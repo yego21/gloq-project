@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Database Migration Guide - Gloq Project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #e2e8f0;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        h1 {
+            color: #a5b4fc;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        h2 {
+            color: #818cf8;
+            font-size: 1.8rem;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+        }
+
+        h3 {
+            color: #a5b4fc;
+            font-size: 1.3rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            color: #c7d2fe;
+            font-size: 1.1rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #cbd5e1;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: #cbd5e1;
+        }
+
+        .info-box {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .warning-box {
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .error-box {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 4px solid #ef4444;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .success-box {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 4px solid #22c55e;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        pre {
+            background: #0f172a;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+            margin: 15px 0;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        code {
+            font-family: 'Courier New', monospace;
+            color: #a5f3fc;
+            font-size: 0.9rem;
+        }
+
+        .inline-code {
+            background: rgba(99, 102, 241, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #c7d2fe;
+        }
+
+        .toc {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            color: #a5b4fc;
+        }
+
+        .toc ul {
+            list-style: none;
+            margin-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 10px;
+        }
+
+        .toc a {
+            color: #818cf8;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .toc a:hover {
+            color: #a5b4fc;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .badge-problem {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+        }
+
+        .badge-solution {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+        }
+
+        .badge-note {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: rgba(99, 102, 241, 0.2);
+            color: #a5b4fc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 12px;
+            border-top: 1px solid rgba(99, 102, 241, 0.1);
+            color: #cbd5e1;
+        }
+
+        .emoji {
+            font-size: 1.3rem;
+            margin-right: 8px;
+        }
+
+        .workflow-step {
+            background: rgba(15, 23, 42, 0.5);
+            border-left: 3px solid #818cf8;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+
+        .workflow-step strong {
+            color: #a5b4fc;
+        }
+
+        .file-tree {
+            background: #0f172a;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            color: #cbd5e1;
+            margin: 15px 0;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(99, 102, 241, 0.2);
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        a {
+            color: #818cf8;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: #a5b4fc;
+            text-decoration: underline;
+        }
+
+        .command-box {
+            background: #0f172a;
+            border: 2px solid #22c55e;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .command-box::before {
+            content: '$ ';
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .highlight {
+            background: rgba(251, 191, 36, 0.2);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><span class="emoji">🌙</span>Database Migration Guide</h1>
+        <p class="subtitle">Gloq Project - Database Dump/Load Operations Reference</p>
+
+        <div class="info-box">
+            <strong>📌 Quick Overview:</strong> This guide covers how to safely dump and load database fixtures in the Gloq project, handling emoji data, multi-environment setup, signal management, and Windows UTF-8 encoding challenges.
+        </div>
+
+        <div class="toc">
+            <h3>📋 Table of Contents</h3>
+            <ul>
+                <li><a href="#problem">1. The Problem We Solved</a></li>
+                <li><a href="#dumping">2. Database Dump Process</a></li>
+                <li><a href="#loading">3. Database Load Process</a></li>
+                <li><a href="#signals">4. Signal Management</a></li>
+                <li><a href="#troubleshooting">5. Common Issues & Solutions</a></li>
+                <li><a href="#workflows">6. Complete Workflows</a></li>
+                <li><a href="#reference">7. Quick Reference Commands</a></li>
+            </ul>
+        </div>
+
+        <h2 id="problem"><span class="emoji">🔴</span>The Problem We Solved</h2>
+
+        <h3><span class="badge badge-problem">ISSUE 1</span>Emoji Encoding Error</h3>
+        <div class="error-box">
+            <strong>Error Message:</strong><br>
+            <code>CommandError: Unable to serialize database: 'charmap' codec can't encode character '\U0001f31e' in position 1</code>
+        </div>
+
+        <p><strong>Cause:</strong> Django's standard <span class="inline-code">dumpdata</span> uses ASCII encoding by default, which can't handle emoji characters (🌞🌙) stored in the database.</p>
+
+        <p><strong>Why we have emojis:</strong></p>
+        <ul>
+            <li>Moon phase indicators in journal entries (🌑🌒🌓🌔🌕🌖🌗🌘)</li>
+            <li>User profile data</li>
+            <li>Mystical/astrology features</li>
+        </ul>
+
+        <h3><span class="badge badge-problem">ISSUE 2</span>ContentType Conflicts</h3>
+        <div class="error-box">
+            <strong>Error Message:</strong><br>
+            <code>django.db.utils.IntegrityError: duplicate key value violates unique constraint "django_content_type_app_label_model_76bd3d3b_uniq"</code>
+        </div>
+
+        <p><strong>Cause:</strong> Loading fixtures into a database that already has ContentType records causes unique constraint violations.</p>
+
+        <h3><span class="badge badge-problem">ISSUE 3</span>Signal Interference</h3>
+        <p>User profile signals (like auto-creating profiles on user creation) fire during fixture load, causing duplicates or unwanted side effects.</p>
+
+        <h2 id="dumping"><span class="emoji">📤</span>Database Dump Process</h2>
+
+        <h3>File Location</h3>
+        <p>Create <span class="inline-code">db_dump.py</span> in the same directory as <span class="inline-code">manage.py</span>:</p>
+
+        <div class="file-tree">
+Gloq/<br>
+&nbsp;&nbsp;gloq_project/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;manage.py<br>
+&nbsp;&nbsp;&nbsp;&nbsp;db_dump.py     <span style="color: #22c55e;">← Place here</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;.env<br>
+&nbsp;&nbsp;&nbsp;&nbsp;gloq/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;settings/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dev.py<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prod.py
+        </div>
+
+        <h3>The Script: db_dump.py</h3>
+
+        <pre><code># db_dump.py
+import os
+import sys
+import json
+import django
+import environ
+from pathlib import Path
+
+# Setup environment exactly like manage.py does
+BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env()
+environ.Env.read_env(BASE_DIR / '.env')
+
+django_env = env('DJANGO_ENV', default='dev')
+print(f'django env:{django_env}')
+
+# Set settings module based on environment
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', f'gloq.settings.{django_env}')
+django.setup()
+
+from django.core import serializers
+from django.apps import apps
+from django.conf import settings
+
+print("🌙 Starting UTF-8 database dump...")
+print(f"📂 Settings module: {settings.SETTINGS_MODULE}")
+
+# Get database info
+try:
+    db_config = settings.DATABASES.get('default', list(settings.DATABASES.values())[0])
+    db_name = db_config.get('NAME', 'Unknown')
+    print(f"📊 Database: {db_name}")
+except Exception as e:
+    print(f"📊 Database: Could not read config ({e})")
+print()
+
+# Get all models, excluding problematic system tables
+print("🗂️  Loading models...")
+excluded_models = ['contenttypes.contenttype', 'auth.permission']
+all_models = [
+    model for model in apps.get_models()
+    if f"{model._meta.app_label}.{model._meta.model_name}" not in excluded_models
+]
+
+print(f"Found {len(all_models)} models (excluding system tables)")
+print()
+
+# Count and collect objects
+print("🔍 Collecting data:")
+all_objects = []
+model_stats = {}
+
+for model in all_models:
+    try:
+        count = model.objects.count()
+        model_name = f"{model._meta.app_label}.{model._meta.model_name}"
+        model_stats[model_name] = count
+        
+        if count > 0:
+            print(f"  ✓ {model_name}: {count} objects")
+            objects = list(model.objects.all())
+            all_objects.extend(objects)
+        else:
+            print(f"  ○ {model_name}: 0 objects (skipping)")
+    except Exception as e:
+        print(f"  ✗ Error: {e}")
+
+print()
+print(f"📦 Total objects to serialize: {len(all_objects)}")
+
+if len(all_objects) == 0:
+    print("⚠️  WARNING: No objects found!")
+    sys.exit(1)
+
+# Serialize with UTF-8 support
+print("📝 Serializing data...")
+data_json = serializers.serialize('json', all_objects, indent=4)
+
+# Parse and re-dump with ensure_ascii=False (preserves emojis!)
+data = json.loads(data_json)
+
+# Write with UTF-8 encoding
+output_file = f'db_dump_{django_env}.json'
+print(f"💾 Writing to {output_file}...")
+with open(output_file, 'w', encoding='utf-8') as f:
+    json.dump(data, f, indent=4, ensure_ascii=False)
+
+print()
+print(f"✅ Successfully dumped {len(data)} objects!")
+print()
+print("🌞 Emojis preserved: 🌑 🌒 🌓 🌔 🌕 🌖 🌗 🌘")</code></pre>
+
+        <h3>Running the Dump</h3>
+        <div class="command-box">cd C:\Users\IT\Documents\Django Project\Gloq\gloq_project</div>
+        <div class="command-box">python db_dump.py</div>
+
+        <div class="success-box">
+            <strong>Output:</strong> <span class="inline-code">db_dump_dev.json</span> (or <span class="inline-code">db_dump_prod.json</span> depending on DJANGO_ENV)
+        </div>
+
+        <h3>What Gets Excluded</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Model</th>
+                    <th>Reason for Exclusion</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>contenttypes.contenttype</code></td>
+                    <td>Auto-generated by migrations, causes conflicts</td>
+                </tr>
+                <tr>
+                    <td><code>auth.permission</code></td>
+                    <td>Auto-generated by migrations, recreated automatically</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h2 id="loading"><span class="emoji">📥</span>Database Load Process</h2>
+
+        <h3>Standard Load (Simple Case)</h3>
+        <p>If loading into a <span class="highlight">completely fresh database</span>:</p>
+
+        <div class="workflow-step">
+            <strong>Step 1:</strong> Delete existing database<br>
+            <code>del db.sqlite3</code>
+        </div>
+
+        <div class="workflow-step">
+            <strong>Step 2:</strong> Run migrations to create tables<br>
+            <code>python manage.py migrate</code>
+        </div>
+
+        <div class="workflow-step">
+            <strong>Step 3:</strong> Load fixture<br>
+            <code>python manage.py loaddata db_dump_dev.json</code>
+        </div>
+
+        <div class="workflow-step">
+            <strong>Step 4:</strong> Create superuser if needed<br>
+            <code>python manage.py createsuperuser</code>
+        </div>
+
+        <div class="info-box">
+            <strong><span class="emoji">💡</span>Note:</strong> Standard <span class="inline-code">loaddata</span> handles UTF-8 correctly when <em>reading</em> JSON files, so no special script needed for loading!
+        </div>
+
+        <h3>Safe Load (With Signal Control)</h3>
+        <p>For loading with signal management, create a custom command.</p>
+
+        <p><strong>File:</strong> <span class="inline-code">userprofile/management/commands/loaddata_safe.py</span></p>
+
+        <pre><code>from django.core.management.base import BaseCommand
+from django.core.management import call_command
+from django.contrib.contenttypes.models import ContentType
+
+class Command(BaseCommand):
+    help = 'Safely load fixture data with signal control'
+
+    def add_arguments(self, parser):
+        parser.add_argument('fixture', type=str, help='Fixture file')
+        parser.add_argument('--fresh', action='store_true', help='Fresh load')
+
+    def handle(self, *args, **options):
+        fixture = options['fixture']
+        fresh = options.get('fresh', False)
+
+        self.stdout.write('🔧 Starting safe fixture load...')
+
+        # Disable signals
+        signals_disabled = False
+        try:
+            from userprofile.signals import disable_signals
+            disable_signals()
+            signals_disabled = True
+        except ImportError:
+            pass
+
+        try:
+            if fresh:
+                ContentType.objects.all().delete()
+
+            # Load fixture
+            call_command('loaddata', fixture, verbosity=2)
+            self.stdout.write('✅ Fixture loaded!')
+
+        finally:
+            # Re-enable signals
+            if signals_disabled:
+                try:
+                    from userprofile.signals import enable_signals
+                    enable_signals()
+                except ImportError:
+                    pass
+
+        self.stdout.write('🎉 Done!')</code></pre>
+
+        <h3>Running Safe Load</h3>
+        <div class="command-box">python manage.py loaddata_safe db_dump_dev.json --fresh</div>
+
+        <h2 id="signals"><span class="emoji">🔔</span>Signal Management</h2>
+
+        <h3>Why Signals Are a Problem</h3>
+        <p>When loading fixtures, Django creates model instances. If you have signals that auto-create related objects, they fire during fixture load, creating duplicates!</p>
+
+        <div class="warning-box">
+            <strong>Example Problem:</strong> A <span class="inline-code">post_save</span> signal that creates a UserProfile when a User is created will fire during fixture load, even though the UserProfile is already in the fixture!
+        </div>
+
+        <h3>Signal Control Implementation</h3>
+        <p><strong>File:</strong> <span class="inline-code">userprofile/signals.py</span></p>
+
+        <pre><code>from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.contrib.auth.models import User
+
+# Global flag to control signals
+_signals_enabled = True
+
+def disable_signals():
+    """Disable all signals in this module"""
+    global _signals_enabled
+    _signals_enabled = False
+
+def enable_signals():
+    """Re-enable all signals in this module"""
+    global _signals_enabled
+    _signals_enabled = True
+
+@receiver(post_save, sender=User)
+def create_user_profile(sender, instance, created, **kwargs):
+    # Check if signals are enabled
+    if not _signals_enabled:
+        return
+    
+    if created:
+        from .models import UserProfile
+        UserProfile.objects.get_or_create(user=instance)</code></pre>
+
+        <h2 id="troubleshooting"><span class="emoji">🔧</span>Common Issues & Solutions</h2>
+
+        <h3>Issue: "charmap codec can't encode character"</h3>
+        <div class="error-box">
+            <strong>Problem:</strong> Windows console can't display/write emojis
+        </div>
+        <div class="success-box">
+            <strong>Solution:</strong> Use the custom <span class="inline-code">db_dump.py</span> script which forces UTF-8 encoding
+        </div>
+
+        <h3>Issue: ContentType already exists</h3>
+        <div class="error-box">
+            <strong>Problem:</strong> Loading into database that already has ContentTypes
+        </div>
+        <div class="success-box">
+            <strong>Solutions:</strong>
+            <ol>
+                <li>Use <span class="inline-code">--fresh</span> flag with <span class="inline-code">loaddata_safe</span></li>
+                <li>Clear ContentTypes manually before loading</li>
+                <li>Exclude ContentTypes from dump (already done in script)</li>
+            </ol>
+        </div>
+
+        <h3>Issue: Duplicate user profiles after load</h3>
+        <div class="error-box">
+            <strong>Problem:</strong> Signals firing during fixture load
+        </div>
+        <div class="success-box">
+            <strong>Solution:</strong> Use <span class="inline-code">loaddata_safe</span> command with signal control
+        </div>
+
+        <h3>Issue: Wrong database being dumped</h3>
+        <div class="error-box">
+            <strong>Problem:</strong> Multiple environments (dev/prod)
+        </div>
+        <div class="success-box">
+            <strong>Solution:</strong> Check your <span class="inline-code">.env</span> file - make sure <span class="inline-code">DJANGO_ENV</span> is set correctly
+        </div>
+
+        <h3>Issue: Empty dump (0 objects)</h3>
+        <div class="error-box">
+            <strong>Possible causes:</strong>
+            <ul>
+                <li>Wrong DJANGO_ENV setting</li>
+                <li>Database file doesn't exist at expected location</li>
+                <li>Models not properly registered</li>
+            </ul>
+        </div>
+        <div class="success-box">
+            <strong>Debug:</strong><br>
+            <code>python manage.py shell</code><br>
+            <code>>>> from journal.models import JournalEntry</code><br>
+            <code>>>> JournalEntry.objects.count()  # Should show number > 0</code>
+        </div>
+
+        <h2 id="workflows"><span class="emoji">🔄</span>Complete Workflows</h2>
+
+        <h3>Workflow 1: Backup Current Database</h3>
+        <div class="command-box">copy db.sqlite3 db.sqlite3.backup_2025-11-19</div>
+        <p>Or with JSON dump:</p>
+        <div class="command-box">python db_dump.py</div>
+
+        <h3>Workflow 2: Fresh Start (New Machine/Clean Install)</h3>
+        <div class="workflow-step">
+            <strong>1.</strong> Clone repository<br>
+            <code>git clone your-repo-url</code><br>
+            <code>cd gloq_project</code>
+        </div>
+        <div class="workflow-step">
+            <strong>2.</strong> Setup virtual environment<br>
+            <code>python -m venv gvenv</code><br>
+            <code>gvenv\Scripts\activate</code>
+        </div>
+        <div class="workflow-step">
+            <strong>3.</strong> Install dependencies<br>
+            <code>pip install -r requirements.txt</code>
+        </div>
+        <div class="workflow-step">
+            <strong>4.</strong> Setup environment<br>
+            <code>copy .env.example .env</code><br>
+            <em>Edit .env and set DJANGO_ENV=dev</em>
+        </div>
+        <div class="workflow-step">
+            <strong>5.</strong> Create database structure<br>
+            <code>python manage.py migrate</code>
+        </div>
+        <div class="workflow-step">
+            <strong>6.</strong> Load data<br>
+            <code>python manage.py loaddata db_dump_dev.json</code>
+        </div>
+        <div class="workflow-step">
+            <strong>7.</strong> Create superuser<br>
+            <code>python manage.py createsuperuser</code>
+        </div>
+        <div class="workflow-step">
+            <strong>8.</strong> Run server<br>
+            <code>python manage.py runserver</code>
+        </div>
+
+        <h3>Workflow 3: Migrate Between Environments (Dev → Prod)</h3>
+        <p><strong>On DEV machine:</strong></p>
+        <div class="workflow-step">
+            <strong>1.</strong> Ensure DJANGO_ENV=dev in .env<br>
+            <code>python db_dump.py</code>
+        </div>
+        <div class="workflow-step">
+            <strong>2.</strong> Transfer file to PROD machine<br>
+            <code>scp db_dump_dev.json user@prod-server:/path/</code>
+        </div>
+
+        <p><strong>On PROD machine:</strong></p>
+        <div class="workflow-step">
+            <strong>3.</strong> Ensure DJANGO_ENV=prod in .env
+        </div>
+        <div class="workflow-step">
+            <strong>4.</strong> Backup current prod database<br>
+            <code>python db_dump.py  # Creates db_dump_prod.json</code><br>
+            <code>copy db.sqlite3 db.sqlite3.backup</code>
+        </div>
+        <div class="workflow-step">
+            <strong>5.</strong> Fresh load<br>
+            <code>del db.sqlite3</code><br>
+            <code>python manage.py migrate</code><br>
+            <code>python manage.py loaddata_safe db_dump_dev.json --fresh</code>
+        </div>
+
+        <h3>Workflow 4: Testing/Development Cycle</h3>
+        <div class="info-box">
+            <strong>Save current state:</strong><br>
+            <code>python db_dump.py</code>
+        </div>
+        <p>Make experimental changes... Broke something?</p>
+        <div class="warning-box">
+            <strong>Reset to known-good state:</strong><br>
+            <code>del db.sqlite3</code><br>
+            <code>python manage.py migrate</code><br>
+            <code>python manage.py loaddata db_dump_dev.json</code>
+        </div>
+
+        <h2 id="reference"><span class="emoji">📝</span>Quick Reference Commands</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Operation</th>
+                    <th>Command</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>DUMP</strong></td>
+                    <td><code>python db_dump.py</code></td>
+                </tr>
+                <tr>
+                    <td><strong>LOAD (Simple)</strong></td>
+                    <td><code>python manage.py loaddata db_dump_dev.json</code></td>
+                </tr>
+                <tr>
+                    <td><strong>LOAD (Safe)</strong></td>
+                    <td><code>python manage.py loaddata_safe db_dump_dev.json --fresh</code></td>
+                </tr>
+                <tr>
+                    <td><strong>BACKUP</strong></td>
+                    <td><code>copy db.sqlite3 db.sqlite3.backup</code></td>
+                </tr>
+                <tr>
+                    <td><strong>RESTORE</strong></td>
+                    <td><code>copy db.sqlite3.backup db.sqlite3</code></td>
+                </tr>
+                <tr>
+                    <td><strong>FRESH START</strong></td>
+                    <td>
+                        <code>del db.sqlite3</code><br>
+                        <code>python manage.py migrate</code><br>
+                        <code>python manage.py loaddata db_dump_dev.json</code><br>
+                        <code>python manage.py createsuperuser</code>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>DEBUG</strong></td>
+                    <td>
+                        <code>python manage.py shell</code><br>
+                        <code>>>> from journal.models import JournalEntry</code><br>
+                        <code>>>> JournalEntry.objects.count()</code>
+                    </td>

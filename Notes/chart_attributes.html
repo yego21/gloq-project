@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Astrology JSON Attribute Reference</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; }
+    h2 { margin-top: 30px; color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    th { background-color: #444; color: #fff; }
+    .houses { background-color: #ffe4b5; }   /* light orange */
+    .planets { background-color: #b0e0e6; }  /* light blue */
+    .aspects { background-color: #98fb98; }  /* light green */
+    .angles { background-color: #dda0dd; }   /* light purple */
+    .meta { background-color: #f0e68c; }     /* khaki */
+  </style>
+</head>
+<body>
+
+  <h1>Astrology JSON Attribute Reference</h1>
+
+  <!-- Houses -->
+  <h2>houses[]</h2>
+  <table>
+    <tr><th>Attribute</th><th>Description</th></tr>
+    <tr class="houses"><td>house.sign</td><td>Zodiac sign on the cusp</td></tr>
+    <tr class="houses"><td>house.degree</td><td>Degree of cusp within sign</td></tr>
+    <tr class="houses"><td>house.number</td><td>House number (1–12)</td></tr>
+    <tr class="houses"><td>house.cusp_longitude</td><td>Absolute ecliptic longitude</td></tr>
+  </table>
+
+  <!-- Planets -->
+  <h2>planets[]</h2>
+  <table>
+    <tr><th>Attribute</th><th>Description</th></tr>
+    <tr class="planets"><td>planet.name</td><td>Planet name (e.g. Sun, Moon)</td></tr>
+    <tr class="planets"><td>planet.sign</td><td>Zodiac sign</td></tr>
+    <tr class="planets"><td>planet.house</td><td>House number</td></tr>
+    <tr class="planets"><td>planet.degree</td><td>Degree within sign</td></tr>
+    <tr class="planets"><td>planet.symbol</td><td>Unicode glyph</td></tr>
+    <tr class="planets"><td>planet.element</td><td>Element classification (Earth, Air, Fire, Water)</td></tr>
+    <tr class="planets"><td>planet.longitude</td><td>Absolute ecliptic longitude</td></tr>
+  </table>
+
+  <!-- Aspects -->
+  <h2>aspects[]</h2>
+  <table>
+    <tr><th>Attribute</th><th>Description</th></tr>
+    <tr class="aspects"><td>aspect.orb</td><td>Orb difference in degrees</td></tr>
+    <tr class="aspects"><td>aspect.angle</td><td>Exact angular separation</td></tr>
+    <tr class="aspects"><td>aspect.planet1</td><td>First planet involved</td></tr>
+    <tr class="aspects"><td>aspect.planet2</td><td>Second planet involved</td></tr>
+    <tr class="aspects"><td>aspect.aspect_type</td><td>Type of aspect (Conjunction, Trine, etc.)</td></tr>
+  </table>
+
+  <!-- Angles -->
+  <h2>ascendant / midheaven</h2>
+  <table>
+    <tr><th>Attribute</th><th>Description</th></tr>
+    <tr class="angles"><td>ascendant.sign</td><td>Rising sign</td></tr>
+    <tr class="angles"><td>ascendant.degree</td><td>Degree of ASC</td></tr>
+    <tr class="angles"><td>ascendant.symbol</td><td>Glyph for ASC</td></tr>
+    <tr class="angles"><td>ascendant.longitude</td><td>Absolute longitude</td></tr>
+    <tr class="angles"><td>midheaven.sign</td><td>MC sign</td></tr>
+    <tr class="angles"><td>midheaven.degree</td><td>Degree of MC</td></tr>
+    <tr class="angles"><td>midheaven.symbol</td><td>Glyph for MC</td></tr>
+    <tr class="angles"><td>midheaven.longitude</td><td>Absolute longitude</td></tr>
+  </table>
+
+  <!-- Meta -->
+  <h2>Other root attributes</h2>
+  <table>
+    <tr><th>Attribute</th><th>Description</th></tr>
+    <tr class="meta"><td>has_houses</td><td>Boolean, indicates if houses are calculated</td></tr>
+    <tr class="meta"><td>calculated_at</td><td>Timestamp of chart calculation</td></tr>
+    <tr class="meta"><td>dominant_element</td><td>Dominant element in chart</td></tr>
+    <tr class="meta"><td>dominant_modality</td><td>Dominant modality in chart</td></tr>
+    <tr class="meta"><td>planets_in_houses</td><td>Object mapping house numbers to arrays of planet names</td></tr>
+  </table>
+
+</body>
+</html>

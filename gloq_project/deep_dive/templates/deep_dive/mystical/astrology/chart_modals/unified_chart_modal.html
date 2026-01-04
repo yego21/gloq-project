@@ -1,170 +1,136 @@
-<!-- 
-    UNIFIED CHART MODAL - Complete HTML Template
-    This replaces your existing chart modal HTML
-    Includes both Chart View and Data View tabs with HTMX integration
--->
-<div class="flex justify-between items-center mb-6">
-    <div>
-        <h3 class="text-2xl font-bold">Complete Birth Chart</h3>
-        <p class="text-sm text-slate-400 mt-1">
-            {{ birth_profile.birth_date|date:"F j, Y" }} • 
-            {{ birth_profile.birth_time }} • 
-            {{ birth_profile.birth_location }}
-        </p>
-    </div>
-</div>
-
-<div class="mystical-divider"></div>
-
-<!-- Tab Navigation -->
-<div class="flex gap-2 mb-6 mt-4">
-    <button class="tab-btn active" data-tab="chart-view">
-        <i class="fas fa-chart-pie mr-2"></i>Chart View
-    </button>
-    <button class="tab-btn" data-tab="data-view">
-        <i class="fas fa-table mr-2"></i>Data View
-    </button>
-</div>
-
-<!-- Tab Content Container -->
-<div class="tab-content-wrapper">
+<!-- Chart Content Wrapper -->
+<div class="chart-content-wrapper">
     
-    <!-- CHART VIEW TAB -->
-    <div id="chart-view" class="tab-content active">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- CHART VIEW (Default Active) -->
+    <div id="chart-view" class="chart-view-panel active">
+        
+        <!-- Main Chart Wheel -->
+        <div class="bg-slate-900/30 rounded-xl p-4 sm:p-6 lg:p-8 border border-indigo-500/10">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+                <h4 class="font-semibold text-base sm:text-lg text-indigo-300">Natal Chart Wheel</h4>
+                <div class="text-xs sm:text-sm text-slate-400">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <span class="hidden sm:inline">Hover or tap planets for details</span>
+                    <span class="sm:hidden">Tap planets for details</span>
+                </div>
+            </div>
             
-            <!-- Left: Chart Visualization -->
-            <div class="lg:col-span-2">
-                <div class="bg-slate-900/50 rounded-xl p-6 border border-indigo-500/20">
-                    <div class="flex justify-between items-center mb-4">
-                        <h4 class="font-semibold text-sm text-indigo-300">Natal Chart Wheel</h4>
-                        <div class="text-xs text-slate-400">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Click planets for details
-                        </div>
-                    </div>
-                    
-                    <!-- Chart Canvas -->
-                    <div id="unified-chart-wheel" class="w-full mx-auto" style="max-width: 600px; max-height: 600px;"></div>
-                    
-                    <!-- Aspect Legend -->
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-6 text-xs">
-                        <div class="flex items-center space-x-2 bg-slate-800/30 rounded-lg p-2">
-                            <div class="w-8 h-0.5 bg-yellow-400 opacity-60"></div>
-                            <span class="text-slate-300">Conjunction</span>
-                        </div>
-                        <div class="flex items-center space-x-2 bg-slate-800/30 rounded-lg p-2">
-                            <div class="w-8 h-0.5 bg-red-400 opacity-50"></div>
-                            <span class="text-slate-300">Opposition</span>
-                        </div>
-                        <div class="flex items-center space-x-2 bg-slate-800/30 rounded-lg p-2">
-                            <div class="w-8 h-0.5 bg-green-400 opacity-50"></div>
-                            <span class="text-slate-300">Trine</span>
-                        </div>
-                        <div class="flex items-center space-x-2 bg-slate-800/30 rounded-lg p-2">
-                            <div class="w-8 h-0.5 bg-orange-400 opacity-50"></div>
-                            <span class="text-slate-300">Square</span>
-                        </div>
-                        <div class="flex items-center space-x-2 bg-slate-800/30 rounded-lg p-2">
-                            <div class="w-8 h-0.5 bg-blue-400 opacity-50"></div>
-                            <span class="text-slate-300">Sextile</span>
-                        </div>
-                    </div>
-
-                    <!-- Chart Summary Stats -->
-                    <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-gradient-to-br from-purple-900/30 to-indigo-900/30 rounded-xl p-4 border border-purple-500/30">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-xs text-slate-400 mb-1">Total Aspects</p>
-                                    <p class="text-2xl font-bold text-white">{{ natal_chart.aspects|length }}</p>
-                                </div>
-                                <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center">
-                                    <i class="fas fa-project-diagram text-purple-400 text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-gradient-to-br from-green-900/30 to-emerald-900/30 rounded-xl p-4 border border-green-500/30">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-xs text-slate-400 mb-1">Dominant Element</p>
-                                    <p class="text-2xl font-bold text-white">{{ natal_chart.dominant_element }}</p>
-                                </div>
-                                <div class="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center">
-                                    <i class="fas fa-leaf text-green-400 text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-gradient-to-br from-blue-900/30 to-cyan-900/30 rounded-xl p-4 border border-blue-500/30">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-xs text-slate-400 mb-1">Houses</p>
-                                    <p class="text-2xl font-bold text-white">{{ natal_chart.houses|length }}</p>
-                                </div>
-                                <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
-                                    <i class="fas fa-home text-blue-400 text-xl"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Chart Canvas - Responsive -->
+            <div class="flex justify-center overflow-x-auto">
+                <div id="main-chart-wheel" class="min-w-[300px] w-full max-w-[700px]" style="aspect-ratio: 1/1; max-height: 700px;"></div>
+            </div>
+            
+            <!-- Aspect Legend - Responsive Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mt-6 sm:mt-8">
+                <div class="flex items-center gap-2 bg-slate-800/30 rounded-lg p-2 sm:p-3">
+                    <div class="w-8 sm:w-10 h-0.5 bg-yellow-400 opacity-60"></div>
+                    <span class="text-xs sm:text-sm text-slate-300">Conjunction</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/30 rounded-lg p-2 sm:p-3">
+                    <div class="w-8 sm:w-10 h-0.5 bg-red-400 opacity-50"></div>
+                    <span class="text-xs sm:text-sm text-slate-300">Opposition</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/30 rounded-lg p-2 sm:p-3">
+                    <div class="w-8 sm:w-10 h-0.5 bg-green-400 opacity-50"></div>
+                    <span class="text-xs sm:text-sm text-slate-300">Trine</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/30 rounded-lg p-2 sm:p-3">
+                    <div class="w-8 sm:w-10 h-0.5 bg-orange-400 opacity-50"></div>
+                    <span class="text-xs sm:text-sm text-slate-300">Square</span>
+                </div>
+                <div class="flex items-center gap-2 bg-slate-800/30 rounded-lg p-2 sm:p-3 col-span-2 sm:col-span-1">
+                    <div class="w-8 sm:w-10 h-0.5 bg-blue-400 opacity-50"></div>
+                    <span class="text-xs sm:text-sm text-slate-300">Sextile</span>
                 </div>
             </div>
-
-            <!-- Right: Planet Info Panel -->
-            <div class="lg:col-span-1">
-                <div id="planet-info" class="bg-gradient-to-br from-slate-900/80 to-indigo-900/30 rounded-xl p-5 border border-indigo-500/30 shadow-lg hidden h-full flex flex-col">
-                    <div class="flex justify-between items-center mb-4 flex-shrink-0">
-                        <h4 class="font-semibold text-sm text-indigo-300 flex items-center">
-                            <i class="fas fa-info-circle mr-2"></i>Planet Details
-                        </h4>
-                        <button onclick="document.getElementById('planet-info').classList.add('hidden'); document.getElementById('planet-info-placeholder').classList.remove('hidden');" 
-                                class="text-slate-400 hover:text-white transition-colors">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent mb-4 flex-shrink-0"></div>
-                    <div id="planet-info-content" class="custom-scrollbar overflow-y-auto flex-1 pr-2">
-                        <!-- Populated by HTMX -->
-                    </div>
-                </div>
-                
-                <!-- Default state when no planet selected -->
-                <div id="planet-info-placeholder" class="bg-gradient-to-br from-slate-900/80 to-indigo-900/30 rounded-xl p-5 border border-indigo-500/30 shadow-lg h-full flex items-center justify-center">
-                    <div class="text-center py-12">
-                        <i class="fas fa-hand-pointer text-4xl text-slate-600 mb-3"></i>
-                        <p class="text-sm text-slate-400">Click any planet on the chart to view detailed information</p>
-                    </div>
-                </div>
-            </div>
-
         </div>
     </div>
 
-    <!-- DATA VIEW TAB -->
-    <div id="data-view" class="tab-content">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+    <!-- DATA VIEW - Hybrid Approach -->
+    <div id="data-view" class="chart-view-panel">
+        
+        <!-- Desktop: Split View | Mobile: Accordion -->
+        <div class="lg:grid lg:grid-cols-3 lg:gap-6">
             
-            <!-- Left & Center: Data Tables -->
-            <div class="lg:col-span-2 space-y-6 overflow-y-auto custom-scrollbar pr-2" style="max-height: calc(100vh - 250px);">
+            <!-- Left & Center: Data Tables (Desktop 2/3, Mobile Full Width) -->
+            <div class="lg:col-span-2 space-y-6">
                 
                 <!-- Planetary Positions -->
                 <div>
-                    <h4 class="font-semibold mb-4 text-lg flex items-center sticky top-0 bg-slate-950/95 backdrop-blur-sm py-2 z-10">
-                        <i class="fas fa-globe text-indigo-400 mr-3"></i>
+                    <h4 class="font-semibold mb-4 text-base sm:text-lg flex items-center text-indigo-300">
+                        <i class="fas fa-globe mr-2 sm:mr-3"></i>
                         Planetary Positions
                     </h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    
+                    <!-- Mobile: Accordion Style -->
+                    <div class="lg:hidden space-y-2">
                         {% for planet in natal_chart.planets %}
-                        <div class="bg-slate-800/30 rounded-xl p-4 hover:bg-slate-800/50 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30"
+                        <div class="planet-accordion bg-slate-800/30 rounded-xl border border-transparent hover:border-indigo-500/30 transition-all overflow-hidden">
+                            <button class="planet-accordion-trigger w-full text-left p-4 flex items-center justify-between"
+                                    data-planet="{{ planet.name }}">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <span class="text-2xl">{{ planet.symbol }}</span>
+                                    <div>
+                                        <p class="font-semibold text-sm">{{ planet.name }}</p>
+                                        <p class="text-indigo-300 font-bold text-xs">{{ planet.sign }} {{ planet.degree }}°</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 accordion-icon"></i>
+                            </button>
+                            <div class="planet-accordion-content max-h-0 overflow-hidden transition-all duration-300"
+                                 data-planet-detail="{{ planet.name }}">
+                                <div class="p-4 pt-0 space-y-3 border-t border-indigo-500/10">
+                                    <div class="flex justify-between">
+                                        <span class="text-xs text-slate-400">Sign</span>
+                                        <span class="text-sm text-slate-200 font-medium">{{ planet.sign }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-xs text-slate-400">Degree</span>
+                                        <span class="text-sm text-slate-200 font-medium">{{ planet.degree }}°</span>
+                                    </div>
+                                    {% if planet.house %}
+                                    <div class="flex justify-between">
+                                        <span class="text-xs text-slate-400">House</span>
+                                        <span class="text-sm text-slate-200 font-medium">{{ planet.house }}</span>
+                                    </div>
+                                    {% endif %}
+                                    <div class="flex justify-between">
+                                        <span class="text-xs text-slate-400">Element</span>
+                                        <span class="text-xs px-2 py-1 rounded bg-indigo-900/40 text-indigo-300">{{ planet.element }}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-xs text-slate-400">Longitude</span>
+                                        <span class="text-xs text-slate-400 font-mono">{{ planet.longitude|floatformat:2 }}°</span>
+                                    </div>
+                                    <!-- Placeholder for detailed interpretation -->
+                                    <div class="mt-3 pt-3 border-t border-indigo-500/10">
+                                        <p class="text-xs text-slate-500 italic">Tap "View Details" for full interpretation</p>
+                                        <button class="mt-2 w-full text-xs bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-lg py-2 transition-all"
+                                                hx-get="{% url 'deep_dive:planet_detail' planet.name %}"
+                                                hx-target="#mobile-detail-modal"
+                                                hx-swap="innerHTML"
+                                                onclick="document.getElementById('mobile-detail-modal').classList.remove('hidden')">
+                                            <i class="fas fa-info-circle mr-1"></i> View Full Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Desktop: Grid with Click to Detail Panel -->
+                    <div class="hidden lg:grid grid-cols-2 gap-3">
+                        {% for planet in natal_chart.planets %}
+                        <div class="planet-card bg-slate-800/30 rounded-xl p-4 hover:bg-slate-800/50 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30"
+                             data-planet="{{ planet.name }}"
                              hx-get="{% url 'deep_dive:planet_detail' planet.name %}"
-                             hx-target="#data-detail-panel-content"
+                             hx-target="#desktop-detail-panel-content"
                              hx-swap="innerHTML"
-                             onclick="document.getElementById('data-detail-panel').classList.remove('hidden'); document.getElementById('data-detail-placeholder').classList.add('hidden');">
+                             onclick="showDesktopDetailPanel()">
                             <div class="flex items-center justify-between mb-2">
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-xl">{{ planet.symbol }}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-2xl">{{ planet.symbol }}</span>
                                     <span class="font-semibold text-sm">{{ planet.name }}</span>
                                 </div>
                                 <span class="text-xs px-2 py-1 rounded bg-indigo-900/40 text-indigo-300">
@@ -172,7 +138,7 @@
                                 </span>
                             </div>
                             <div class="flex items-center justify-between">
-                                <p class="text-indigo-300 font-bold">
+                                <p class="text-indigo-300 font-bold text-sm">
                                     {{ planet.sign }} {{ planet.degree }}°
                                 </p>
                                 {% if planet.house %}
@@ -180,55 +146,26 @@
                                 {% endif %}
                             </div>
                             <p class="text-xs text-slate-500 mt-2">
-                                {{ planet.modality }} • {{ planet.longitude|floatformat:2 }}°
+                                {{ planet.longitude|floatformat:2 }}° longitude
                             </p>
                         </div>
                         {% endfor %}
                     </div>
                 </div>
 
-                <!-- House Cusps -->
-                {% if natal_chart.houses %}
-                <div>
-                    <h4 class="font-semibold mb-4 text-lg flex items-center sticky top-0 bg-slate-950/95 backdrop-blur-sm py-2 z-10">
-                        <i class="fas fa-home text-indigo-400 mr-3"></i>
-                        House Cusps
-                    </h4>
-                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                        {% for house in natal_chart.houses %}
-                        <div class="bg-slate-800/30 rounded-lg p-3 hover:bg-slate-800/50 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30"
-                             hx-get="{% url 'deep_dive:house_detail' house.house_number %}"
-                             hx-target="#data-detail-panel-content"
-                             hx-swap="innerHTML"
-                             onclick="document.getElementById('data-detail-panel').classList.remove('hidden'); document.getElementById('data-detail-placeholder').classList.add('hidden');">
-                            <div class="text-center">
-                                <div class="text-xs text-slate-400 mb-1">House {{ house.house_number }}</div>
-                                <div class="text-sm font-semibold text-indigo-300">{{ house.sign }}</div>
-                                <div class="text-xs text-slate-500 mt-1">{{ house.degree }}°</div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-
                 <!-- Major Aspects -->
                 {% if natal_chart.aspects %}
                 <div>
-                    <h4 class="font-semibold mb-4 text-lg flex items-center sticky top-0 bg-slate-950/95 backdrop-blur-sm py-2 z-10">
-                        <i class="fas fa-project-diagram text-indigo-400 mr-3"></i>
+                    <h4 class="font-semibold mb-4 text-base sm:text-lg flex items-center text-indigo-300">
+                        <i class="fas fa-project-diagram mr-2 sm:mr-3"></i>
                         Major Aspects
                     </h4>
-                    <div class="bg-slate-900/30 rounded-xl p-4">
+                    <div class="bg-slate-900/30 rounded-xl p-3 sm:p-4 border border-indigo-500/10">
                         <div class="space-y-2">
                             {% for aspect in natal_chart.aspects %}
-                            <div class="bg-slate-800/40 rounded-lg p-3 hover:bg-slate-800/60 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30"
-                                 hx-get="{% url 'deep_dive:aspect_detail' aspect.planet1 aspect.planet2 aspect.aspect_type %}"
-                                 hx-target="#data-detail-panel-content"
-                                 hx-swap="innerHTML"
-                                 onclick="document.getElementById('data-detail-panel').classList.remove('hidden'); document.getElementById('data-detail-placeholder').classList.add('hidden');">
-                                <div class="flex items-center justify-between">
-                                    <div class="flex items-center space-x-2 text-sm">
+                            <div class="bg-slate-800/40 rounded-lg p-3 hover:bg-slate-800/60 transition-all">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2 text-xs sm:text-sm">
                                         <span class="font-medium">{{ aspect.planet1 }}</span>
                                         <span class="
                                             {% if aspect.aspect_type == 'Trine' %}text-green-400
@@ -241,7 +178,7 @@
                                         </span>
                                         <span class="font-medium">{{ aspect.planet2 }}</span>
                                     </div>
-                                    <span class="text-xs text-slate-400">{{ aspect.orb|floatformat:1 }}°</span>
+                                    <span class="text-xs text-slate-400">{{ aspect.orb|floatformat:1 }}° orb</span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -250,56 +187,33 @@
                 </div>
                 {% endif %}
 
-                <!-- Birth Profile Info -->
-                <div class="bg-gradient-to-br from-indigo-900/20 to-purple-900/20 rounded-xl p-5 border border-indigo-500/20">
-                    <h4 class="font-semibold mb-3 text-sm text-indigo-300 flex items-center">
-                        <i class="fas fa-user-circle mr-2"></i>Birth Information
-                    </h4>
-                    <div class="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span class="text-slate-400 text-xs block mb-1">Date</span>
-                            <span class="font-medium">{{ birth_profile.birth_date|date:"F j, Y" }}</span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 text-xs block mb-1">Time</span>
-                            <span class="font-medium">{{ birth_profile.birth_time }}</span>
-                        </div>
-                        <div class="col-span-2">
-                            <span class="text-slate-400 text-xs block mb-1">Location</span>
-                            <span class="font-medium">{{ birth_profile.birth_city }}, {{ birth_profile.birth_country }}</span>
-                        </div>
-                        <div class="col-span-2">
-                            <span class="text-slate-400 text-xs block mb-1">Timezone</span>
-                            <span class="font-medium text-xs">{{ birth_profile.timezone }}</span>
-                        </div>
-                    </div>
-                </div>
-
             </div>
 
-            <!-- Right: Detail Panel -->
-            <div class="lg:col-span-1">
-                <div id="data-detail-panel" class="bg-gradient-to-br from-slate-900/80 to-indigo-900/30 rounded-xl p-5 border border-indigo-500/30 shadow-lg hidden h-full flex flex-col" style="max-height: calc(100vh - 250px);">
-                    <div class="flex justify-between items-center mb-4 flex-shrink-0">
-                        <h4 class="font-semibold text-sm text-indigo-300 flex items-center">
-                            <i class="fas fa-info-circle mr-2"></i>Details
-                        </h4>
-                        <button onclick="document.getElementById('data-detail-panel').classList.add('hidden'); document.getElementById('data-detail-placeholder').classList.remove('hidden');" 
-                                class="text-slate-400 hover:text-white transition-colors">
-                            <i class="fas fa-times"></i>
-                        </button>
+            <!-- Desktop Right: Detail Panel (1/3) - Hidden by Default -->
+            <div class="hidden lg:block lg:col-span-1">
+                <div class="sticky top-6">
+                    <!-- Placeholder shown initially -->
+                    <div id="desktop-detail-placeholder" class="bg-gradient-to-br from-slate-900/60 to-indigo-900/20 rounded-xl p-6 border border-indigo-500/20 text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                            <i class="fas fa-hand-pointer text-3xl text-indigo-400/40"></i>
+                        </div>
+                        <p class="text-sm text-slate-400">Click a planet to view details</p>
                     </div>
-                    <div class="h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent mb-4 flex-shrink-0"></div>
-                    <div id="data-detail-panel-content" class="custom-scrollbar overflow-y-auto flex-1 pr-2">
-                        <!-- Populated by HTMX -->
-                    </div>
-                </div>
-
-                <!-- Default state -->
-                <div id="data-detail-placeholder" class="bg-gradient-to-br from-slate-900/80 to-indigo-900/30 rounded-xl p-5 border border-indigo-500/30 shadow-lg h-full flex items-center justify-center" style="max-height: calc(100vh - 250px);">
-                    <div class="text-center py-12">
-                        <i class="fas fa-hand-pointer text-4xl text-slate-600 mb-3"></i>
-                        <p class="text-sm text-slate-400">Click any planet, house, or aspect to view detailed information</p>
+                    
+                    <!-- Detail content loaded here -->
+                    <div id="desktop-detail-panel" class="hidden bg-gradient-to-br from-slate-900/80 to-indigo-900/30 rounded-xl p-5 border border-indigo-500/30">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold text-base text-indigo-300 flex items-center">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Details
+                            </h4>
+                            <button onclick="hideDesktopDetailPanel()" class="text-slate-400 hover:text-slate-200 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="desktop-detail-panel-content">
+                            <!-- HTMX loads content here -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -309,102 +223,207 @@
 
 </div>
 
+<!-- Mobile Detail Modal (Full Screen Overlay) -->
+<div id="mobile-detail-modal" class="hidden fixed inset-0 bg-slate-900/95 backdrop-blur-sm z-50 overflow-y-auto lg:hidden">
+    <div class="min-h-screen p-4">
+        <div class="max-w-2xl mx-auto">
+            <div class="flex justify-between items-center mb-4 sticky top-0 bg-slate-900/95 py-4 z-10">
+                <h3 class="text-lg font-semibold text-indigo-300">Planet Details</h3>
+                <button onclick="document.getElementById('mobile-detail-modal').classList.add('hidden')" 
+                        class="w-10 h-10 rounded-full bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center transition-colors">
+                    <i class="fas fa-times text-slate-300"></i>
+                </button>
+            </div>
+            <div id="mobile-detail-modal-content" class="bg-slate-800/30 rounded-xl p-4 border border-indigo-500/20">
+                <!-- HTMX loads content here -->
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// Function to initialize chart and tabs
-function initializeAll() {
-    // Chart initialization
+// Chart view switching
+function setupViewSwitching() {
+    console.log('Setting up view switching...');
+    
+    // Listen for chart view change events from parent
+    document.addEventListener('chartViewChange', function(e) {
+        const targetView = e.detail.view;
+        console.log('Chart view change event received:', targetView);
+        
+        // Hide all panels
+        document.querySelectorAll('.chart-view-panel').forEach(panel => {
+            panel.classList.remove('active');
+        });
+        
+        // Show target panel
+        const targetPanel = document.getElementById(`${targetView}-view`);
+        if (targetPanel) {
+            targetPanel.classList.add('active');
+            console.log('Switched to view:', targetView);
+        }
+        
+        // If switching to chart view, ensure chart is rendered
+        if (targetView === 'chart') {
+            const chartContainer = document.getElementById('main-chart-wheel');
+            if (chartContainer && !chartContainer.hasChildNodes()) {
+                console.log('Chart container empty, reinitializing...');
+                setTimeout(initializeChart, 100);
+            }
+        }
+    });
+}
+
+// Initialize chart
+function initializeChart() {
+    console.log('Initializing chart...');
     const dataEl = document.getElementById('natal-chart-data');
-    if (dataEl && window.chartRenderer) {
+    
+    if (!dataEl) {
+        console.log('No natal chart data element found');
+        return;
+    }
+    
+    if (!window.chartRenderer) {
+        console.log('Chart renderer not available, retrying...');
+        setTimeout(initializeChart, 200);
+        return;
+    }
+    
+    try {
         const natalChart = JSON.parse(dataEl.textContent);
+        console.log('Rendering chart with data:', natalChart);
         
-        // Render chart with click handlers
-        window.chartRenderer.renderChartWheel(natalChart, 'unified-chart-wheel', 600, true);
+        // Calculate element distribution
+        calculateElementDistribution(natalChart.planets);
         
-        // Add HTMX click handlers to planets in chart
-        setTimeout(() => {
-            const planetElements = document.querySelectorAll('#unified-chart-wheel .planet-marker');
-            planetElements.forEach(el => {
-                const planetName = el.getAttribute('data-planet-name');
-                if (planetName) {
-                    el.style.cursor = 'pointer';
-                    el.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        
-                        // Hide placeholder, show panel
-                        document.getElementById('planet-info-placeholder').classList.add('hidden');
-                        document.getElementById('planet-info').classList.remove('hidden');
-                        
-                        // Fetch planet details via HTMX
-                        htmx.ajax('GET', `/deep-dive/planet/${planetName}/`, {
-                            target: '#planet-info-content',
-                            swap: 'innerHTML'
-                        });
-                    });
+        // Render the chart with hover/click functionality
+        window.chartRenderer.renderChartWheel(natalChart, 'main-chart-wheel', 700, true);
+        
+        console.log('Chart rendered successfully with full interactions enabled');
+    } catch (e) {
+        console.error('Error initializing chart:', e);
+    }
+}
+
+// Calculate element distribution
+function calculateElementDistribution(planets) {
+    const elements = { Fire: 0, Earth: 0, Air: 0, Water: 0 };
+    
+    planets.forEach(planet => {
+        const element = planet.element;
+        if (elements.hasOwnProperty(element)) {
+            elements[element]++;
+        }
+    });
+    
+    // Update counts in DOM
+    const fireEl = document.getElementById('fire-count');
+    const earthEl = document.getElementById('earth-count');
+    const airEl = document.getElementById('air-count');
+    const waterEl = document.getElementById('water-count');
+    
+    if (fireEl) fireEl.textContent = elements.Fire;
+    if (earthEl) earthEl.textContent = elements.Earth;
+    if (airEl) airEl.textContent = elements.Air;
+    if (waterEl) waterEl.textContent = elements.Water;
+}
+
+// Mobile accordion functionality
+function setupMobileAccordions() {
+    const triggers = document.querySelectorAll('.planet-accordion-trigger');
+    
+    triggers.forEach(trigger => {
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const content = this.nextElementSibling;
+            const icon = this.querySelector('.accordion-icon');
+            const accordion = this.closest('.planet-accordion');
+            
+            // Close all other accordions
+            document.querySelectorAll('.planet-accordion').forEach(acc => {
+                if (acc !== accordion) {
+                    const otherContent = acc.querySelector('.planet-accordion-content');
+                    const otherIcon = acc.querySelector('.accordion-icon');
+                    otherContent.style.maxHeight = '0';
+                    otherIcon.style.transform = 'rotate(0deg)';
                 }
             });
-        }, 500);
-    }
-
-    // Tab initialization
-    var tabBtns = document.querySelectorAll('.tab-btn');
-    var tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            const targetTab = this.getAttribute('data-tab');
             
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            
-            this.classList.add('active');
-            document.getElementById(targetTab).classList.add('active');
+            // Toggle current accordion
+            if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+                content.style.maxHeight = '0';
+                icon.style.transform = 'rotate(0deg)';
+            } else {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                icon.style.transform = 'rotate(180deg)';
+            }
         });
     });
 }
 
-// Call once
-initializeAll();
+// Desktop detail panel functions
+function showDesktopDetailPanel() {
+    document.getElementById('desktop-detail-placeholder').classList.add('hidden');
+    document.getElementById('desktop-detail-panel').classList.remove('hidden');
+}
+
+function hideDesktopDetailPanel() {
+    document.getElementById('desktop-detail-placeholder').classList.remove('hidden');
+    document.getElementById('desktop-detail-panel').classList.add('hidden');
+}
+
+// Initialize everything when content loads
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM loaded, initializing...');
+        initializeChart();
+        setupViewSwitching();
+        setupMobileAccordions();
+    });
+} else {
+    console.log('DOM already loaded, initializing...');
+    initializeChart();
+    setupViewSwitching();
+    setupMobileAccordions();
+}
+
+// Reinitialize after HTMX swaps
+document.body.addEventListener('htmx:afterSwap', function(event) {
+    if (event.detail.target.id === 'chart-content-area') {
+        console.log('Chart content swapped, reinitializing...');
+        setTimeout(function() {
+            initializeChart();
+            setupViewSwitching();
+            setupMobileAccordions();
+        }, 300);
+    }
+});
+
+// Mobile detail modal - redirect HTMX target
+document.body.addEventListener('htmx:configRequest', function(event) {
+    // If on mobile and loading planet detail, use mobile modal
+    if (window.innerWidth < 1024 && event.detail.path.includes('planet_detail')) {
+        event.detail.target = '#mobile-detail-modal-content';
+    }
+});
 </script>
 
 <style>
-/* Tab Styles */
-.tab-btn {
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.75rem;
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    color: #94a3b8;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    cursor: pointer;
-}
-
-.tab-btn:hover {
-    background: rgba(30, 41, 59, 0.6);
-    color: #cbd5e1;
-}
-
-.tab-btn.active {
-    background: linear-gradient(135deg, #3730a3, #1e40af);
-    border-color: rgba(99, 102, 241, 0.4);
-    color: white;
-    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
-}
-
-.tab-content {
+/* View Panels */
+.chart-view-panel {
     display: none;
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.4s ease-in-out;
 }
 
-.tab-content.active {
+.chart-view-panel.active {
     display: block;
 }
 
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(15px);
     }
     to {
         opacity: 1;
@@ -412,43 +431,87 @@ initializeAll();
     }
 }
 
+/* Mobile Accordion */
+.planet-accordion {
+    transition: all 0.3s ease;
+}
+
+.planet-accordion-content {
+    transition: max-height 0.3s ease-out;
+}
+
+.accordion-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Desktop Detail Panel Animation */
+#desktop-detail-panel {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Mobile Detail Modal */
+#mobile-detail-modal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Planet Card Hover Effect */
+.planet-card {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.planet-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 0.75rem;
+    padding: 1px;
+    background: linear-gradient(135deg, transparent, rgba(139, 92, 246, 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.planet-card:hover::before {
+    opacity: 1;
+}
+
+/* Responsive Chart Container */
+@media (max-width: 640px) {
+    #main-chart-wheel {
+        width: 100% !important;
+        height: auto !important;
+    }
+}
+
 /* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
+#mobile-detail-modal::-webkit-scrollbar {
     width: 8px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-track {
+#mobile-detail-modal::-webkit-scrollbar-track {
     background: rgba(30, 41, 59, 0.3);
-    border-radius: 4px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb {
+#mobile-detail-modal::-webkit-scrollbar-thumb {
     background: rgba(99, 102, 241, 0.5);
     border-radius: 4px;
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+#mobile-detail-modal::-webkit-scrollbar-thumb:hover {
     background: rgba(99, 102, 241, 0.7);
-}
-
-/* Smooth scrolling */
-.custom-scrollbar {
-    scroll-behavior: smooth;
-}
-
-/* Sticky headers styling */
-.sticky {
-    position: -webkit-sticky;
-    position: sticky;
-}
-
-/* Planet marker hover effect */
-.planet-marker {
-    transition: transform 0.2s ease, filter 0.2s ease;
-}
-
-.planet-marker:hover {
-    transform: scale(1.1);
-    filter: brightness(1.3);
 }
 </style>

@@ -269,45 +269,99 @@ class ReadingWrapper:
         return self._ai_reading.is_today(self.reading_type)
 
 
-def astro_chart_reading(request):
+# def astro_chart_reading(request):
+#     """
+#     Returns chart preview section
+#     If user is logged in and has a birth profile, include chart data
+#     """
+#     from userprofile.models import BirthProfile
+#     natal_chart = None
+#     birth_profile = None
+#     has_birth_profile = False
+#     current_reading = None
+#     has_birth_time = False
+#
+#     # Initialize empty readings
+#     readings = {
+#         'daily_overview': None,
+#         'transit_focus': None,
+#         'element_wisdom': None,
+#     }
+#
+#     if request.user.is_authenticated:
+#         try:
+#             current_reading = AIReading.objects.get(user=request.user)
+#
+#             # Wrap each reading with is_today check
+#             if current_reading.has_reading_type('daily_overview'):
+#                 reading_data = current_reading.get_reading('daily_overview')
+#                 readings['daily_overview'] = ReadingWrapper(reading_data, 'daily_overview', current_reading)
+#
+#             if current_reading.has_reading_type('transit_focus'):
+#                 reading_data = current_reading.get_reading('transit_focus')
+#                 readings['transit_focus'] = ReadingWrapper(reading_data, 'transit_focus', current_reading)
+#
+#             if current_reading.has_reading_type('element_wisdom'):
+#                 reading_data = current_reading.get_reading('element_wisdom')
+#                 readings['element_wisdom'] = ReadingWrapper(reading_data, 'element_wisdom', current_reading)
+#
+#         except AIReading.DoesNotExist:
+#             # No readings exist for this user yet
+#             pass
+#
+#     if request.user.is_authenticated:
+#         try:
+#             birth_profile = request.user.birth_profile
+#             has_birth_profile = True
+#             has_birth_time = birth_profile.has_birth_time
+#             natal_chart = birth_profile.cached_chart_data
+#         except BirthProfile.DoesNotExist:
+#             pass
+#         except Exception as e:
+#             print(f"Error loading birth profile: {e}")
+#
+#     # Extract simple fields for template
+#     chart_context = {}
+#     if natal_chart:
+#         sun_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Sun'), None)
+#         moon_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Moon'), None)
+#
+#         chart_context = {
+#             'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
+#             'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
+#             'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
+#             'dominant_element': natal_chart.get('dominant_element', 'Spirit'),
+#             'planet_count': len(natal_chart.get('planets', [])),
+#             'aspect_count': len(natal_chart.get('aspects', [])),
+#         }
+#
+#     return render(request, 'deep_dive/mystical/astrology/_astro_chart_reading.html', {
+#         'has_birth_profile': has_birth_profile,
+#         'has_chart': natal_chart is not None,
+#         'has_birth_time': has_birth_time,
+#         'natal_chart': json.dumps(natal_chart) if natal_chart else None,
+#         'daily_reading': readings['daily_overview'],
+#         'transit_reading': readings['transit_focus'],
+#         'element_reading': readings['element_wisdom'],
+#         'chart_info': chart_context,
+#         'birth_setup_url': reverse('userprofile:birth_profile_setup')
+#     })
+
+
+# Add this to your deep_dive/views.py file
+
+
+def astro_birth_chart(request):
     """
-    Returns chart preview section
-    If user is logged in and has a birth profile, include chart data
+    Returns birth chart preview section with chart data
+    Handles 3 states: no profile, profile but no chart, chart exists
     """
     from userprofile.models import BirthProfile
+
     natal_chart = None
     birth_profile = None
     has_birth_profile = False
-    current_reading = None
     has_birth_time = False
-
-    # Initialize empty readings
-    readings = {
-        'daily_overview': None,
-        'transit_focus': None,
-        'element_wisdom': None,
-    }
-
-    if request.user.is_authenticated:
-        try:
-            current_reading = AIReading.objects.get(user=request.user)
-
-            # Wrap each reading with is_today check
-            if current_reading.has_reading_type('daily_overview'):
-                reading_data = current_reading.get_reading('daily_overview')
-                readings['daily_overview'] = ReadingWrapper(reading_data, 'daily_overview', current_reading)
-
-            if current_reading.has_reading_type('transit_focus'):
-                reading_data = current_reading.get_reading('transit_focus')
-                readings['transit_focus'] = ReadingWrapper(reading_data, 'transit_focus', current_reading)
-
-            if current_reading.has_reading_type('element_wisdom'):
-                reading_data = current_reading.get_reading('element_wisdom')
-                readings['element_wisdom'] = ReadingWrapper(reading_data, 'element_wisdom', current_reading)
-
-        except AIReading.DoesNotExist:
-            # No readings exist for this user yet
-            pass
 
     if request.user.is_authenticated:
         try:
@@ -329,26 +383,77 @@ def astro_chart_reading(request):
         chart_context = {
             'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
             'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
-            # 'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
+            'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
             'dominant_element': natal_chart.get('dominant_element', 'Spirit'),
             'planet_count': len(natal_chart.get('planets', [])),
             'aspect_count': len(natal_chart.get('aspects', [])),
         }
 
-    return render(request, 'deep_dive/mystical/astrology/_astro_chart_reading.html', {
+    return render(request, 'deep_dive/mystical/astrology/_birth_chart.html', {
         'has_birth_profile': has_birth_profile,
         'has_chart': natal_chart is not None,
         'has_birth_time': has_birth_time,
         'natal_chart': json.dumps(natal_chart) if natal_chart else None,
-        'daily_reading': readings['daily_overview'],
-        'transit_reading': readings['transit_focus'],
-        'element_reading': readings['element_wisdom'],
         'chart_info': chart_context,
         'birth_setup_url': reverse('userprofile:birth_profile_setup')
     })
 
 
-# Add this to your deep_dive/views.py file
+def astro_ai_readings(request):
+    """
+    Returns AI readings dashboard section
+    Requires natal chart to be generated first
+    """
+    from userprofile.models import BirthProfile
+
+    has_chart = False
+    has_birth_profile = False
+
+    # Initialize empty readings
+    readings = {
+        'daily_overview': None,
+        'transit_focus': None,
+        'element_wisdom': None,
+    }
+
+    if request.user.is_authenticated:
+        # Check if user has a chart
+        try:
+            birth_profile = request.user.birth_profile
+            has_birth_profile = True
+            has_chart = birth_profile.cached_chart_data is not None
+        except BirthProfile.DoesNotExist:
+            pass
+
+        # Load readings if chart exists
+        if has_chart:
+            try:
+                current_reading = AIReading.objects.get(user=request.user)
+
+                # Wrap each reading with is_today check
+                if current_reading.has_reading_type('daily_overview'):
+                    reading_data = current_reading.get_reading('daily_overview')
+                    readings['daily_overview'] = ReadingWrapper(reading_data, 'daily_overview', current_reading)
+
+                if current_reading.has_reading_type('transit_focus'):
+                    reading_data = current_reading.get_reading('transit_focus')
+                    readings['transit_focus'] = ReadingWrapper(reading_data, 'transit_focus', current_reading)
+
+                if current_reading.has_reading_type('element_wisdom'):
+                    reading_data = current_reading.get_reading('element_wisdom')
+                    readings['element_wisdom'] = ReadingWrapper(reading_data, 'element_wisdom', current_reading)
+
+            except AIReading.DoesNotExist:
+                # No readings exist for this user yet
+                pass
+
+    return render(request, 'deep_dive/mystical/astrology/_ai_readings.html', {
+        'has_chart': has_chart,
+        'has_birth_profile': has_birth_profile,
+        'daily_reading': readings['daily_overview'],
+        'transit_reading': readings['transit_focus'],
+        'element_reading': readings['element_wisdom'],
+    })
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
@@ -383,18 +488,18 @@ def unified_chart_modal(request):
 
 
         # Extract summary data for display
-        # sun_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Sun'), None)
-        # moon_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Moon'), None)
-        # rising_sign = natal_chart_data.get('ascendant', {}).get('sign', 'Unknown')
+        sun_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Sun'), None)
+        moon_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Moon'), None)
+        rising_sign = natal_chart_data.get('ascendant', {}).get('sign', 'Unknown')
 
         # Prepare context
         context = {
             'birth_profile': birth_profile,
             'natal_chart': natal_chart_data,
             'has_chart': True,
-            # 'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
-            # 'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
-            # 'rising_sign': rising_sign,
+            'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
+            'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
+            'rising_sign': rising_sign,
             'planet_count': len(natal_chart_data.get('planets', [])),
             'aspect_count': len(natal_chart_data.get('aspects', [])),
             'dominant_element': natal_chart_data.get('dominant_element', 'Spirit'),
@@ -403,13 +508,13 @@ def unified_chart_modal(request):
         return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', context)
 
     except BirthProfile.DoesNotExist:
-        return render(request, 'deep_dive/mystical/chart_modals/unified_chart_modal.html', {
+        return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', {
             'error': 'No birth profile found. Please create your birth profile first.',
             'has_chart': False,
             'birth_setup_url': reverse('userprofile:birth_profile_setup')
         })
     except Exception as e:
-        return render(request, 'deep_dive/mystical/chart_modals/unified_chart_modal.html', {
+        return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', {
             'error': f'Error loading chart data: {str(e)}',
             'has_chart': False,
             'birth_setup_url': reverse('userprofile:birth_profile_setup')
@@ -787,7 +892,7 @@ def generate_natal_chart(request):
             chart_context = {
                 'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
                 'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
-                # 'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
+                'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
                 'dominant_element': natal_chart.get('dominant_element', 'Spirit'),
                 'planet_count': len(natal_chart.get('planets', [])),
                 'aspect_count': len(natal_chart.get('aspects', [])),
@@ -804,7 +909,7 @@ def generate_natal_chart(request):
         }
 
         # Return the partial template
-        return render(request, 'deep_dive/mystical/astrology/_astro_chart_reading.html', context)
+        return render(request, 'deep_dive/mystical/astrology/_birth_chart.html', context)
 
     except BirthProfile.DoesNotExist:
         return HttpResponse("Birth profile not found. Please create one first.", status=404)

@@ -1,0 +1,14 @@
+# 1. Update code locally
+# 2. Test with Docker
+docker build -t yego211/gloq-project:latest .
+docker run --env-file .env -p 8000:8000 yego211/gloq-project:latest
+
+# 3. Push to GitHub
+git add .
+git commit -m "Your changes"
+git push origin docker-render-clean
+
+# 4. Push new image to Docker Hub
+docker push yego211/gloq-project:latest
+
+# 5. Render auto-deploys (or click Manual Deploy)

@@ -92,75 +92,240 @@ class AstronomicalService:
 
         return lst
 
-    def _calculate_houses_placidus(self, skyfield_time, latitude: float, longitude: float) -> Dict[str, any]:
+    def _calculate_houses_whole_sign(self, ascendant: float, mc: float) -> Dict[str, any]:
         """
-        Calculate house cusps using Placidus system.
-        Based on Swiss Ephemeris algorithm.
+        Calculate house cusps using Whole Sign system.
+
+        Whole Sign is the oldest and simplest house system.
+        Each house = one complete zodiac sign, starting from the Ascendant's sign.
+
+        Args:
+            ascendant: Ascendant longitude in degrees
+            mc: Midheaven longitude in degrees
+
+        Returns:
+            Dictionary with house cusps (all at 0° of their respective signs)
         """
-        from math import sin, cos, tan, asin, atan2, radians, degrees
+        # Find which sign the Ascendant is in
+        # Round down to the start of that sign (0°, 30°, 60°, etc.)
+        asc_sign_start = (int(ascendant // 30) * 30)
 
-        lat_rad = radians(latitude)
-
-        # Calculate RAMC (Right Ascension of MC)
-        # Get from your existing LST calculation
-        lst = self._calculate_sidereal_time(skyfield_time, longitude)
-        ramc_rad = radians(lst)
-
-        # Obliquity of ecliptic
-        T = (skyfield_time.tt - 2451545.0) / 36525.0
-        eps = radians(23.439291 - 0.0130042 * T)
-
-        # 1. Calculate MC (Midheaven)
-        mc_rad = atan2(tan(ramc_rad), cos(eps))
-        mc = degrees(mc_rad) % 360
-
-        # 2. Calculate ASC (Ascendant)
-        asc_rad = atan2(-cos(ramc_rad),
-                        (sin(eps) * tan(lat_rad) + cos(eps) * sin(ramc_rad)))
-        asc = degrees(asc_rad) % 360
-
-        # 3. Calculate IC and DESC
-        ic = (mc + 180) % 360
-        desc = (asc + 180) % 360
-
-        # 4. Calculate intermediate houses using Koch method (simpler)
-        # This is still simplified but better than your current approach
-
+        # Build houses - each house starts at 0° of the next sign
         houses = {}
-        houses[1] = asc
-        houses[10] = mc
-        houses[4] = ic
-        houses[7] = desc
+        for house_num in range(1, 13):
+            houses[house_num] = (asc_sign_start + (house_num - 1) * 30) % 360
 
-        # For intermediate houses, use a proper algorithm
-        # This would require solving transcendental equations
-        # For now, use an approximation or switch to Koch houses
-
-        # SIMPLE APPROXIMATION (better than equal division):
-        # Calculate house 11 as 1/3 of way from MC to ASC
-        # But adjust for sign boundaries
-        def interpolate_angle(start, end, fraction):
-            diff = (end - start) % 360
-            if diff > 180:
-                diff -= 360
-            return (start + diff * fraction) % 360
-
-        houses[11] = interpolate_angle(mc, asc, 1 / 3)
-        houses[12] = interpolate_angle(mc, asc, 2 / 3)
-        houses[2] = interpolate_angle(asc, ic, 1 / 3)
-        houses[3] = interpolate_angle(asc, ic, 2 / 3)
-        houses[5] = interpolate_angle(ic, desc, 1 / 3)
-        houses[6] = interpolate_angle(ic, desc, 2 / 3)
-        houses[8] = interpolate_angle(desc, (mc + 360) % 360, 1 / 3)
-        houses[9] = interpolate_angle(desc, (mc + 360) % 360, 2 / 3)
+        # Descendant and IC are simply opposite the angles
+        descendant = (ascendant + 180) % 360
+        ic = (mc + 180) % 360
 
         return {
-            'ascendant': asc,
+            'ascendant': ascendant,
             'midheaven': mc,
-            'descendant': desc,
+            'descendant': descendant,
             'ic': ic,
             'houses': houses
         }
+
+    def _calculate_houses_placidus(self, skyfield_time, latitude: float, longitude: float) -> Dict[str, any]:
+        """
+        Calculate house cusps using Placidus system.
+
+        Placidus divides the diurnal and nocturnal semi-arcs proportionally.
+        This implementation uses iterative methods for intermediate cusps.
+
+        Args:
+            skyfield_time: Skyfield Time object
+            latitude: Geographic latitude in degrees
+            longitude: Geographic longitude in degrees
+
+        Returns:
+            Dictionary with ascendant, midheaven, and 12 house cusps
+        """
+        # Calculate Local Sidereal Time
+        lst = self._calculate_sidereal_time(skyfield_time, longitude)
+
+        # Convert to radians for trig calculations
+        lat_rad = math.radians(latitude)
+
+        # Calculate obliquity of ecliptic (Earth's axial tilt)
+        T = (skyfield_time.tt - 2451545.0) / 36525.0
+        epsilon = 23.439291 - 0.0130042 * T  # degrees
+        epsilon_rad = math.radians(epsilon)
+
+        # RAMC (Right Ascension of MC) = LST in degrees
+        ramc = lst
+        ramc_rad = math.radians(ramc)
+
+        # MIDHEAVEN (10th house cusp)
+        # Convert RAMC to ecliptic longitude
+        mc_numerator = math.sin(ramc_rad)
+        mc_denominator = math.cos(ramc_rad) * math.cos(epsilon_rad)
+        mc = math.degrees(math.atan2(mc_numerator, mc_denominator)) % 360
+
+        # ASCENDANT (1st house cusp)
+        asc_numerator = math.cos(ramc_rad)
+        asc_denominator = -math.sin(ramc_rad) * math.cos(epsilon_rad) - math.tan(lat_rad) * math.sin(epsilon_rad)
+        ascendant = math.degrees(math.atan2(asc_numerator, asc_denominator)) % 360
+
+        # DESCENDANT (7th house) and IC (4th house) - opposite points
+        descendant = (ascendant + 180) % 360
+        ic = (mc + 180) % 360
+
+        # Calculate intermediate cusps using Placidus semi-arc division
+        houses = {}
+        houses[1] = ascendant
+        houses[4] = ic
+        houses[7] = descendant
+        houses[10] = mc
+
+        # For Placidus intermediate cusps, we need to calculate cusps based on
+        # trisecting the semi-arcs of diurnal/nocturnal motion
+
+        # Houses 11, 12 (between MC and ASC - nocturnal arc)
+        houses[11] = self._placidus_cusp(ramc, latitude, epsilon, 30)  # 1/3 of arc
+        houses[12] = self._placidus_cusp(ramc, latitude, epsilon, 60)  # 2/3 of arc
+
+        # Houses 2, 3 (between ASC and IC - diurnal arc below horizon)
+        houses[2] = self._placidus_cusp(ramc, latitude, epsilon, 120)  # 1/3 after ASC
+        houses[3] = self._placidus_cusp(ramc, latitude, epsilon, 150)  # 2/3 after ASC
+
+        # Houses 5, 6 (between IC and DESC - nocturnal arc below)
+        houses[5] = self._placidus_cusp(ramc, latitude, epsilon, 210)  # 1/3 after IC
+        houses[6] = self._placidus_cusp(ramc, latitude, epsilon, 240)  # 2/3 after IC
+
+        # Houses 8, 9 (between DESC and MC - diurnal arc)
+        houses[8] = self._placidus_cusp(ramc, latitude, epsilon, 300)  # 1/3 after DESC
+        houses[9] = self._placidus_cusp(ramc, latitude, epsilon, 330)  # 2/3 after DESC
+
+        return {
+            'ascendant': ascendant,
+            'midheaven': mc,
+            'descendant': descendant,
+            'ic': ic,
+            'houses': houses
+        }
+
+    def _placidus_cusp(self, ramc: float, latitude: float, epsilon: float, house_md: float) -> float:
+        """
+        Calculate a single Placidus house cusp using iterative method.
+
+        Args:
+            ramc: Right Ascension of Midheaven in degrees
+            latitude: Geographic latitude in degrees
+            epsilon: Obliquity of ecliptic in degrees
+            house_md: Meridian distance of house cusp in degrees (0-360)
+                     11th=30, 12th=60, 2nd=120, 3rd=150, etc.
+
+        Returns:
+            Ecliptic longitude of the house cusp in degrees
+        """
+        lat_rad = math.radians(latitude)
+        eps_rad = math.radians(epsilon)
+
+        # Calculate RA of the house cusp point
+        # RA = RAMC + MD (meridian distance)
+        ra_cusp = (ramc + house_md) % 360
+        ra_cusp_rad = math.radians(ra_cusp)
+
+        # For Placidus, we need to find the ecliptic longitude that corresponds
+        # to this RA at the appropriate altitude above/below horizon
+
+        # Determine the "pole elevation" based on which quadrant
+        # This accounts for the semi-arc division
+        if 0 <= house_md < 90:  # Houses 11, 12 (upper quadrant, nocturnal)
+            # MD from MC to ASC
+            pole_elevation_factor = (90 - house_md) / 90.0
+        elif 90 <= house_md < 180:  # Houses 2, 3 (lower quadrant, diurnal)
+            # MD from ASC to IC
+            pole_elevation_factor = -(house_md - 90) / 90.0
+        elif 180 <= house_md < 270:  # Houses 5, 6 (lower quadrant, nocturnal)
+            # MD from IC to DESC
+            pole_elevation_factor = -(270 - house_md) / 90.0
+        else:  # Houses 8, 9 (upper quadrant, diurnal)
+            # MD from DESC to MC
+            pole_elevation_factor = (house_md - 270) / 90.0
+
+        # Calculate the declination adjustment for this cusp
+        # This is the key to Placidus - each cusp has different altitude
+        decl_adjustment = pole_elevation_factor * latitude
+        decl_adj_rad = math.radians(decl_adjustment)
+
+        # Use iterative method to find ecliptic longitude
+        # Start with a reasonable guess based on RA
+        lambda_guess = ra_cusp
+
+        # Newton-Raphson iteration to refine
+        for iteration in range(20):  # Usually converges in 3-5 iterations
+            lambda_rad = math.radians(lambda_guess)
+
+            # Calculate declination at this ecliptic longitude
+            sin_decl = math.sin(lambda_rad) * math.sin(eps_rad)
+            decl = math.asin(sin_decl)
+
+            # Calculate RA at this ecliptic longitude
+            y = math.sin(lambda_rad) * math.cos(eps_rad)
+            x = math.cos(lambda_rad)
+            ra_calc = math.degrees(math.atan2(y, x)) % 360
+
+            # For Placidus, we need to account for the altitude adjustment
+            # Calculate the adjusted RA based on declination and latitude
+            try:
+                # Semi-diurnal arc calculation
+                tan_lat_tan_decl = math.tan(lat_rad) * math.tan(decl)
+
+                # Check if the point is circumpolar or never rises
+                if tan_lat_tan_decl >= 1:
+                    # Circumpolar - use simple RA
+                    ra_adjusted = ra_calc
+                elif tan_lat_tan_decl <= -1:
+                    # Never rises - use simple RA
+                    ra_adjusted = ra_calc
+                else:
+                    # Calculate hour angle at the adjusted altitude
+                    cos_ha = -tan_lat_tan_decl * pole_elevation_factor
+
+                    # Clamp to valid range
+                    cos_ha = max(-1, min(1, cos_ha))
+
+                    ha = math.degrees(math.acos(cos_ha))
+
+                    # Adjusted RA based on which side of meridian
+                    if 0 <= house_md < 180:
+                        # Eastern side (rising)
+                        ra_adjusted = (ra_calc - ha * pole_elevation_factor) % 360
+                    else:
+                        # Western side (setting)
+                        ra_adjusted = (ra_calc + ha * pole_elevation_factor) % 360
+            except (ValueError, ZeroDivisionError):
+                ra_adjusted = ra_calc
+
+            # Error between target RA and calculated RA
+            ra_error = (ra_cusp - ra_adjusted + 180) % 360 - 180
+
+            # Check convergence
+            if abs(ra_error) < 0.0001:  # Converged to ~0.36 arcseconds
+                break
+
+            # Newton-Raphson step: adjust lambda
+            # Derivative approximation
+            dlambda = 0.01  # Small increment
+            lambda_test = lambda_guess + dlambda
+            lambda_test_rad = math.radians(lambda_test)
+
+            y_test = math.sin(lambda_test_rad) * math.cos(eps_rad)
+            x_test = math.cos(lambda_test_rad)
+            ra_test = math.degrees(math.atan2(y_test, x_test)) % 360
+
+            dra_dlambda = ((ra_test - ra_calc + 180) % 360 - 180) / dlambda
+
+            if abs(dra_dlambda) > 0.0001:
+                lambda_guess = (lambda_guess + ra_error / dra_dlambda) % 360
+            else:
+                # Derivative too small, use small step
+                lambda_guess = (lambda_guess + ra_error * 0.5) % 360
+
+        return lambda_guess % 360
 
     def get_natal_chart_data(
             self,
@@ -168,7 +333,7 @@ class AstronomicalService:
             birth_lat: float,
             birth_lon: float,
             timezone: str = 'UTC',
-            house_system: str = 'placidus'
+            house_system: str = 'whole_sign'
     ) -> Dict[str, any]:
         """
         Calculate Ascendant, Midheaven, and House cusps for a birth chart.
@@ -181,25 +346,13 @@ class AstronomicalService:
             birth_lat: Birth latitude in degrees (-90 to 90)
             birth_lon: Birth longitude in degrees (-180 to 180)
             timezone: IANA timezone string (e.g., 'Asia/Manila')
-            house_system: House system to use (default: 'placidus')
+            house_system: House system to use ('whole_sign' or 'placidus')
 
         Returns:
             {
-                'ascendant': {
-                    'longitude': 145.67,
-                    'sign': 'Leo',
-                    'degree': 25
-                },
-                'midheaven': {
-                    'longitude': 65.34,
-                    'sign': 'Gemini',
-                    'degree': 5
-                },
-                'houses': [
-                    {'number': 1, 'cusp_longitude': 145.67, 'sign': 'Leo', 'degree': 25},
-                    {'number': 2, 'cusp_longitude': 175.23, 'sign': 'Virgo', 'degree': 25},
-                    ...
-                ]
+                'ascendant': {...},
+                'midheaven': {...},
+                'houses': [...]
             }
         """
         try:
@@ -213,24 +366,49 @@ class AstronomicalService:
             # Convert to Skyfield time
             birth_time = self.ts.from_datetime(birth_local)
 
-            # Calculate houses (currently only Placidus supported)
-            if house_system.lower() == 'placidus':
+            # Calculate Local Sidereal Time and basic angles first
+            lst = self._calculate_sidereal_time(birth_time, birth_lon)
+
+            # Calculate obliquity
+            T = (birth_time.tt - 2451545.0) / 36525.0
+            epsilon = 23.439291 - 0.0130042 * T
+            epsilon_rad = math.radians(epsilon)
+
+            # Calculate MC and ASC
+            ramc = lst
+            ramc_rad = math.radians(ramc)
+            lat_rad = math.radians(birth_lat)
+
+            # MIDHEAVEN
+            mc_numerator = math.sin(ramc_rad)
+            mc_denominator = math.cos(ramc_rad) * math.cos(epsilon_rad)
+            mc = math.degrees(math.atan2(mc_numerator, mc_denominator)) % 360
+
+            # ASCENDANT
+            asc_numerator = math.cos(ramc_rad)
+            asc_denominator = -math.sin(ramc_rad) * math.cos(epsilon_rad) - math.tan(lat_rad) * math.sin(epsilon_rad)
+            ascendant = math.degrees(math.atan2(asc_numerator, asc_denominator)) % 360
+
+            # Calculate houses based on selected system
+            if house_system.lower() == 'whole_sign':
+                house_data = self._calculate_houses_whole_sign(ascendant, mc)
+            elif house_system.lower() == 'placidus':
                 house_data = self._calculate_houses_placidus(birth_time, birth_lat, birth_lon)
             else:
-                raise ValueError(f"House system '{house_system}' not yet supported")
+                raise ValueError(f"House system '{house_system}' not supported. Use 'whole_sign' or 'placidus'")
 
             # Format ascendant
             asc_lon = house_data['ascendant']
-            ascendant = {
+            ascendant_formatted = {
                 'longitude': asc_lon,
                 'sign': self._get_zodiac_sign(asc_lon),
                 'degree': self._get_degree_in_sign(asc_lon),
-                'symbol': '⇡'  # Ascendant symbol
+                'symbol': '⇡'
             }
 
             # Format midheaven
             mc_lon = house_data['midheaven']
-            midheaven = {
+            midheaven_formatted = {
                 'longitude': mc_lon,
                 'sign': self._get_zodiac_sign(mc_lon),
                 'degree': self._get_degree_in_sign(mc_lon),
@@ -249,8 +427,8 @@ class AstronomicalService:
                 })
 
             return {
-                'ascendant': ascendant,
-                'midheaven': midheaven,
+                'ascendant': ascendant_formatted,
+                'midheaven': midheaven_formatted,
                 'houses': houses
             }
 
@@ -753,7 +931,7 @@ class AstronomicalService:
             'cosmic_weather': 'The stars whisper secrets through veils of mystery'
         }
 
-    # Convenience functions for easy import
+# Convenience functions for easy import
 def get_moon_phase() -> Dict[str, any]:
     """Quick access to current moon phase with enhanced visual data."""
     try:

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tailwind CLI Quick Reference</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #38bdf8 0%, #3b82f6 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .content {
+            padding: 2rem;
+        }
+        
+        h2 {
+            color: #3b82f6;
+            margin: 2rem 0 1rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #3b82f6;
+            font-size: 1.8rem;
+        }
+        
+        h3 {
+            color: #6366f1;
+            margin: 1.5rem 0 0.75rem 0;
+            font-size: 1.3rem;
+        }
+        
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+        
+        .note {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .note strong {
+            color: #92400e;
+        }
+        
+        ul {
+            margin: 1rem 0 1rem 2rem;
+        }
+        
+        li {
+            margin: 0.5rem 0;
+        }
+        
+        .file-structure {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+        
+        .workflow {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .workflow-item {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .workflow-item h4 {
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tip {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .troubleshooting {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 4px;
+        }
+        
+        .troubleshooting h4 {
+            color: #991b1b;
+            margin-bottom: 0.5rem;
+        }
+        
+        footer {
+            background: #f1f5f9;
+            padding: 1.5rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .workflow {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>⚡ Tailwind CLI Quick Reference</h1>
+            <p>Your complete guide to Tailwind standalone binary with Django</p>
+        </header>
+        
+        <div class="content">
+            <h2>Essential Commands</h2>
+            
+            <h3>Development (Watch Mode)</h3>
+            <pre><code>./tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch</code></pre>
+            <ul>
+                <li>Watches for file changes and rebuilds automatically</li>
+                <li>Keep this running while developing</li>
+                <li>Start it once, leave it running</li>
+            </ul>
+            
+            <h3>Production Build</h3>
+            <pre><code>./tailwindcss -i ./static/src/input.css -o ./static/css/output.css --minify</code></pre>
+            <ul>
+                <li>Generates optimized, minified CSS</li>
+                <li>Run before deploying</li>
+                <li>Creates smallest possible file size</li>
+            </ul>
+            
+            <h3>One-Time Build (Testing)</h3>
+            <pre><code>./tailwindcss -i ./static/src/input.css -o ./static/css/output.css</code></pre>
+            <ul>
+                <li>Builds once and exits</li>
+                <li>No watching, no minification</li>
+                <li>Good for quick tests</li>
+            </ul>
+            
+            <h2>File Structure</h2>
+            <div class="file-structure">
+your_django_project/
+├── manage.py
+├── tailwindcss              # Standalone binary
+├── static/
+│   ├── src/
+│   │   └── input.css        # Source CSS with @import
+│   └── css/
+│       └── output.css       # Generated (don't commit)
+└── templates/
+    └── base.html
+            </div>
+            
+            <h2>Input CSS File</h2>
+            <p><code>static/src/input.css</code></p>
+            <pre><code>@import "tailwindcss";
+
+@source "../../templates";
+@source "../../*/templates";
+
+@theme {
+  /* Custom theme here */
+}</code></pre>
+            
+            <h2>Django Template Usage</h2>
+            <pre><code>&lt;%load static %&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;link href="&lt;%static 'css/output.css' %&gt;" rel="stylesheet"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Your Tailwind classes here --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+            
+            <h2>Daily Workflow</h2>
+            <div class="workflow">
+                <div class="workflow-item">
+                    <h4>Terminal 1: Tailwind Watch</h4>
+                    <pre><code>./tailwindcss -i ./static/src/input.css -o ./static/css/output.css --watch</code></pre>
+                </div>
+                <div class="workflow-item">
+                    <h4>Terminal 2: Django Server</h4>
+                    <pre><code>python manage.py runserver</code></pre>
+                </div>
+            </div>
+            <div class="tip">
+                <strong>💡 Tip:</strong> Keep both terminals running while developing!
+            </div>
+            
+            <h2>Common Flags</h2>
+            <ul>
+                <li><code>-i</code> or <code>--input</code> - Input CSS file</li>
+                <li><code>-o</code> or <code>--output</code> - Output CSS file</li>
+                <li><code>-w</code> or <code>--watch</code> - Watch mode</li>
+                <li><code>-m</code> or <code>--minify</code> - Minify output</li>
+                <li><code>--optimize</code> - Optimize without minifying</li>
+                <li><code>-h</code> or <code>--help</code> - Show all options</li>
+            </ul>
+            
+            <h2>Deployment Script</h2>
+            <pre><code>#!/bin/bash
+./tailwindcss -i ./static/src/input.css -o ./static/css/output.css --minify
+python manage.py collectstatic --noinput</code></pre>
+            
+            <h2>Important Notes</h2>
+            <div class="note">
+                <strong>⚠️ Remember:</strong>
+                <ul>
+                    <li>Watch mode stays running - don't restart after every change</li>
+                    <li>Production builds should use <code>--minify</code> flag</li>
+                    <li>Add <code>static/css/output.css</code> to <code>.gitignore</code></li>
+                    <li>Tailwind scans for complete class names only (no dynamic classes)</li>
+                </ul>
+            </div>
+            
+            <h2>Troubleshooting</h2>
+            
+            <div class="troubleshooting">
+                <h4>🔴 Styles not updating?</h4>
+                <ul>
+                    <li>Make sure watch mode is running</li>
+                    <li>Check console for Tailwind rebuild messages</li>
+                    <li>Try hard refresh (Ctrl+Shift+R)</li>
+                </ul>
+            </div>
+            
+            <div class="troubleshooting">
+                <h4>🔴 Classes not working?</h4>
+                <ul>
+                    <li>Verify <code>@source</code> paths in <code>input.css</code></li>
+                    <li>Make sure class names are complete (not dynamic)</li>
+                    <li>Check that <code>output.css</code> was generated</li>
+                </ul>
+            </div>
+            
+            <div class="troubleshooting">
+                <h4>🔴 File not found errors?</h4>
+                <ul>
+                    <li>Confirm <code>STATICFILES_DIRS</code> in <code>settings.py</code></li>
+                    <li>Run <code>python manage.py collectstatic</code> for production</li>
+                </ul>
+            </div>
+        </div>
+        
+        <footer>
+            <p>📝 Save this file locally for quick reference • Last updated: Nov 2024</p>
+        </footer>
+    </div>
+</body>
+</html>

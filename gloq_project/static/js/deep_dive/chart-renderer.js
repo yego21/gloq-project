@@ -65,8 +65,13 @@ class ChartRenderer {
         // Create conjunction glow filter
         this.createConjunctionGlowFilter(svg);
 
-        // Draw layers
+        // Draw layers (order matters for z-index)
         this.drawZodiacRing(svg, center, size);
+
+        // Draw house segment fills for Whole Sign (subtle background)
+        if (natalChart.houses && natalChart.houses.length > 0) {
+            this.drawHouseSegments(svg, center, natalChart.houses, getCirclePosition);
+        }
 
         if (natalChart.houses && natalChart.houses.length > 0) {
             this.drawHouses(svg, center, natalChart.houses, getCirclePosition);
@@ -78,8 +83,13 @@ class ChartRenderer {
 
         this.drawPlanets(svg, center, natalChart.planets, getCirclePosition, isFullView);
 
+        // Draw Ascendant and Midheaven markers
         if (natalChart.ascendant) {
             this.drawAscendant(svg, center, natalChart.ascendant, getCirclePosition);
+        }
+
+        if (natalChart.midheaven) {
+            this.drawMidheaven(svg, center, natalChart.midheaven, getCirclePosition);
         }
 
         container.innerHTML = '';
@@ -224,34 +234,177 @@ class ChartRenderer {
         });
     }
 
-    drawHouses(svg, center, houses, getCirclePosition) {
-        const houseRadius = center - 50;
+    drawHouseSegments(svg, center, houses, getCirclePosition) {
+        const segmentOuterRadius = center - 40;
+        const segmentInnerRadius = center - 130;
+
+        // Check if we have planets_in_houses data
+        const planetsInHouses = this.currentNatalChart?.planets_in_houses || {};
 
         houses.forEach(house => {
-            const pos = getCirclePosition(house.longitude, houseRadius);
+            const houseNum = house.number;
+            const startLon = house.cusp_longitude;
+            const endLon = houses[(houseNum % 12)].cusp_longitude;
+            
+            const startAngle = (180 - startLon) * Math.PI / 180;
+            const endAngle = (180 - endLon) * Math.PI / 180;
+            
+            const startOuter = {
+                x: center + segmentOuterRadius * Math.cos(startAngle),
+                y: center - segmentOuterRadius * Math.sin(startAngle)
+            };
+            const endOuter = {
+                x: center + segmentOuterRadius * Math.cos(endAngle),
+                y: center - segmentOuterRadius * Math.sin(endAngle)
+            };
+            const startInner = {
+                x: center + segmentInnerRadius * Math.cos(startAngle),
+                y: center - segmentInnerRadius * Math.sin(startAngle)
+            };
+            const endInner = {
+                x: center + segmentInnerRadius * Math.cos(endAngle),
+                y: center - segmentInnerRadius * Math.sin(endAngle)
+            };
+            
+            let angleDiff = (startLon - endLon + 360) % 360;
+            const largeArcFlag = angleDiff > 180 ? 1 : 0;
+            
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            const d = `
+                M ${startOuter.x} ${startOuter.y}
+                A ${segmentOuterRadius} ${segmentOuterRadius} 0 ${largeArcFlag} 0 ${endOuter.x} ${endOuter.y}
+                L ${endInner.x} ${endInner.y}
+                A ${segmentInnerRadius} ${segmentInnerRadius} 0 ${largeArcFlag} 1 ${startInner.x} ${startInner.y}
+                Z
+            `;
+            
+            path.setAttribute('d', d);
+            
+            const hasPlanets = planetsInHouses[houseNum] && planetsInHouses[houseNum].length > 0;
+            
+            if (hasPlanets) {
+                path.setAttribute('fill', 'rgba(99, 102, 241, 0.08)');
+                path.setAttribute('stroke', 'rgba(99, 102, 241, 0.15)');
+                path.setAttribute('stroke-width', '0.5');
+            } else {
+                path.setAttribute('fill', 'rgba(99, 102, 241, 0.02)');
+                path.setAttribute('stroke', 'none');
+            }
+            
+            path.style.pointerEvents = 'none';
+            svg.appendChild(path);
+        });
+    }
+
+    drawHouses(svg, center, houses, getCirclePosition) {
+        const houseRadius = center - 50;
+        const self = this;
+
+        const signAbbrev = {
+            'Aries': 'Ari', 'Taurus': 'Tau', 'Gemini': 'Gem', 'Cancer': 'Can',
+            'Leo': 'Leo', 'Virgo': 'Vir', 'Libra': 'Lib', 'Scorpio': 'Sco',
+            'Sagittarius': 'Sag', 'Capricorn': 'Cap', 'Aquarius': 'Aqu', 'Pisces': 'Pis'
+        };
+
+        const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'];
+
+        houses.forEach(house => {
+            const pos = getCirclePosition(house.cusp_longitude, houseRadius);
 
             const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             line.setAttribute('x1', center);
             line.setAttribute('y1', center);
             line.setAttribute('x2', pos.x);
             line.setAttribute('y2', pos.y);
-            line.setAttribute('stroke', house.house_number === 1 || house.house_number === 10
+            
+            line.setAttribute('stroke', house.number === 1 || house.number === 10
                 ? 'rgba(168, 85, 247, 0.4)'
                 : 'rgba(148, 163, 184, 0.2)');
-            line.setAttribute('stroke-width', house.house_number === 1 || house.house_number === 10 ? '2' : '1');
+            line.setAttribute('stroke-width', house.number === 1 || house.number === 10 ? '2' : '1');
             line.setAttribute('stroke-dasharray', '2,2');
             svg.appendChild(line);
 
-            const labelPos = getCirclePosition(house.longitude, houseRadius - 20);
-            const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            text.setAttribute('x', labelPos.x);
-            text.setAttribute('y', labelPos.y);
-            text.setAttribute('text-anchor', 'middle');
-            text.setAttribute('dominant-baseline', 'central');
-            text.setAttribute('fill', 'rgba(148, 163, 184, 0.5)');
-            text.setAttribute('font-size', '10');
-            text.textContent = house.house_number;
-            svg.appendChild(text);
+            // Enhanced house labels with Roman numerals
+            const labelRadius = houseRadius - 25;
+            
+            const nextHouse = houses[house.number % 12];
+            const nextCusp = nextHouse.cusp_longitude;
+            
+            let midLongitude = (house.cusp_longitude + nextCusp) / 2;
+            
+            if (Math.abs(nextCusp - house.cusp_longitude) > 180) {
+                midLongitude = ((house.cusp_longitude + nextCusp + 360) / 2) % 360;
+            }
+            
+            const midPos = getCirclePosition(midLongitude, labelRadius);
+            
+            const labelGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            labelGroup.style.cursor = 'pointer';
+            
+            // Rounded rectangle background for house label
+            const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bgRect.setAttribute('x', midPos.x - 22);
+            bgRect.setAttribute('y', midPos.y - 12);
+            bgRect.setAttribute('width', '44');
+            bgRect.setAttribute('height', '24');
+            bgRect.setAttribute('rx', '4');
+            bgRect.setAttribute('ry', '4');
+            bgRect.setAttribute('fill', 'rgba(15, 23, 42, 0.9)');
+            bgRect.setAttribute('stroke', 'rgba(148, 163, 184, 0.4)');
+            bgRect.setAttribute('stroke-width', '1');
+            labelGroup.appendChild(bgRect);
+            
+            // Roman numeral (larger and centered)
+            const houseNum = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            houseNum.setAttribute('x', midPos.x);
+            houseNum.setAttribute('y', midPos.y - 1);
+            houseNum.setAttribute('text-anchor', 'middle');
+            houseNum.setAttribute('dominant-baseline', 'central');
+            houseNum.setAttribute('fill', 'rgba(203, 213, 225, 0.9)');
+            houseNum.setAttribute('font-size', '11');
+            houseNum.setAttribute('font-weight', '600');
+            houseNum.setAttribute('font-family', 'serif');
+            houseNum.textContent = romanNumerals[house.number - 1];
+            labelGroup.appendChild(houseNum);
+            
+            // Sign abbreviation (smaller, below)
+            const signText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            signText.setAttribute('x', midPos.x);
+            signText.setAttribute('y', midPos.y + 9);
+            signText.setAttribute('text-anchor', 'middle');
+            signText.setAttribute('dominant-baseline', 'central');
+            signText.setAttribute('fill', 'rgba(148, 163, 184, 0.6)');
+            signText.setAttribute('font-size', '7');
+            signText.textContent = signAbbrev[house.sign] || house.sign.substring(0, 3);
+            labelGroup.appendChild(signText);
+            
+            labelGroup.addEventListener('mouseenter', function(e) {
+                bgRect.setAttribute('fill', 'rgba(30, 41, 59, 0.95)');
+                bgRect.setAttribute('stroke', 'rgba(99, 102, 241, 0.6)');
+                houseNum.setAttribute('font-size', '12');
+                
+                const planetsInHouse = self.currentNatalChart?.planets_in_houses?.[house.number] || [];
+                
+                self.showTooltip(e, 'house', {
+                    number: house.number,
+                    sign: house.sign,
+                    degree: house.degree,
+                    planets: planetsInHouse
+                });
+            });
+            
+            labelGroup.addEventListener('mousemove', function(e) {
+                self.updateTooltipPosition(e);
+            });
+            
+            labelGroup.addEventListener('mouseleave', function() {
+                bgRect.setAttribute('fill', 'rgba(15, 23, 42, 0.9)');
+                bgRect.setAttribute('stroke', 'rgba(148, 163, 184, 0.4)');
+                houseNum.setAttribute('font-size', '11');
+                self.hideTooltip();
+            });
+            
+            svg.appendChild(labelGroup);
         });
     }
 
@@ -259,12 +412,25 @@ class ChartRenderer {
         const aspectRadius = center - 80;
         const planetRadius = center - 70;
         
+        // Define planet importance weights (higher = more important)
+        const planetWeights = {
+            'Sun': 10, 'Moon': 10, 'Mercury': 8, 'Venus': 8, 'Mars': 8,
+            'Jupiter': 7, 'Saturn': 7, 'Uranus': 5, 'Neptune': 5, 'Pluto': 5,
+            'Chiron': 3, 'Lilith': 2, 'North Node': 1, 'South Node': 1
+        };
+        
+        const getAspectWeight = (planet1Name, planet2Name) => {
+            const weight1 = planetWeights[planet1Name] || 1;
+            const weight2 = planetWeights[planet2Name] || 1;
+            return (weight1 + weight2) / 2;
+        };
+        
         const aspectStyles = {
-            'Conjunction': { color: 'rgba(255, 215, 0, 0.9)', width: 4, dasharray: 'none' },
-            'Opposition': { color: 'rgba(239, 68, 68, 0.5)', width: 2, dasharray: 'none' },
-            'Trine': { color: 'rgba(34, 197, 94, 0.5)', width: 2, dasharray: 'none' },
-            'Square': { color: 'rgba(251, 146, 60, 0.5)', width: 2, dasharray: 'none' },
-            'Sextile': { color: 'rgba(59, 130, 246, 0.4)', width: 1.5, dasharray: 'none' }
+            'Conjunction': { baseColor: 'rgba(255, 215, 0, 0.9)', baseWidth: 5, dasharray: 'none' },
+            'Opposition': { baseColor: 'rgba(239, 68, 68, 0.5)', baseWidth: 2.5, dasharray: 'none' },
+            'Trine': { baseColor: 'rgba(34, 197, 94, 0.5)', baseWidth: 2.5, dasharray: 'none' },
+            'Square': { baseColor: 'rgba(251, 146, 60, 0.5)', baseWidth: 2.5, dasharray: 'none' },
+            'Sextile': { baseColor: 'rgba(59, 130, 246, 0.4)', baseWidth: 2, dasharray: 'none' }
         };
 
         const self = this;
@@ -275,13 +441,27 @@ class ChartRenderer {
 
             if (!planet1 || !planet2) return;
 
-            const style = aspectStyles[aspect.aspect_type] || {
-                color: 'rgba(148, 163, 184, 0.3)',
-                width: 1,
+            // Calculate aspect importance based on planets involved
+            const aspectWeight = getAspectWeight(aspect.planet1, aspect.planet2);
+            const weightMultiplier = Math.max(0.2, aspectWeight / 10); // Normalize with minimum
+            
+            const baseStyle = aspectStyles[aspect.aspect_type] || {
+                baseColor: 'rgba(148, 163, 184, 0.3)',
+                baseWidth: 1.5,
                 dasharray: 'none'
             };
+            
+            // Adjust style based on weight
+            const style = {
+                color: baseStyle.baseColor,
+                width: baseStyle.baseWidth * weightMultiplier,
+                dasharray: baseStyle.dasharray
+            };
+            
+            // Skip very weak aspects if width is too small
+            if (style.width < 0.4) return;
 
-            // Special handling for Conjunctions - draw as curved arc
+            // Special handling for Conjunctions
             if (aspect.aspect_type === 'Conjunction') {
                 const pos1 = getCirclePosition(planet1.longitude, planetRadius);
                 const pos2 = getCirclePosition(planet2.longitude, planetRadius);
@@ -291,7 +471,6 @@ class ChartRenderer {
                 const distance = Math.sqrt(dx * dx + dy * dy);
                 
                 if (distance < 50) {
-                    // Very close conjunction - simple curved arc
                     const midX = (pos1.x + pos2.x) / 2;
                     const midY = (pos1.y + pos2.y) / 2;
                     
@@ -312,13 +491,14 @@ class ChartRenderer {
                     path.setAttribute('stroke-linecap', 'round');
                     path.setAttribute('class', 'aspect-line conjunction-arc');
                     path.style.cursor = 'pointer';
-                    path.setAttribute('filter', 'url(#conjunction-glow)');
+                    if (style.width > 2) {
+                        path.setAttribute('filter', 'url(#conjunction-glow)');
+                    }
                     
                     this.addAspectInteractions(path, aspect, style);
                     svg.appendChild(path);
                     
                 } else {
-                    // Wider conjunction - circular arc
                     let angle1 = (180 - planet1.longitude);
                     let angle2 = (180 - planet2.longitude);
                     
@@ -343,31 +523,35 @@ class ChartRenderer {
                     path.setAttribute('stroke-linecap', 'round');
                     path.setAttribute('class', 'aspect-line conjunction-arc');
                     path.style.cursor = 'pointer';
-                    path.setAttribute('filter', 'url(#conjunction-glow)');
+                    if (style.width > 2) {
+                        path.setAttribute('filter', 'url(#conjunction-glow)');
+                    }
                     
                     this.addAspectInteractions(path, aspect, style);
                     svg.appendChild(path);
                 }
                 
-                // Add endpoint markers
-                const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                marker1.setAttribute('cx', pos1.x);
-                marker1.setAttribute('cy', pos1.y);
-                marker1.setAttribute('r', 4);
-                marker1.setAttribute('fill', style.color);
-                marker1.setAttribute('class', 'conjunction-marker');
-                marker1.style.pointerEvents = 'none';
+                // Add endpoint markers for significant conjunctions
+                if (style.width > 1) {
+                    const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    marker1.setAttribute('cx', pos1.x);
+                    marker1.setAttribute('cy', pos1.y);
+                    marker1.setAttribute('r', Math.min(4, style.width * 0.8));
+                    marker1.setAttribute('fill', style.color);
+                    marker1.setAttribute('class', 'conjunction-marker');
+                    marker1.style.pointerEvents = 'none';
 
-                const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-                marker2.setAttribute('cx', pos2.x);
-                marker2.setAttribute('cy', pos2.y);
-                marker2.setAttribute('r', 4);
-                marker2.setAttribute('fill', style.color);
-                marker2.setAttribute('class', 'conjunction-marker');
-                marker2.style.pointerEvents = 'none';
+                    const marker2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    marker2.setAttribute('cx', pos2.x);
+                    marker2.setAttribute('cy', pos2.y);
+                    marker2.setAttribute('r', Math.min(4, style.width * 0.8));
+                    marker2.setAttribute('fill', style.color);
+                    marker2.setAttribute('class', 'conjunction-marker');
+                    marker2.style.pointerEvents = 'none';
 
-                svg.appendChild(marker1);
-                svg.appendChild(marker2);
+                    svg.appendChild(marker1);
+                    svg.appendChild(marker2);
+                }
 
             } else {
                 // Normal aspect lines
@@ -398,7 +582,7 @@ class ChartRenderer {
         const self = this;
         
         element.addEventListener('mouseenter', function (e) {
-            element.setAttribute('stroke-width', parseFloat(style.width) + 2);
+            element.setAttribute('stroke-width', parseFloat(style.width) + 1.5);
             if (aspect.aspect_type === 'Conjunction') {
                 element.setAttribute('stroke', 'rgba(255, 215, 0, 1)');
             }
@@ -414,13 +598,6 @@ class ChartRenderer {
             element.setAttribute('stroke', style.color);
             self.hideTooltip();
         });
-        
-
-        element.addEventListener('click', function (event) {
-            event.stopPropagation();
-            self.showAspectInfo(aspect);
-        });
-           
     }
 
     drawPlanets(svg, center, planets, getCirclePosition, isFullView = false) {
@@ -472,11 +649,6 @@ class ChartRenderer {
                     circle.setAttribute('r', 16);
                     self.hideTooltip();
                 });
-
-                group.addEventListener('click', function (event) {
-                    event.stopPropagation();
-                    self.showPlanetInfo(planet);
-                });
             }
 
             svg.appendChild(group);
@@ -484,8 +656,65 @@ class ChartRenderer {
     }
 
     drawAscendant(svg, center, ascendant, getCirclePosition) {
-        const ascLongitude = this.signToLongitude(ascendant.sign, ascendant.degree);
-        const pos = getCirclePosition(ascLongitude, center - 40);
+        const pos = getCirclePosition(ascendant.longitude, center - 30);
+        const self = this;
+
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.style.cursor = 'pointer';
+
+        const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        bgCircle.setAttribute('cx', pos.x);
+        bgCircle.setAttribute('cy', pos.y);
+        bgCircle.setAttribute('r', '16');
+        bgCircle.setAttribute('fill', 'rgba(30, 41, 59, 0.9)');
+        bgCircle.setAttribute('stroke', 'rgba(168, 85, 247, 0.6)');
+        bgCircle.setAttribute('stroke-width', '2');
+        group.appendChild(bgCircle);
+
+        const marker = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        marker.setAttribute('x', pos.x);
+        marker.setAttribute('y', pos.y);
+        marker.setAttribute('text-anchor', 'middle');
+        marker.setAttribute('dominant-baseline', 'central');
+        marker.setAttribute('fill', 'rgba(168, 85, 247, 1)');
+        marker.setAttribute('font-size', '10');
+        marker.setAttribute('font-weight', 'bold');
+        marker.textContent = 'ASC';
+        group.appendChild(marker);
+
+        group.addEventListener('mouseenter', function (e) {
+            bgCircle.setAttribute('fill', 'rgba(99, 102, 241, 0.4)');
+            bgCircle.setAttribute('r', '18');
+            marker.setAttribute('font-size', '12');
+            self.showTooltip(e, 'angle', {
+                name: 'Ascendant',
+                symbol: 'ASC',
+                sign: ascendant.sign,
+                degree: ascendant.degree,
+                description: 'Your rising sign - the mask you wear to the world'
+            });
+        });
+
+        group.addEventListener('mousemove', function (e) {
+            self.updateTooltipPosition(e);
+        });
+
+        group.addEventListener('mouseleave', function () {
+            bgCircle.setAttribute('fill', 'rgba(30, 41, 59, 0.9)');
+            bgCircle.setAttribute('r', '16');
+            marker.setAttribute('font-size', '10');
+            self.hideTooltip();
+        });
+
+        svg.appendChild(group);
+    }
+
+    drawMidheaven(svg, center, midheaven, getCirclePosition) {
+        const pos = getCirclePosition(midheaven.longitude, center - 40);
+        const self = this;
+
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.style.cursor = 'pointer';
 
         const marker = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         marker.setAttribute('x', pos.x);
@@ -495,20 +724,34 @@ class ChartRenderer {
         marker.setAttribute('fill', 'rgba(168, 85, 247, 0.9)');
         marker.setAttribute('font-size', '12');
         marker.setAttribute('font-weight', 'bold');
-        marker.textContent = 'ASC';
-        svg.appendChild(marker);
+        marker.textContent = 'MC';
+        group.appendChild(marker);
+
+        group.addEventListener('mouseenter', function (e) {
+            marker.setAttribute('fill', 'rgba(168, 85, 247, 1)');
+            marker.setAttribute('font-size', '14');
+            self.showTooltip(e, 'angle', {
+                name: 'Midheaven',
+                symbol: 'MC',
+                sign: midheaven.sign,
+                degree: midheaven.degree,
+                description: 'Your public image and career path'
+            });
+        });
+
+        group.addEventListener('mousemove', function (e) {
+            self.updateTooltipPosition(e);
+        });
+
+        group.addEventListener('mouseleave', function () {
+            marker.setAttribute('fill', 'rgba(168, 85, 247, 0.9)');
+            marker.setAttribute('font-size', '12');
+            self.hideTooltip();
+        });
+
+        svg.appendChild(group);
     }
 
-    signToLongitude(sign, degree) {
-        const signs = {
-            'Aries': 0, 'Taurus': 30, 'Gemini': 60, 'Cancer': 90,
-            'Leo': 120, 'Virgo': 150, 'Libra': 180, 'Scorpio': 210,
-            'Sagittarius': 240, 'Capricorn': 270, 'Aquarius': 300, 'Pisces': 330
-        };
-        return signs[sign] + degree;
-    }
-
-    // Tooltip methods
     showTooltip(event, type, data) {
         if (!this.tooltipElement) return;
 
@@ -520,7 +763,7 @@ class ChartRenderer {
             icon.textContent = data.symbol;
             title.textContent = data.name;
             content.innerHTML = `
-                <div><span class="tooltip-label">Sign:</span> <span class="tooltip-value">${data.sign} ${data.degree.toFixed(2)}°</span></div>
+                <div><span class="tooltip-label">Sign:</span> <span class="tooltip-value">${data.sign} ${data.degree}°</span></div>
                 <div><span class="tooltip-label">Element:</span> <span class="tooltip-value">${data.element}</span></div>
                 <div><span class="tooltip-label">House:</span> <span class="tooltip-value">${data.house || 'N/A'}</span></div>
                 ${data.retrograde ? '<div class="tooltip-label" style="color: #fca5a5; margin-top: 4px;">⟲ Retrograde</div>' : ''}
@@ -555,6 +798,23 @@ class ChartRenderer {
                 <div><span class="tooltip-label">Modality:</span> <span class="tooltip-value">${data.modality}</span></div>
                 <div><span class="tooltip-label">Degrees:</span> <span class="tooltip-value">${data.start}° - ${data.start + 30}°</span></div>
             `;
+        } else if (type === 'angle') {
+            icon.textContent = data.symbol;
+            title.textContent = data.name;
+            content.innerHTML = `
+                <div><span class="tooltip-label">Sign:</span> <span class="tooltip-value">${data.sign} ${data.degree}°</span></div>
+                <div class="tooltip-label" style="margin-top: 6px;">${data.description}</div>
+            `;
+        } else if (type === 'house') {
+            icon.textContent = data.number.toString();
+            title.textContent = `House ${data.number}`;
+            const planetsText = data.planets.length > 0 
+                ? data.planets.join(', ')
+                : 'No planets';
+            content.innerHTML = `
+                <div><span class="tooltip-label">Sign:</span> <span class="tooltip-value">${data.sign} ${data.degree}°</span></div>
+                <div><span class="tooltip-label">Planets:</span> <span class="tooltip-value">${planetsText}</span></div>
+            `;
         }
 
         this.tooltipElement.classList.add('visible');
@@ -587,182 +847,55 @@ class ChartRenderer {
         }
     }
 
-    // showPlanetInfo(planet) {
-    //     const infoContainer = document.getElementById('planet-info');
-    //     const infoContent = document.getElementById('planet-info-content');
-
-    //     if (!infoContainer || !infoContent) {
-    //         console.warn('Planet info panel not found');
-    //         return;
-    //     }
-
-    //     // Find aspects involving this planet
-    //     const planetAspects = this.currentNatalChart.aspects.filter(
-    //         aspect => aspect.planet1 === planet.name || aspect.planet2 === planet.name
-    //     );
-
-    //     const elementDescriptions = {
-    //         'Fire': 'Dynamic, passionate, action-oriented',
-    //         'Earth': 'Practical, grounded, material-focused',
-    //         'Air': 'Intellectual, communicative, social',
-    //         'Water': 'Emotional, intuitive, sensitive'
-    //     };
-
-    //     const planetMeanings = {
-    //         'Sun': 'Core identity, ego, vitality, life purpose',
-    //         'Moon': 'Emotions, instincts, inner self, needs',
-    //         'Mercury': 'Communication, thinking, intellect, learning',
-    //         'Venus': 'Love, beauty, values, relationships',
-    //         'Mars': 'Action, desire, energy, assertiveness',
-    //         'Jupiter': 'Growth, expansion, luck, wisdom',
-    //         'Saturn': 'Structure, discipline, responsibility, karma',
-    //         'Uranus': 'Innovation, rebellion, sudden change',
-    //         'Neptune': 'Dreams, spirituality, illusion, compassion',
-    //         'Pluto': 'Transformation, power, death/rebirth'
-    //     };
-
-    //     infoContent.innerHTML = `
-    //         <div class="space-y-4">
-    //             <div class="flex items-center justify-between pb-3 border-b border-indigo-500/30">
-    //                 <div class="flex items-center gap-3">
-    //                     <span class="text-3xl">${planet.symbol}</span>
-    //                     <div>
-    //                         <h5 class="text-xl font-bold text-white">${planet.name}</h5>
-    //                         <p class="text-sm text-slate-400">${planetMeanings[planet.name] || 'Celestial body'}</p>
-    //                     </div>
-    //                 </div>
-    //             </div>
-
-    //             <div class="grid grid-cols-2 gap-3">
-    //                 <div class="bg-slate-700/30 rounded-lg p-3">
-    //                     <span class="text-xs text-slate-400 block mb-1">Sign</span>
-    //                     <span class="text-indigo-300 font-semibold">${planet.sign} ${planet.degree.toFixed(2)}°</span>
-    //                 </div>
-    //                 <div class="bg-slate-700/30 rounded-lg p-3">
-    //                     <span class="text-xs text-slate-400 block mb-1">Element</span>
-    //                     <span class="text-white font-semibold">${planet.element}</span>
-    //                 </div>
-    //                 <div class="bg-slate-700/30 rounded-lg p-3">
-    //                     <span class="text-xs text-slate-400 block mb-1">Longitude</span>
-    //                     <span class="text-white font-semibold">${planet.longitude.toFixed(2)}°</span>
-    //                 </div>
-    //                 <div class="bg-slate-700/30 rounded-lg p-3">
-    //                     <span class="text-xs text-slate-400 block mb-1">House</span>
-    //                     <span class="text-white font-semibold">${planet.house ? 'House ' + planet.house : 'N/A'}</span>
-    //                 </div>
-    //             </div>
-
-    //             ${planet.retrograde ? `
-    //                 <div class="bg-red-900/20 border border-red-500/30 rounded-lg p-3">
-    //                     <span class="text-red-400 font-semibold">
-    //                         <i class="fas fa-undo mr-2"></i>Retrograde Motion
-    //                     </span>
-    //                     <p class="text-xs text-slate-300 mt-1">
-    //                         This planet appears to move backward, suggesting internalized or review energy.
-    //                     </p>
-    //                 </div>
-    //             ` : ''}
-
-    //             <div class="bg-gradient-to-r from-indigo-900/20 to-purple-900/20 rounded-lg p-3 border border-indigo-500/20">
-    //                 <span class="text-xs text-slate-400 block mb-1">Element Quality</span>
-    //                 <p class="text-sm text-slate-200">${elementDescriptions[planet.element]}</p>
-    //             </div>
-
-    //             ${planetAspects.length > 0 ? `
-    //                 <div>
-    //                     <h6 class="text-sm font-semibold text-slate-300 mb-2 flex items-center">
-    //                         <i class="fas fa-project-diagram text-pink-400 mr-2"></i>
-    //                         Aspects (${planetAspects.length})
-    //                     </h6>
-    //                     <div class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
-    //                         ${planetAspects.map(aspect => {
-    //                             const otherPlanet = aspect.planet1 === planet.name ? aspect.planet2 : aspect.planet1;
-    //                             const aspectColors = {
-    //                                 'Conjunction': 'text-yellow-300',
-    //                                 'Opposition': 'text-red-400',
-    //                                 'Trine': 'text-green-400',
-    //                                 'Square': 'text-orange-400',
-    //                                 'Sextile': 'text-blue-400'
-    //                             };
-    //                             const aspectIcons = {
-    //                                 'Conjunction': '☌',
-    //                                 'Opposition': '☍',
-    //                                 'Trine': '△',
-    //                                 'Square': '□',
-    //                                 'Sextile': '⚹'
-    //                             };
-    //                             return `
-    //                                 <div class="bg-slate-700/30 rounded-lg p-2 flex items-center justify-between hover:bg-slate-700/50 transition-colors">
-    //                                     <span class="text-sm">
-    //                                         <span class="${aspectColors[aspect.aspect_type]} font-bold mr-2">
-    //                                             ${aspectIcons[aspect.aspect_type]}
-    //                                         </span>
-    //                                         <span class="text-slate-300">${aspect.aspect_type} to ${otherPlanet}</span>
-    //                                     </span>
-    //                                     <span class="text-xs text-slate-400">${aspect.orb.toFixed(1)}°</span>
-    //                                 </div>
-    //                             `;
-    //                         }).join('')}
-    //                     </div>
-    //                 </div>
-    //             ` : '<p class="text-sm text-slate-400 italic">No major aspects</p>'}
-    //         </div>
-    //     `;
-
-    //     infoContainer.classList.remove('hidden');
-    // }
-
     showPlanetInfo(planet) {
-    const infoContainer = document.getElementById('planet-info');
-    const placeholderContainer = document.getElementById('planet-info-placeholder');
-    const infoContent = document.getElementById('planet-info-content');
+        const infoContainer = document.getElementById('planet-info');
+        const placeholderContainer = document.getElementById('planet-info-placeholder');
+        const infoContent = document.getElementById('planet-info-content');
 
-    if (!infoContainer || !infoContent) {
-        console.warn('Planet info panel not found');
-        return;
+        if (!infoContainer || !infoContent) {
+            console.warn('Planet info panel not found');
+            return;
+        }
+
+        if (placeholderContainer) {
+            placeholderContainer.classList.add('hidden');
+        }
+        infoContainer.classList.remove('hidden');
+
+        if (typeof htmx !== 'undefined') {
+            htmx.ajax('GET', `/deep_dives/planet/${planet.name}/`, {
+                target: '#planet-info-content',
+                swap: 'innerHTML'
+            });
+        } else {
+            console.warn('HTMX not loaded');
+        }
     }
 
-    // Hide placeholder, show info panel
-    if (placeholderContainer) {
-        placeholderContainer.classList.add('hidden');
+    showAspectInfo(aspect) {
+        const infoContainer = document.getElementById('planet-info');
+        const placeholderContainer = document.getElementById('planet-info-placeholder');
+        const infoContent = document.getElementById('planet-info-content');
+
+        if (!infoContainer || !infoContent) {
+            console.warn('Planet info panel not found');
+            return;
+        }
+
+        if (placeholderContainer) {
+            placeholderContainer.classList.add('hidden');
+        }
+        infoContainer.classList.remove('hidden');
+
+        if (typeof htmx !== 'undefined') {
+            htmx.ajax('GET', `/deep_dives/aspect/${aspect.planet1}/${aspect.planet2}/${aspect.aspect_type}/`, {
+                target: '#planet-info-content',
+                swap: 'innerHTML'
+            });
+        } else {
+            console.warn('HTMX not loaded');
+        }
     }
-    infoContainer.classList.remove('hidden');
-
-    // Use HTMX to fetch planet details from Django view
-    // This replaces all the innerHTML generation with a server request
-    htmx.ajax('GET', `/deep_dives/planet/${planet.name}/`, {
-        target: '#planet-info-content',
-        swap: 'innerHTML'
-    });
-
-    
-}
-
-showAspectInfo(aspect) {
-    const infoContainer = document.getElementById('planet-info');
-    const placeholderContainer = document.getElementById('planet-info-placeholder');
-    const infoContent = document.getElementById('planet-info-content');
-
-    if (!infoContainer || !infoContent) {
-        console.warn('Planet info panel not found');
-        return;
-    }
-
-    // Hide placeholder, show info panel
-    if (placeholderContainer) {
-        placeholderContainer.classList.add('hidden');
-    }
-    infoContainer.classList.remove('hidden');
-
-    // Use HTMX to fetch aspect details from Django view
-    // aspect object should have: planet1, planet2, aspect_type
-    htmx.ajax('GET', `/deep_dives/aspect/${aspect.planet1}/${aspect.planet2}/${aspect.aspect_type}/`, {
-        target: '#planet-info-content',
-        swap: 'innerHTML'
-    });
-}
-
-
 }
 
 // Initialize global instance
