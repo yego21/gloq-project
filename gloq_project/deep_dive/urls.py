@@ -22,6 +22,17 @@ urlpatterns = [
     path('mystical/tarot_card_history', mystical_views.tarot_card_history, name='tarot_card_history'),
     path('mystical/draw_tarot_spread', mystical_views.draw_tarot_spread, name='draw_tarot_spread'),
 
+    # Planet Modal Endpoints
+    path('planet/<str:planet_name>/meaning/',
+         mystical_views.planet_meaning,
+         name='planet_meaning'),
+
+    path('planet/<str:planet_name>/journals/',
+         mystical_views.planet_journals,
+         name='planet_journals'),
+
+
+
     # AI Reading endpoints
     path('ai-reading/generate/',
          mystical_views.generate_ai_reading,

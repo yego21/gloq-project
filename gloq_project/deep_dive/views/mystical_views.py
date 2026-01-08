@@ -479,6 +479,270 @@ def astro_birth_chart(request):
     })
 
 
+@login_required
+def planet_meaning(request, planet_name):
+    """
+    Returns detailed astrological interpretation for a specific planet.
+    Loads via HTMX into the General Meaning section.
+    """
+    try:
+        birth_profile = BirthProfile.objects.get(user=request.user)
+        natal_chart_data = birth_profile.cached_chart_data
+
+        if not natal_chart_data:
+            return HttpResponse(
+                '<p class="text-red-400 text-sm">Chart data not available</p>',
+                status=404
+            )
+
+        # Find the planet
+        planet = next(
+            (p for p in natal_chart_data.get('planets', []) if p['name'] == planet_name),
+            None
+        )
+
+        if not planet:
+            return HttpResponse(
+                f'<p class="text-red-400 text-sm">Planet {planet_name} not found</p>',
+                status=404
+            )
+
+        # Get aspects involving this planet
+        planet_aspects = [
+            aspect for aspect in natal_chart_data.get('aspects', [])
+            if aspect['planet1'] == planet_name or aspect['planet2'] == planet_name
+        ]
+
+        # Generate interpretation based on planet placement
+        interpretation = generate_planet_interpretation(
+            planet_name=planet_name,
+            sign=planet['sign'],
+            house=planet.get('house'),
+            degree=planet.get('degree'),
+            is_retrograde=planet.get('is_retrograde', False),
+            aspects=planet_aspects
+        )
+
+        context = {
+            'planet': planet,
+            'interpretation': interpretation,
+            'planet_aspects': planet_aspects[:3],  # Show top 3 aspects
+        }
+
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/planet_meaning.html',
+            context
+        )
+
+    except BirthProfile.DoesNotExist:
+        return HttpResponse(
+            '<p class="text-red-400 text-sm">Birth profile not found</p>',
+            status=404
+        )
+    except Exception as e:
+        return HttpResponse(
+            f'<p class="text-red-400 text-sm">Error: {str(e)}</p>',
+            status=500
+        )
+
+
+@login_required
+def planet_journals(request, planet_name):
+    """
+    Returns journal entries tagged with this planetary placement.
+    Loads via HTMX into the Journal Entries section.
+    """
+    try:
+        birth_profile = BirthProfile.objects.get(user=request.user)
+        natal_chart_data = birth_profile.cached_chart_data
+
+        if not natal_chart_data:
+            return render(
+                request,
+                'deep_dive/mystical/astrology/partials/planet_journals.html',
+                {'journals': [], 'planet_name': planet_name, 'error': 'No chart data'}
+            )
+
+        # Find the planet to get its sign
+        planet = next(
+            (p for p in natal_chart_data.get('planets', []) if p['name'] == planet_name),
+            None
+        )
+
+        if not planet:
+            return render(
+                request,
+                'deep_dive/mystical/astrology/partials/planet_journals.html',
+                {'journals': [], 'planet_name': planet_name}
+            )
+
+        # Query journal entries
+        # Adjust this based on your Journal model structure
+        from journal.models import JournalEntry  # Adjust import path
+
+        # Example: Filter by tags or custom fields
+        # You might have tags like "Sun in Capricorn", "Venus in Aquarius", etc.
+        search_tag = f"{planet_name} in {planet['sign']}"
+
+        journals = JournalEntry.objects.filter(
+            user=request.user
+        ).filter(
+            # Adjust this query based on how you store tags/placements
+            # Option 1: If you have a tags field
+            # tags__name__icontains=planet_name
+            # Option 2: If you have a placements field
+            # placements__planet=planet_name
+            # Option 3: Search in content
+            content__icontains=planet_name
+        ).order_by('-created_at')[:10]
+
+        context = {
+            'journals': journals,
+            'planet_name': planet_name,
+            'planet_sign': planet['sign'],
+            'planet_house': planet.get('house'),
+        }
+
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/planet_journals.html',
+            context
+        )
+
+    except BirthProfile.DoesNotExist:
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/planet_journals.html',
+            {'journals': [], 'planet_name': planet_name, 'error': 'No profile'}
+        )
+    except Exception as e:
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/planet_journals.html',
+            {'journals': [], 'planet_name': planet_name, 'error': str(e)}
+        )
+
+
+
+# ============================================
+# HELPER FUNCTION: Generate Interpretation
+# ============================================
+
+def generate_planet_interpretation(planet_name, sign, house, degree, is_retrograde, aspects):
+    """
+    Generates astrological interpretation for a planet placement.
+    You can expand this with a database of interpretations or API calls.
+    """
+
+    # Basic interpretation templates
+    interpretations = {
+        'Sun': {
+            'core': f"The Sun represents your core identity, ego, and life force. In {sign}, your essential self expresses through the qualities of this sign.",
+            'keywords': ['Identity', 'Vitality', 'Purpose', 'Ego', 'Willpower']
+        },
+        'Moon': {
+            'core': f"The Moon governs your emotional nature, instincts, and subconscious patterns. In {sign}, your emotional responses are colored by this sign's energy.",
+            'keywords': ['Emotions', 'Instincts', 'Needs', 'Security', 'Memory']
+        },
+        'Mercury': {
+            'core': f"Mercury rules communication, thinking, and information processing. In {sign}, your mental approach and communication style reflect this sign's characteristics.",
+            'keywords': ['Communication', 'Thinking', 'Learning', 'Logic', 'Expression']
+        },
+        'Venus': {
+            'core': f"Venus represents love, beauty, values, and attraction. In {sign}, your approach to relationships and aesthetics is influenced by this sign.",
+            'keywords': ['Love', 'Beauty', 'Values', 'Relationships', 'Pleasure']
+        },
+        'Mars': {
+            'core': f"Mars governs action, desire, and assertion. In {sign}, your drive and how you pursue goals is shaped by this sign's energy.",
+            'keywords': ['Action', 'Drive', 'Passion', 'Courage', 'Assertion']
+        },
+        'Jupiter': {
+            'core': f"Jupiter represents expansion, wisdom, and fortune. In {sign}, your growth opportunities and philosophical outlook are colored by this sign.",
+            'keywords': ['Growth', 'Wisdom', 'Luck', 'Philosophy', 'Expansion']
+        },
+        'Saturn': {
+            'core': f"Saturn rules structure, responsibility, and life lessons. In {sign}, your approach to discipline and long-term goals reflects this sign's nature.",
+            'keywords': ['Structure', 'Discipline', 'Responsibility', 'Lessons', 'Maturity']
+        },
+        'Uranus': {
+            'core': f"Uranus represents innovation, rebellion, and sudden change. In {sign}, your unique expression and revolutionary tendencies are influenced by this sign.",
+            'keywords': ['Innovation', 'Freedom', 'Revolution', 'Uniqueness', 'Change']
+        },
+        'Neptune': {
+            'core': f"Neptune governs dreams, spirituality, and illusion. In {sign}, your spiritual path and creative imagination are colored by this sign's energy.",
+            'keywords': ['Dreams', 'Spirituality', 'Intuition', 'Imagination', 'Transcendence']
+        },
+        'Pluto': {
+            'core': f"Pluto rules transformation, power, and the unconscious. In {sign}, your capacity for deep change and regeneration is shaped by this sign.",
+            'keywords': ['Transformation', 'Power', 'Rebirth', 'Intensity', 'Depth']
+        },
+        'Chiron': {
+            'core': f"Chiron represents your deepest wound and greatest healing potential. In {sign}, your path to wholeness involves healing through this sign's themes.",
+            'keywords': ['Healing', 'Wounding', 'Teaching', 'Wisdom', 'Integration']
+        },
+        'North Node': {
+            'core': f"The North Node shows your soul's growth direction in this lifetime. In {sign}, you're learning to develop the positive qualities of this sign.",
+            'keywords': ['Destiny', 'Growth', 'Purpose', 'Evolution', 'Future']
+        },
+        'South Node': {
+            'core': f"The South Node represents past life talents and comfort zones. In {sign}, you have natural abilities but may need to release over-reliance on them.",
+            'keywords': ['Past', 'Talents', 'Karma', 'Release', 'Comfort Zone']
+        },
+        'Lilith': {
+            'core': f"Lilith represents your shadow self and primal power. In {sign}, your raw, unfiltered energy and taboo desires express through this sign.",
+            'keywords': ['Shadow', 'Power', 'Sexuality', 'Authenticity', 'Rebellion']
+        },
+    }
+
+    base_interp = interpretations.get(planet_name, {
+        'core': f"{planet_name} in {sign} brings unique energies to your chart.",
+        'keywords': ['Energy', 'Expression', 'Influence']
+    })
+
+    # Add house context
+    house_meaning = ""
+    if house:
+        house_themes = {
+            1: "self-identity and personal appearance",
+            2: "personal resources and values",
+            3: "communication and learning",
+            4: "home and family roots",
+            5: "creativity and self-expression",
+            6: "health and daily routines",
+            7: "partnerships and relationships",
+            8: "transformation and shared resources",
+            9: "higher learning and philosophy",
+            10: "career and public image",
+            11: "friendships and aspirations",
+            12: "spirituality and the unconscious"
+        }
+        house_meaning = f" In your {house}th house, this energy manifests in matters of {house_themes.get(house, 'life experience')}."
+
+    # Add retrograde context
+    retrograde_note = ""
+    if is_retrograde:
+        retrograde_note = " ℞ The retrograde motion suggests this planet's energy is turned inward, requiring deeper internal processing and reflection."
+
+    # Build personal interpretation
+    personal_interpretation = f"{base_interp['core']}{house_meaning}{retrograde_note}"
+
+    # Add aspect influences
+    if aspects:
+        aspect_summary = f" This placement is emphasized by {len(aspects)} major aspect(s), adding layers of complexity and connection to other planetary energies in your chart."
+        personal_interpretation += aspect_summary
+
+    return {
+        'core_meaning': base_interp['core'],
+        'personal_interpretation': personal_interpretation,
+        'keywords': base_interp['keywords'],
+        'degree': degree,
+        'house': house,
+        'is_retrograde': is_retrograde,
+        'aspect_count': len(aspects) if aspects else 0
+    }
+
+
 def astro_ai_readings(request):
     """
     Returns AI readings dashboard section
