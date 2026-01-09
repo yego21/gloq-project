@@ -17,7 +17,7 @@
                         
                         <!-- View Full Chart Button (Mobile Only) -->
                         <button class="lg:hidden mystical-btn w-full px-6 py-2.5 rounded-full text-sm font-semibold hover:scale-105 transition-transform mt-4"
-                                hx-get="{% url 'deep_dive:unified_chart_modal' %}"
+                                hx-get="{% url 'deep_dive:chart_details_modal' %}"
                                 hx-target="#chart-modal-content"
                                 hx-swap="innerHTML"
                                 hx-on::after-request="document.getElementById('chart-modal').classList.add('active')">
@@ -190,7 +190,7 @@
                 <div class="desktop-chart-container cosmic-border h-full">
                     <div class="mystical-card rounded-2xl p-6 h-full">
                         <div id="desktop-chart-analysis"
-                             hx-get="{% url 'deep_dive:unified_chart_modal' %}"
+                             hx-get="{% url 'deep_dive:chart_details_modal' %}"
                              hx-trigger="intersect once, load"
                              hx-swap="innerHTML"
                              class="h-full">

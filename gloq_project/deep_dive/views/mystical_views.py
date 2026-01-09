@@ -407,21 +407,7 @@ def birth_chart_view(request):
         })
 
 
-# ============================================
-# PLANET DETAIL VIEWS (for HTMX in modal)
-# ============================================
 
-@login_required
-def planet_meaning(request, planet_name):
-    """Loads planet interpretation via HTMX"""
-    # (Keep as-is from previous artifact)
-    pass
-
-@login_required
-def planet_journals(request, planet_name):
-    """Loads planet journals via HTMX"""
-    # (Keep as-is from previous artifact)
-    pass
 
 @login_required
 def save_planet_note(request, planet_name):
@@ -458,6 +444,7 @@ def astro_birth_chart(request):
     if natal_chart:
         sun_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Sun'), None)
         moon_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Moon'), None)
+
 
         chart_context = {
             'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
@@ -625,121 +612,522 @@ def planet_journals(request, planet_name):
 
 
 
-# ============================================
-# HELPER FUNCTION: Generate Interpretation
-# ============================================
-
-def generate_planet_interpretation(planet_name, sign, house, degree, is_retrograde, aspects):
+def generate_planet_interpretation(
+    planet_name,
+    sign,
+    house,
+    degree,
+    is_retrograde,
+    aspects
+):
     """
-    Generates astrological interpretation for a planet placement.
-    You can expand this with a database of interpretations or API calls.
+    Generates a comprehensive astrological interpretation for a planetary placement.
+    Designed for extensibility: natal, transit, synastry, or report generation.
     """
 
-    # Basic interpretation templates
-    interpretations = {
+    # =========================
+    # CORE ASTROLOGICAL DATABASE
+    # =========================
+
+    PLANET_DATA = {
         'Sun': {
-            'core': f"The Sun represents your core identity, ego, and life force. In {sign}, your essential self expresses through the qualities of this sign.",
-            'keywords': ['Identity', 'Vitality', 'Purpose', 'Ego', 'Willpower']
+            'core': "The Sun represents identity, vitality, ego, and life purpose.",
+            'function': "how you shine, create meaning, and express your essential self",
+            'keywords': ['Identity', 'Vitality', 'Purpose', 'Willpower', 'Ego']
         },
         'Moon': {
-            'core': f"The Moon governs your emotional nature, instincts, and subconscious patterns. In {sign}, your emotional responses are colored by this sign's energy.",
+            'core': "The Moon governs emotions, instincts, and subconscious patterns.",
+            'function': "how you feel, nurture, and seek emotional security",
             'keywords': ['Emotions', 'Instincts', 'Needs', 'Security', 'Memory']
         },
         'Mercury': {
-            'core': f"Mercury rules communication, thinking, and information processing. In {sign}, your mental approach and communication style reflect this sign's characteristics.",
-            'keywords': ['Communication', 'Thinking', 'Learning', 'Logic', 'Expression']
+            'core': "Mercury rules thinking, communication, and perception.",
+            'function': "how you process information and express ideas",
+            'keywords': ['Communication', 'Logic', 'Learning', 'Speech', 'Mind']
         },
         'Venus': {
-            'core': f"Venus represents love, beauty, values, and attraction. In {sign}, your approach to relationships and aesthetics is influenced by this sign.",
-            'keywords': ['Love', 'Beauty', 'Values', 'Relationships', 'Pleasure']
+            'core': "Venus governs love, values, attraction, and harmony.",
+            'function': "how you relate, love, and find pleasure",
+            'keywords': ['Love', 'Values', 'Beauty', 'Relationships', 'Pleasure']
         },
         'Mars': {
-            'core': f"Mars governs action, desire, and assertion. In {sign}, your drive and how you pursue goals is shaped by this sign's energy.",
+            'core': "Mars governs action, drive, desire, and assertion.",
+            'function': "how you pursue goals and assert your will",
             'keywords': ['Action', 'Drive', 'Passion', 'Courage', 'Assertion']
         },
         'Jupiter': {
-            'core': f"Jupiter represents expansion, wisdom, and fortune. In {sign}, your growth opportunities and philosophical outlook are colored by this sign.",
-            'keywords': ['Growth', 'Wisdom', 'Luck', 'Philosophy', 'Expansion']
+            'core': "Jupiter represents growth, wisdom, and expansion.",
+            'function': "how you seek meaning, opportunity, and faith",
+            'keywords': ['Growth', 'Wisdom', 'Luck', 'Beliefs', 'Expansion']
         },
         'Saturn': {
-            'core': f"Saturn rules structure, responsibility, and life lessons. In {sign}, your approach to discipline and long-term goals reflects this sign's nature.",
-            'keywords': ['Structure', 'Discipline', 'Responsibility', 'Lessons', 'Maturity']
+            'core': "Saturn rules discipline, structure, and karmic lessons.",
+            'function': "how you build stability through responsibility",
+            'keywords': ['Structure', 'Discipline', 'Responsibility', 'Boundaries', 'Maturity']
         },
         'Uranus': {
-            'core': f"Uranus represents innovation, rebellion, and sudden change. In {sign}, your unique expression and revolutionary tendencies are influenced by this sign.",
-            'keywords': ['Innovation', 'Freedom', 'Revolution', 'Uniqueness', 'Change']
+            'core': "Uranus represents innovation, rebellion, and awakening.",
+            'function': "how you seek freedom and express uniqueness",
+            'keywords': ['Innovation', 'Change', 'Freedom', 'Rebellion', 'Awakening']
         },
         'Neptune': {
-            'core': f"Neptune governs dreams, spirituality, and illusion. In {sign}, your spiritual path and creative imagination are colored by this sign's energy.",
-            'keywords': ['Dreams', 'Spirituality', 'Intuition', 'Imagination', 'Transcendence']
+            'core': "Neptune governs spirituality, dreams, and transcendence.",
+            'function': "how you dissolve boundaries and seek higher truth",
+            'keywords': ['Spirituality', 'Dreams', 'Illusion', 'Compassion', 'Mysticism']
         },
         'Pluto': {
-            'core': f"Pluto rules transformation, power, and the unconscious. In {sign}, your capacity for deep change and regeneration is shaped by this sign.",
-            'keywords': ['Transformation', 'Power', 'Rebirth', 'Intensity', 'Depth']
+            'core': "Pluto rules transformation, power, and regeneration.",
+            'function': "how you confront shadow and undergo deep change",
+            'keywords': ['Transformation', 'Power', 'Intensity', 'Rebirth', 'Depth']
         },
         'Chiron': {
-            'core': f"Chiron represents your deepest wound and greatest healing potential. In {sign}, your path to wholeness involves healing through this sign's themes.",
-            'keywords': ['Healing', 'Wounding', 'Teaching', 'Wisdom', 'Integration']
+            'core': "Chiron represents the wounded healer archetype.",
+            'function': "where healing, teaching, and integration occur",
+            'keywords': ['Healing', 'Wound', 'Wisdom', 'Integration', 'Teaching']
         },
         'North Node': {
-            'core': f"The North Node shows your soul's growth direction in this lifetime. In {sign}, you're learning to develop the positive qualities of this sign.",
+            'core': "The North Node indicates evolutionary growth and soul direction.",
+            'function': "where your soul is learning to grow",
             'keywords': ['Destiny', 'Growth', 'Purpose', 'Evolution', 'Future']
         },
         'South Node': {
-            'core': f"The South Node represents past life talents and comfort zones. In {sign}, you have natural abilities but may need to release over-reliance on them.",
-            'keywords': ['Past', 'Talents', 'Karma', 'Release', 'Comfort Zone']
+            'core': "The South Node reflects past patterns and karmic comfort zones.",
+            'function': "where habits must be released or balanced",
+            'keywords': ['Past', 'Karma', 'Habits', 'Release', 'Familiarity']
         },
         'Lilith': {
-            'core': f"Lilith represents your shadow self and primal power. In {sign}, your raw, unfiltered energy and taboo desires express through this sign.",
-            'keywords': ['Shadow', 'Power', 'Sexuality', 'Authenticity', 'Rebellion']
+            'core': "Lilith represents raw instinct, shadow, and primal autonomy.",
+            'function': "how untamed power and suppressed truth emerge",
+            'keywords': ['Shadow', 'Power', 'Sexuality', 'Autonomy', 'Rebellion']
+        }
+    }
+
+    SIGN_DATA = {
+        sign: {
+            'expression': f"{sign} colors this planet with its distinctive qualities.",
+            'mode': "how the planetary energy is expressed through temperament and style"
+        }
+    }
+
+    HOUSE_DATA = {
+        1: "identity, self-image, and personal expression",
+        2: "values, resources, and self-worth",
+        3: "communication, learning, and mindset",
+        4: "home, roots, and emotional foundation",
+        5: "creativity, joy, and self-expression",
+        6: "work, health, and daily routines",
+        7: "partnerships, marriage, and cooperation",
+        8: "transformation, intimacy, and shared resources",
+        9: "beliefs, philosophy, and higher learning",
+        10: "career, reputation, and public life",
+        11: "friendships, networks, and aspirations",
+        12: "subconscious, spirituality, and solitude"
+    }
+
+    RETROGRADE_MEANING = (
+        "The retrograde motion internalizes this planet’s energy, "
+        "indicating reflection, revision, and karmic processing."
+    )
+
+    # =========================
+    # INTERPRETATION ASSEMBLY
+    # =========================
+
+    planet = PLANET_DATA.get(planet_name, {
+        'core': f"{planet_name} represents a unique energetic influence.",
+        'function': "how this planetary force operates",
+        'keywords': ['Energy', 'Influence']
+    })
+
+    interpretation_parts = []
+
+    # Core meaning
+    interpretation_parts.append(
+        f"{planet['core']} It describes {planet['function']}."
+    )
+
+    # Sign expression
+    interpretation_parts.append(
+        f"In {sign}, this energy is expressed through the qualities and style of {sign}."
+    )
+
+    # House placement
+    if house:
+        house_theme = HOUSE_DATA.get(house, "life experience")
+        interpretation_parts.append(
+            f"Placed in the {house}th house, this planet manifests in matters of {house_theme}."
+        )
+
+    # Degree emphasis (open-ended hook)
+    if degree is not None:
+        interpretation_parts.append(
+            f"At {degree}°, this placement carries a specific emphasis that can refine timing, intensity, or mastery."
+        )
+
+    # Retrograde influence
+    if is_retrograde:
+        interpretation_parts.append(f"℞ {RETROGRADE_MEANING}")
+
+    # Aspect synthesis
+    aspect_count = len(aspects) if aspects else 0
+    if aspect_count > 0:
+        interpretation_parts.append(
+            f"This planet forms {aspect_count} significant aspect(s), "
+            "interweaving its expression with other planetary forces in the chart."
+        )
+
+    personal_interpretation = " ".join(interpretation_parts)
+
+    # =========================
+    # FINAL OUTPUT
+    # =========================
+
+    return {
+        'planet': planet_name,
+        'sign': sign,
+        'house': house,
+        'degree': degree,
+        'is_retrograde': is_retrograde,
+        'aspect_count': aspect_count,
+        'keywords': planet['keywords'],
+        'core_meaning': planet['core'],
+        'personal_interpretation': personal_interpretation
+    }
+
+
+def generate_aspect_interpretation(planet1, planet2, aspect_type, orb):
+    """
+    Generates a comprehensive interpretation for a specific aspect between two planets.
+    Returns detailed, personalized meaning based on the planetary combination.
+    """
+
+    # =========================
+    # PLANET ARCHETYPES
+    # =========================
+
+    PLANET_ARCHETYPES = {
+        'Sun': {'essence': 'core identity', 'verb': 'shine', 'energy': 'vital force'},
+        'Moon': {'essence': 'emotional nature', 'verb': 'feel', 'energy': 'instinctual response'},
+        'Mercury': {'essence': 'mental patterns', 'verb': 'think and communicate', 'energy': 'intellectual processing'},
+        'Venus': {'essence': 'values and attractions', 'verb': 'love and appreciate', 'energy': 'relational harmony'},
+        'Mars': {'essence': 'drive and desire', 'verb': 'act and assert', 'energy': 'motivational force'},
+        'Jupiter': {'essence': 'expansion and beliefs', 'verb': 'grow and explore', 'energy': 'optimistic faith'},
+        'Saturn': {'essence': 'structure and limits', 'verb': 'commit and discipline',
+                   'energy': 'crystallizing maturity'},
+        'Uranus': {'essence': 'innovation and freedom', 'verb': 'awaken and liberate',
+                   'energy': 'revolutionary change'},
+        'Neptune': {'essence': 'spirituality and dreams', 'verb': 'dissolve and transcend',
+                    'energy': 'mystical connection'},
+        'Pluto': {'essence': 'transformation and power', 'verb': 'transform and regenerate',
+                  'energy': 'intense rebirth'},
+        'Chiron': {'essence': 'wound and healing', 'verb': 'heal and teach', 'energy': 'wounded wisdom'},
+        'North Node': {'essence': 'evolutionary direction', 'verb': 'evolve toward', 'energy': 'karmic growth'},
+        'South Node': {'essence': 'past patterns', 'verb': 'release from', 'energy': 'karmic familiarity'},
+        'Lilith': {'essence': 'shadow power', 'verb': 'reclaim autonomy', 'energy': 'primal authenticity'},
+    }
+
+    # =========================
+    # ASPECT-SPECIFIC DYNAMICS
+    # =========================
+
+    ASPECT_DYNAMICS = {
+        'Conjunction': {
+            'relationship': 'merges',
+            'dynamic': 'These energies blend into a unified force, amplifying each other',
+            'experience': 'You experience these planets as inseparable—they work as one',
+            'integration': 'The key is learning to express both energies simultaneously without one overpowering the other',
+        },
+        'Opposition': {
+            'relationship': 'polarizes',
+            'dynamic': 'These energies pull in opposite directions, creating conscious awareness',
+            'experience': 'You may feel torn between these two needs, often seeing one reflected in others',
+            'integration': 'The key is finding the middle ground and integrating both perspectives',
+        },
+        'Trine': {
+            'relationship': 'harmonizes with',
+            'dynamic': 'These energies flow together naturally and effortlessly',
+            'experience': 'This combination feels innate—talents here come easily to you',
+            'integration': 'The key is actively developing these natural gifts rather than taking them for granted',
+        },
+        'Square': {
+            'relationship': 'challenges',
+            'dynamic': 'These energies create internal friction that demands action',
+            'experience': 'You feel motivated tension between these areas, pushing you to grow',
+            'integration': 'The key is using this dynamic tension as fuel for achievement and mastery',
+        },
+        'Sextile': {
+            'relationship': 'cooperates with',
+            'dynamic': 'These energies support each other when you take initiative',
+            'experience': 'Opportunities arise naturally, but require your conscious engagement',
+            'integration': 'The key is actively pursuing the supportive connections this aspect offers',
+        },
+        'Quincunx': {
+            'relationship': 'awkwardly connects with',
+            'dynamic': 'These energies don\'t naturally understand each other, requiring constant adjustment',
+            'experience': 'You feel a persistent sense of unease, as if these needs speak different languages',
+            'integration': 'The key is developing creative flexibility and accepting the need for ongoing adaptation',
         },
     }
 
-    base_interp = interpretations.get(planet_name, {
-        'core': f"{planet_name} in {sign} brings unique energies to your chart.",
-        'keywords': ['Energy', 'Expression', 'Influence']
+    # =========================
+    # PLANETARY COMBINATIONS
+    # =========================
+
+    def get_combination_meaning(p1, p2, aspect):
+        """Generate specific interpretation for planet pair"""
+
+        # Normalize planet order for lookup
+        combo_key = tuple(sorted([p1, p2]))
+
+        COMBINATIONS = {
+            ('Sun', 'Moon'): {
+                'essence': 'conscious identity with emotional needs',
+                'Conjunction': 'Your sense of self and emotional nature are unified—what you want aligns with what you need.',
+                'Opposition': 'You balance between your personal goals (Sun) and emotional security (Moon), often seeing one in relationships.',
+                'Trine': 'Your ego and emotions work harmoniously together—you naturally express feelings in healthy ways.',
+                'Square': 'Internal tension between what you want to be and what you need emotionally drives self-development.',
+                'Sextile': 'Opportunities to integrate your identity with emotional intelligence through conscious effort.',
+            },
+            ('Sun', 'Mercury'): {
+                'essence': 'identity with mental expression',
+                'Conjunction': 'Your sense of self and thinking are merged—you think about yourself and express your identity mentally.',
+                'Opposition': 'Objectivity about your identity; you can step back and think about yourself clearly.',
+                'Trine': 'Natural ability to articulate who you are and communicate your authentic self.',
+                'Square': 'Tension between ego and logic drives you to refine self-expression and communication.',
+                'Sextile': 'Opportunities to develop communication skills that authentically represent your identity.',
+            },
+            ('Sun', 'Venus'): {
+                'essence': 'identity with values and love',
+                'Conjunction': 'Who you are and what you love are inseparable—your identity IS your values and relationships.',
+                'Opposition': 'You seek yourself through relationships, learning self-worth through others.',
+                'Trine': 'Natural charm and ease in expressing yourself lovingly; creativity flows effortlessly.',
+                'Square': 'Creative tension between ego and relationships drives artistic development and self-worth work.',
+                'Sextile': 'Opportunities to develop talents in art, relationships, or self-expression through practice.',
+            },
+            ('Sun', 'Mars'): {
+                'essence': 'identity with action and desire',
+                'Conjunction': 'Your will and action are one—you naturally assert yourself with confidence.',
+                'Opposition': 'You learn assertiveness through others; partners may reflect your warrior energy.',
+                'Trine': 'Natural courage and ability to pursue goals confidently without internal conflict.',
+                'Square': 'Dynamic tension between ego and action creates ambitious drive and competitive spirit.',
+                'Sextile': 'Opportunities to develop confidence and assertiveness through taking action.',
+            },
+            ('Sun', 'Jupiter'): {
+                'essence': 'identity with expansion and faith',
+                'Conjunction': 'Your identity expands naturally—you radiate optimism and philosophical confidence.',
+                'Opposition': 'You grow through relationships and see your potential reflected in others.',
+                'Trine': 'Natural luck and optimism; doors open easily and faith in yourself is strong.',
+                'Square': 'Over-expansion drives growth; learning to balance confidence with realistic self-assessment.',
+                'Sextile': 'Opportunities for growth and learning when you actively pursue knowledge and experience.',
+            },
+            ('Sun', 'Saturn'): {
+                'essence': 'identity with structure and limits',
+                'Conjunction': 'Your identity is shaped by discipline, responsibility, and earned authority.',
+                'Opposition': 'You learn self-mastery through relationships and external structures.',
+                'Trine': 'Natural ability to build lasting achievements through patient, disciplined effort.',
+                'Square': 'Father issues or authority struggles drive you to develop authentic inner authority.',
+                'Sextile': 'Opportunities to develop maturity and discipline through consistent effort.',
+            },
+            ('Sun', 'Uranus'): {
+                'essence': 'identity with innovation and freedom',
+                'Conjunction': 'Your identity IS uniqueness—you naturally rebel against convention and awaken others.',
+                'Opposition': 'Freedom needs clash with ego; partners may be unpredictable or awakening.',
+                'Trine': 'Natural ability to innovate and express your unique genius without internal conflict.',
+                'Square': 'Revolutionary tension pushes you toward breakthrough self-expression despite disruption.',
+                'Sextile': 'Opportunities to develop your unique gifts through experimentation and risk-taking.',
+            },
+            ('Sun', 'Neptune'): {
+                'essence': 'identity with spirituality and dreams',
+                'Conjunction': 'Your ego dissolves into universal consciousness—artist, mystic, or both.',
+                'Opposition': 'You seek transcendence through relationships; boundaries with others blur easily.',
+                'Trine': 'Natural creative and spiritual gifts flow effortlessly into self-expression.',
+                'Square': 'Identity confusion or illusion pushes you toward spiritual clarity and creative expression.',
+                'Sextile': 'Opportunities to develop spiritual or creative identity through dedicated practice.',
+            },
+            ('Sun', 'Pluto'): {
+                'essence': 'identity with transformation and power',
+                'Conjunction': 'Your identity undergoes constant death and rebirth—you wield transformative power.',
+                'Opposition': 'You meet your shadow through relationships; others catalyze your transformation.',
+                'Trine': 'Natural ability to transform yourself and wield personal power authentically.',
+                'Square': 'Power struggles and ego death drive profound self-transformation.',
+                'Sextile': 'Opportunities to develop personal power and transformative capacity through intensity.',
+            },
+            ('Moon', 'Mercury'): {
+                'essence': 'emotions with mental expression',
+                'Conjunction': 'Feelings and thoughts merge—you talk about emotions easily but may over-rationalize them.',
+                'Opposition': 'You balance feeling with thinking; may intellectualize emotions or feel your thoughts.',
+                'Trine': 'Natural emotional intelligence—you articulate feelings clearly and think empathetically.',
+                'Square': 'Tension between head and heart drives development of emotional communication skills.',
+                'Sextile': 'Opportunities to develop emotional literacy through journaling, therapy, or communication.',
+            },
+            ('Moon', 'Venus'): {
+                'essence': 'emotions with values and love',
+                'Conjunction': 'Your emotional needs and what you love are unified—you need love to feel secure.',
+                'Opposition': 'You balance personal comfort with relationship harmony; may attract nurturing partners.',
+                'Trine': 'Natural emotional warmth and ease in relationships; you nurture through love.',
+                'Square': 'Tension between security needs and relationship desires drives emotional maturity.',
+                'Sextile': 'Opportunities to cultivate emotional harmony and loving relationships through care.',
+            },
+            ('Moon', 'Mars'): {
+                'essence': 'emotions with action and desire',
+                'Conjunction': 'Your emotions and actions are one—you act on feelings immediately and passionately.',
+                'Opposition': 'You balance emotional safety with assertion; may attract passionate or aggressive partners.',
+                'Trine': 'Natural ability to act on emotions healthily; courage comes from emotional security.',
+                'Square': 'Emotional volatility or anger drives you to develop healthy emotional expression.',
+                'Sextile': 'Opportunities to develop emotional courage and healthy assertion through practice.',
+            },
+            ('Moon', 'Jupiter'): {
+                'essence': 'emotions with expansion and faith',
+                'Conjunction': 'Emotional abundance and optimism—you need freedom and growth to feel secure.',
+                'Opposition': 'You balance emotional needs with adventure; relationships expand your comfort zone.',
+                'Trine': 'Natural emotional generosity and optimism; you nurture through expansion and faith.',
+                'Square': 'Over-emotional expression or restlessness drives growth in emotional wisdom.',
+                'Sextile': 'Opportunities to expand emotional capacity through philosophy, travel, or teaching.',
+            },
+            ('Moon', 'Saturn'): {
+                'essence': 'emotions with structure and limits',
+                'Conjunction': 'Emotional restraint or maturity—you need structure and achievement to feel secure.',
+                'Opposition': 'You balance emotional needs with responsibility; may attract serious or older partners.',
+                'Trine': 'Natural emotional stability and maturity; you build lasting emotional security.',
+                'Square': 'Mother issues or emotional blocks drive development of mature emotional self-sufficiency.',
+                'Sextile': 'Opportunities to develop emotional discipline and lasting security through commitment.',
+            },
+            ('Mercury', 'Venus'): {
+                'essence': 'thinking with values and beauty',
+                'Conjunction': 'Your mind loves beauty—you think about relationships, art, and harmony.',
+                'Opposition': 'You balance logic with aesthetics; may see ideas through relationship lens.',
+                'Trine': 'Natural charm in communication; you speak with grace and think creatively.',
+                'Square': 'Tension between logic and aesthetics drives refined taste and diplomatic skill.',
+                'Sextile': 'Opportunities to develop artistic communication or relationship intelligence.',
+            },
+            ('Mercury', 'Mars'): {
+                'essence': 'thinking with action and assertion',
+                'Conjunction': 'Sharp, quick mind—you think fast, speak assertively, and defend your ideas.',
+                'Opposition': 'You balance thinking with action; may debate or see thoughts through others.',
+                'Trine': 'Natural mental quickness and confident communication; strategic thinking flows.',
+                'Square': 'Mental impatience or argumentativeness drives sharp wit and competitive thinking.',
+                'Sextile': 'Opportunities to develop assertive communication and quick decision-making.',
+            },
+            ('Venus', 'Mars'): {
+                'essence': 'attraction with action',
+                'Conjunction': 'Desire and attraction merge—you pursue what you love passionately and directly.',
+                'Opposition': 'You balance attraction with assertion; dynamic romantic tension and polarity.',
+                'Trine': 'Natural ability to pursue desires and create harmonious passion in relationships.',
+                'Square': 'Creative tension between desire and action drives passionate relationships and art.',
+                'Sextile': 'Opportunities to balance masculine and feminine energies through conscious effort.',
+            },
+            ('Mercury', 'Jupiter'): {
+                'essence': 'thinking with expansion and wisdom',
+                'Conjunction': 'Expansive mind—you think big, philosophically, and optimistically.',
+                'Opposition': 'You balance details with big picture; may see concepts through relationships.',
+                'Trine': 'Natural teaching ability and philosophical wisdom; learning comes easily.',
+                'Square': 'Over-thinking or exaggeration drives refinement of philosophical communication.',
+                'Sextile': 'Opportunities to develop wisdom and teaching skills through study and travel.',
+            },
+            ('Mercury', 'Saturn'): {
+                'essence': 'thinking with structure and discipline',
+                'Conjunction': 'Serious, structured mind—you think methodically, deeply, and responsibly.',
+                'Opposition': 'You balance thinking with structure; may see logic through authority figures.',
+                'Trine': 'Natural mental discipline and ability to master complex subjects through patience.',
+                'Square': 'Mental blocks or learning difficulties drive development of mental mastery.',
+                'Sextile': 'Opportunities to develop disciplined thinking and communication through practice.',
+            },
+            ('Venus', 'Jupiter'): {
+                'essence': 'love with expansion and abundance',
+                'Conjunction': 'Abundant love and generosity—you love expansively and attract abundance.',
+                'Opposition': 'You balance intimacy with freedom in relationships; may attract expansive partners.',
+                'Trine': 'Natural charm, luck in love, and ability to attract what you value effortlessly.',
+                'Square': 'Over-indulgence or excess in pleasure drives development of wise enjoyment.',
+                'Sextile': 'Opportunities to expand love and attract abundance through generous giving.',
+            },
+            ('Venus', 'Saturn'): {
+                'essence': 'love with commitment and limits',
+                'Conjunction': 'Serious love and committed values—you love responsibly and value lasting bonds.',
+                'Opposition': 'You balance pleasure with responsibility; may attract mature or serious partners.',
+                'Trine': 'Natural ability to build lasting relationships and value quality over quantity.',
+                'Square': 'Love lessons or rejection drives development of mature, committed love.',
+                'Sextile': 'Opportunities to develop lasting values and committed relationships through patience.',
+            },
+            ('Mars', 'Jupiter'): {
+                'essence': 'action with expansion and faith',
+                'Conjunction': 'Abundant energy and confidence—you act boldly with faith in success.',
+                'Opposition': 'You balance assertion with expansion; may act through relationships or beliefs.',
+                'Trine': 'Natural ability to take confident action and pursue goals with optimism.',
+                'Square': 'Over-confidence or recklessness drives development of wise, measured action.',
+                'Sextile': 'Opportunities to expand your capacity for courageous action through risk-taking.',
+            },
+            ('Mars', 'Saturn'): {
+                'essence': 'action with discipline and limits',
+                'Conjunction': 'Controlled power—you act with discipline, patience, and strategic restraint.',
+                'Opposition': 'You balance assertion with restraint; may face authority in taking action.',
+                'Trine': 'Natural ability to channel energy productively through disciplined effort.',
+                'Square': 'Frustration or blocked energy drives development of patient, strategic action.',
+                'Sextile': 'Opportunities to develop disciplined action and endurance through commitment.',
+            },
+            ('Jupiter', 'Saturn'): {
+                'essence': 'expansion with structure',
+                'Conjunction': 'The Great Conjunction—you balance growth with responsibility in 20-year cycles.',
+                'Opposition': 'You balance optimism with realism; learning to expand within limits.',
+                'Trine': 'Natural ability to build sustainable growth through wise planning.',
+                'Square': 'Tension between expansion and contraction drives mature development.',
+                'Sextile': 'Opportunities to balance faith with discipline through conscious effort.',
+            },
+        }
+
+        # Get specific combination or return generic
+        combo_data = COMBINATIONS.get(combo_key, {})
+        aspect_text = combo_data.get(aspect,
+                                     f"These planets form a {aspect.lower()}, creating a unique dynamic in your chart.")
+        essence = combo_data.get('essence', 'unique planetary interaction')
+
+        return {
+            'essence': essence,
+            'interpretation': aspect_text
+        }
+
+    # =========================
+    # GENERATE INTERPRETATION
+    # =========================
+
+    p1_data = PLANET_ARCHETYPES.get(planet1, {'essence': 'planetary force', 'verb': 'express', 'energy': 'influence'})
+    p2_data = PLANET_ARCHETYPES.get(planet2, {'essence': 'planetary force', 'verb': 'express', 'energy': 'influence'})
+    aspect_dynamic = ASPECT_DYNAMICS.get(aspect_type, {
+        'relationship': 'connects with',
+        'dynamic': 'These energies interact in unique ways',
+        'experience': 'You experience this planetary connection uniquely',
+        'integration': 'The key is learning to work with both energies',
     })
 
-    # Add house context
-    house_meaning = ""
-    if house:
-        house_themes = {
-            1: "self-identity and personal appearance",
-            2: "personal resources and values",
-            3: "communication and learning",
-            4: "home and family roots",
-            5: "creativity and self-expression",
-            6: "health and daily routines",
-            7: "partnerships and relationships",
-            8: "transformation and shared resources",
-            9: "higher learning and philosophy",
-            10: "career and public image",
-            11: "friendships and aspirations",
-            12: "spirituality and the unconscious"
-        }
-        house_meaning = f" In your {house}th house, this energy manifests in matters of {house_themes.get(house, 'life experience')}."
+    combo = get_combination_meaning(planet1, planet2, aspect_type)
 
-    # Add retrograde context
-    retrograde_note = ""
-    if is_retrograde:
-        retrograde_note = " ℞ The retrograde motion suggests this planet's energy is turned inward, requiring deeper internal processing and reflection."
+    # Build comprehensive interpretation
+    interpretation_parts = []
 
-    # Build personal interpretation
-    personal_interpretation = f"{base_interp['core']}{house_meaning}{retrograde_note}"
+    # Opening: What connects
+    interpretation_parts.append(
+        f"Your {p1_data['essence']} ({planet1}) {aspect_dynamic['relationship']} "
+        f"your {p2_data['essence']} ({planet2})."
+    )
 
-    # Add aspect influences
-    if aspects:
-        aspect_summary = f" This placement is emphasized by {len(aspects)} major aspect(s), adding layers of complexity and connection to other planetary energies in your chart."
-        personal_interpretation += aspect_summary
+    # Specific meaning for this combination
+    interpretation_parts.append(combo['interpretation'])
+
+    # How you experience it
+    interpretation_parts.append(aspect_dynamic['experience'])
+
+    # Integration guidance
+    interpretation_parts.append(aspect_dynamic['integration'])
+
+    full_interpretation = " ".join(interpretation_parts)
 
     return {
-        'core_meaning': base_interp['core'],
-        'personal_interpretation': personal_interpretation,
-        'keywords': base_interp['keywords'],
-        'degree': degree,
-        'house': house,
-        'is_retrograde': is_retrograde,
-        'aspect_count': len(aspects) if aspects else 0
+        'planets': f"{planet1}-{planet2}",
+        'aspect_type': aspect_type,
+        'orb': orb,
+        'essence': combo['essence'],
+        'relationship_dynamic': aspect_dynamic['relationship'],
+        'full_interpretation': full_interpretation,
+        'integration_key': aspect_dynamic['integration'],
     }
 
 
@@ -807,7 +1195,7 @@ import json
 
 
 @login_required
-def unified_chart_modal(request):
+def chart_details_modal(request):
     """
     Serves the unified chart modal with both Chart View and Data View tabs.
     Combines the functionality of the full chart visualization and tabular data.
@@ -822,14 +1210,35 @@ def unified_chart_modal(request):
         natal_chart_data = birth_profile.cached_chart_data
 
         if not natal_chart_data:
-            return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', {
+            return render(request, 'deep_dive/mystical/astrology/chart_details_modal.html', {
                 'error': 'No natal chart data available. Please generate your chart first.',
                 'has_chart': False,
                 'birth_setup_url': reverse('userprofile:birth_profile_setup'),
                 'no_chart': 'NO CHART'
             })
 
+        # Get current planetary positions
+        astro_service = AstronomicalService()
+        current_planetary_data = astro_service.get_daily_planetary_summary()
 
+        # Create a lookup dict for current positions by planet name and sign
+        current_positions_lookup = {}
+        for planet_pos in current_planetary_data.get('planetary_positions', []):
+            planet_name = planet_pos['name']
+            planet_sign = planet_pos['sign']
+            current_positions_lookup[planet_name] = planet_sign
+
+        # Mark natal planets that are currently active (same sign)
+        for planet in natal_chart_data.get('planets', []):
+            planet_name = planet['name']
+            natal_sign = planet['sign']
+
+            # Check if this planet is in the same sign currently
+            if planet_name in current_positions_lookup:
+                current_sign = current_positions_lookup[planet_name]
+                planet['is_currently_active'] = (natal_sign == current_sign)
+            else:
+                planet['is_currently_active'] = False
 
         # Extract summary data for display
         sun_planet = next((p for p in natal_chart_data.get('planets', []) if p['name'] == 'Sun'), None)
@@ -838,8 +1247,10 @@ def unified_chart_modal(request):
 
         # Prepare context
         context = {
-            'birth_profile': birth_profile,
+            # 'birth_profile': birth_profile,
             'natal_chart': natal_chart_data,
+            'current_planetary_data': current_planetary_data,
+            'current_positions_lookup': current_positions_lookup,
             'has_chart': True,
             'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
             'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
@@ -849,20 +1260,21 @@ def unified_chart_modal(request):
             'dominant_element': natal_chart_data.get('dominant_element', 'Spirit'),
         }
 
-        return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', context)
+        return render(request, 'deep_dive/mystical/astrology/chart_details_modal.html', context)
 
     except BirthProfile.DoesNotExist:
-        return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', {
+        return render(request, 'deep_dive/mystical/astrology/chart_details_modal.html', {
             'error': 'No birth profile found. Please create your birth profile first.',
             'has_chart': False,
             'birth_setup_url': reverse('userprofile:birth_profile_setup')
         })
     except Exception as e:
-        return render(request, 'deep_dive/mystical/astrology/chart_modals/unified_chart_modal.html', {
+        return render(request, 'deep_dive/mystical/astrology/chart_details_modal.html', {
             'error': f'Error loading chart data: {str(e)}',
             'has_chart': False,
             'birth_setup_url': reverse('userprofile:birth_profile_setup')
         })
+
 
 
 # Optional: Keep these existing detail views for HTMX interactions in Data View tab
@@ -913,10 +1325,10 @@ def planet_detail(request, planet_name):
         }
 
         context = {
-            'planet': planet,
-            'aspects': planet_aspects,
-            'planet_meaning': planet_meanings.get(planet_name, 'Celestial body'),
-            'element_description': element_descriptions.get(planet.get('element'), ''),
+            # 'planet': planet,
+            # 'aspects': planet_aspects,
+            # 'planet_meaning': planet_meanings.get(planet_name, 'Celestial body'),
+            # 'element_description': element_descriptions.get(planet.get('element'), ''),
         }
 
         return render(request, 'deep_dive/mystical/astrology/chart_modals/_planet_detail.html', context)
@@ -941,7 +1353,9 @@ def aspect_detail(request, planet1, planet2, aspect_type):
         # Find the aspect
         aspect = next((
             a for a in natal_chart.get('aspects', [])
-            if (a['planet1'] == planet1 and a['planet2'] == planet2 and a['aspect_type'] == aspect_type)
+            if ((a['planet1'] == planet1 and a['planet2'] == planet2) or
+                (a['planet1'] == planet2 and a['planet2'] == planet1)) and
+               a['aspect_type'] == aspect_type
         ), None)
 
         if not aspect:
@@ -951,61 +1365,172 @@ def aspect_detail(request, planet1, planet2, aspect_type):
         planet1_data = next((p for p in natal_chart['planets'] if p['name'] == planet1), None)
         planet2_data = next((p for p in natal_chart['planets'] if p['name'] == planet2), None)
 
-        # Aspect interpretations
+        # Generate specific interpretation for this planetary combination
+        aspect_interp = generate_aspect_interpretation(
+            planet1,
+            planet2,
+            aspect_type,
+            aspect.get('orb', 0)
+        )
+
+        # Comprehensive aspect metadata
         aspect_meanings = {
             'Conjunction': {
                 'symbol': '☌',
-                'description': 'A powerful blending of planetary energies. These planets work together as a unified force.',
-                'keywords': 'Unity, Fusion, Intensity, Synthesis',
+                'angle': '0°',
+                'description': 'A powerful blending of planetary energies where two planets unite as one force.',
+                'detailed': 'The conjunction represents the most intense aspect, where planetary energies merge completely. This creates a concentrated point of power in your chart, making these planets work as a unified team. The effects can be amplified for better or worse, depending on the planets involved.',
+                'keywords': 'Unity, Fusion, Intensity, Synthesis, Concentration',
                 'influence': 'Strong and direct impact on personality and life themes.',
                 'nature': 'Neutral to Powerful',
                 'color': 'yellow',
+                'energy': 'Maximum intensity and focus',
+                'challenge': 'May lack objectivity; planets can overshadow each other',
+                'gift': 'Powerful unified expression; concentrated energy for manifestation',
             },
             'Opposition': {
                 'symbol': '☍',
-                'description': 'A dynamic tension between opposing forces. Requires balance and integration.',
-                'keywords': 'Polarity, Balance, Awareness, Projection',
+                'angle': '180°',
+                'description': 'A dynamic tension between opposing forces creating awareness through polarity.',
+                'detailed': 'The opposition pulls you in two directions, creating a see-saw effect that demands balance. This aspect brings external awareness through relationships and projections. You may experience these energies as coming from "out there" until you learn to integrate both sides within yourself.',
+                'keywords': 'Polarity, Balance, Awareness, Projection, Integration',
                 'influence': 'Creates awareness through contrast and relationship dynamics.',
                 'nature': 'Challenging',
                 'color': 'red',
+                'energy': 'Pull between two extremes; seek middle ground',
+                'challenge': 'Can feel torn between conflicting needs or projected onto others',
+                'gift': 'Heightened awareness; ability to see multiple perspectives; relationship wisdom',
             },
             'Trine': {
                 'symbol': '△',
-                'description': 'A harmonious flow of energy. Natural talents and ease in expression.',
-                'keywords': 'Harmony, Flow, Talent, Ease',
-                'influence': 'Supportive aspect that enhances natural abilities.',
+                'angle': '120°',
+                'description': 'A harmonious flow of energy representing natural talents and gifts.',
+                'detailed': 'The trine is the aspect of ease and natural ability. These planets support each other effortlessly, creating talents that feel innate. However, because this energy flows so smoothly, there can be a tendency to take these gifts for granted or not develop them fully.',
+                'keywords': 'Harmony, Flow, Talent, Ease, Natural Gifts',
+                'influence': 'Supportive aspect that enhances natural abilities and self-expression.',
                 'nature': 'Harmonious',
                 'color': 'green',
+                'energy': 'Smooth, flowing, effortless cooperation',
+                'challenge': 'May lead to complacency; gifts can be underutilized',
+                'gift': 'Natural talents; things come easily; inner harmony and confidence',
             },
             'Square': {
                 'symbol': '□',
-                'description': 'A dynamic challenge that motivates growth and action.',
-                'keywords': 'Challenge, Growth, Motivation, Friction',
-                'influence': 'Creates productive tension that drives development.',
+                'angle': '90°',
+                'description': 'A dynamic challenge that creates friction and motivates action.',
+                'detailed': 'The square represents internal tension that drives growth through challenge. These planets are in conflict, creating a motivating friction that pushes you to take action. While uncomfortable, squares are often responsible for the greatest personal development and achievement.',
+                'keywords': 'Challenge, Growth, Motivation, Friction, Action',
+                'influence': 'Creates productive tension that drives development and achievement.',
                 'nature': 'Challenging',
                 'color': 'orange',
+                'energy': 'Dynamic tension; catalyst for action and growth',
+                'challenge': 'Feels like internal struggle; requires effort to resolve',
+                'gift': 'Builds strength through adversity; motivates achievement and mastery',
             },
             'Sextile': {
                 'symbol': '⚹',
-                'description': 'Opportunities for growth through conscious effort.',
-                'keywords': 'Opportunity, Cooperation, Skill, Support',
-                'influence': 'Supportive aspect that requires some initiative to activate.',
+                'angle': '60°',
+                'description': 'Opportunities for growth through conscious effort and skill development.',
+                'detailed': 'The sextile offers supportive energy that requires some initiative to activate. Unlike the trine, which flows automatically, the sextile rewards conscious effort and provides opportunities when you take action. It represents skills that can be developed with practice.',
+                'keywords': 'Opportunity, Cooperation, Skill, Support, Development',
+                'influence': 'Supportive aspect that requires initiative to activate opportunities.',
                 'nature': 'Harmonious',
                 'color': 'blue',
+                'energy': 'Cooperative and supportive when engaged',
+                'challenge': 'Opportunities can be missed if not actively pursued',
+                'gift': 'Accessible talents; supportive connections; learnable skills',
+            },
+            'Quincunx': {
+                'symbol': '⚻',
+                'angle': '150°',
+                'description': 'A subtle tension requiring adjustment and adaptation between incompatible energies.',
+                'detailed': 'The quincunx (or inconjunct) connects planets that have nothing in common by element or modality. This creates a persistent sense of unease that requires constant adjustment. These energies don\'t naturally understand each other, requiring creative solutions and flexibility.',
+                'keywords': 'Adjustment, Adaptation, Tension, Incompatibility, Creativity',
+                'influence': 'Creates a need for continual adaptation and creative problem-solving.',
+                'nature': 'Minor Challenging',
+                'color': 'purple',
+                'energy': 'Awkward, requires constant micro-adjustments',
+                'challenge': 'Feels like trying to fit square peg in round hole',
+                'gift': 'Develops flexibility; unique solutions; creative adaptability',
+            },
+            'Semisquare': {
+                'symbol': '∠',
+                'angle': '45°',
+                'description': 'A minor irritation that creates subtle tension and motivation.',
+                'detailed': 'A softer version of the square, the semisquare creates a background friction that can manifest as minor irritations or nagging tensions. While less intense, it still provides motivating energy for growth and change.',
+                'keywords': 'Friction, Irritation, Minor Challenge, Motivation',
+                'influence': 'Subtle tension that builds over time, motivating gradual change.',
+                'nature': 'Minor Challenging',
+                'color': 'orange',
+                'energy': 'Low-level friction; persistent subtle tension',
+                'challenge': 'Can manifest as minor but persistent annoyances',
+                'gift': 'Gentle push toward growth without overwhelming pressure',
+            },
+            'Sesquisquare': {
+                'symbol': '□∠',
+                'angle': '135°',
+                'description': 'A minor challenging aspect creating restlessness and need for release.',
+                'detailed': 'Also called the sesquiquadrate, this aspect creates a buildup of tension that seeks release through action. It\'s less confrontational than a square but can manifest as internal restlessness or impatience.',
+                'keywords': 'Restlessness, Release, Impatience, Action',
+                'influence': 'Creates building tension that needs periodic release through action.',
+                'nature': 'Minor Challenging',
+                'color': 'orange',
+                'energy': 'Building pressure seeking outlet',
+                'challenge': 'Can lead to impulsive actions or frustration',
+                'gift': 'Motivates taking action; prevents stagnation',
             }
         }
+
+        # Get metadata for this aspect type
+        meaning = aspect_meanings.get(aspect_type, {
+            'symbol': '?',
+            'angle': 'Variable',
+            'description': 'A unique aspect between these planets.',
+            'detailed': 'This is a less common aspect in astrology.',
+            'keywords': 'Unique, Specialized',
+            'influence': 'Specific to this planetary combination.',
+            'nature': 'Variable',
+            'color': 'slate',
+            'energy': 'Depends on planets involved',
+            'challenge': 'Interpretation varies',
+            'gift': 'Unique expression of planetary energies',
+        })
+
+        # Calculate aspect strength based on orb
+        orb = float(aspect.get('orb', 0))
+        if orb <= 1:
+            strength = 'Very Strong'
+            strength_color = 'emerald'
+        elif orb <= 3:
+            strength = 'Strong'
+            strength_color = 'green'
+        elif orb <= 5:
+            strength = 'Moderate'
+            strength_color = 'blue'
+        elif orb <= 7:
+            strength = 'Weak'
+            strength_color = 'slate'
+        else:
+            strength = 'Very Weak'
+            strength_color = 'slate'
 
         context = {
             'aspect': aspect,
             'planet1': planet1_data,
             'planet2': planet2_data,
-            'meaning': aspect_meanings.get(aspect_type, {}),
+            'meaning': meaning,
+            'strength': strength,
+            'strength_color': strength_color,
+            'specific_interpretation': aspect_interp,  # Add the specific interpretation
         }
 
         return render(request, 'deep_dive/mystical/astrology/chart_modals/_aspect_detail.html', context)
 
+    except BirthProfile.DoesNotExist:
+        return JsonResponse({'error': 'Birth profile not found'}, status=404)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        logger.error(f"Error loading aspect detail: {str(e)}")
+        return JsonResponse({'error': 'Failed to load aspect details'}, status=500)
 
 
 # @login_required

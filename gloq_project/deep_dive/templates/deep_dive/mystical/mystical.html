@@ -231,28 +231,18 @@
 </div>
 </div>
 
- <!-- Unified Chart Modal -->
-<div class="modal-overlay" id="chart-modal">
-    <div class="modal-content cosmic-border w-11/12 max-w-7xl my-8">
-        <div class="mystical-card relative rounded-3xl p-8">
-            <!-- Close Button -->
-            <button class="absolute top-6 right-6 text-slate-400 hover:text-purple-300 transition-colors z-50 
-                           w-10 h-10 rounded-full bg-slate-800/50 hover:bg-slate-700/50 
-                           flex items-center justify-center border border-purple-500/20 hover:border-purple-400/40"
-                    onclick="document.getElementById('chart-modal').classList.remove('active')">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-
-            <!-- Modal Body -->
-            <div id="chart-modal-content" class="min-h-[400px] relative">
-                <!-- This will be replaced by HTMX -->
-            </div>
-            
-            <!-- Loading Indicator (shown during HTMX request) -->
-            <div class="htmx-indicator absolute inset-0 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm rounded-3xl">
+<!-- Chart Details Modal - Must be at root level -->
+<div id="chart-details-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-[9999] hidden items-center justify-center p-4">
+    <div class="bg-slate-900 rounded-2xl border border-purple-500/30 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden relative">
+        
+        
+        <!-- Modal Content (populated by HTMX) -->
+        <div id="reading-modal-content" class="overflow-y-auto max-h-[90vh]">
+            <!-- Loading state -->
+            <div class="flex items-center justify-center min-h-[400px]">
                 <div class="text-center">
-                    <i class="fas fa-spinner fa-spin text-5xl text-purple-400 mb-6"></i>
-                    <p class="text-slate-300 text-lg">Loading chart data...</p>
+                    <i class="fas fa-spinner fa-spin text-4xl text-indigo-400 mb-4"></i>
+                    <p class="text-slate-300">Loading reading...</p>
                 </div>
             </div>
         </div>
@@ -386,12 +376,37 @@ document.addEventListener('keydown', function(e) {
 </style>
 
 
+<style>
+
+/* Smooth modal transitions */
+#chart-details-modal
+{
+    transition: opacity 0.2s ease-in-out;
+}
+
+#chart-details-modal.active
+{
+    display: flex !important;
+}
+</style>
+
+
 <script>
 (function() {
     'use strict';
     
     // Initialize navigation system
     function initMysticalNavigation() {
+
+            const container = document.querySelector('.mystical-container');
+        if (container && container.dataset.initialized === 'true') {
+            return; // Skip initialization
+        }
+        
+        // Mark as initialized
+        if (container) {
+            container.dataset.initialized = 'true';
+        }
         const mainNavButtons = document.querySelectorAll('.mystical-main-btn');
         const mainSections = document.querySelectorAll('.mystical-main-section');
         const quickActionCards = document.querySelectorAll('.quick-action-card');

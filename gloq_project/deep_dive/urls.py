@@ -13,7 +13,7 @@ urlpatterns = [
     path('mystical/astro_ai_readings/', mystical_views.astro_ai_readings, name='astro_ai_readings'),
     path('mystical/mystical/', mystical_views.interactive_mystical, name='interactive_mystical'),
     path('mystical/generate-natal-chart/', mystical_views.generate_natal_chart, name='generate_natal_chart'),
-    path('chart/unified/', mystical_views.unified_chart_modal, name='unified_chart_modal'),
+    path('chart/chart_details/', mystical_views.chart_details_modal, name='chart_details_modal'),
     path('planet/<str:planet_name>/', mystical_views.planet_detail, name='planet_detail'),
     path('aspect/<str:planet1>/<str:planet2>/<str:aspect_type>/', mystical_views.aspect_detail, name='aspect_detail'),
 

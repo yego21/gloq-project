@@ -530,7 +530,7 @@ class ChartRenderer {
                     this.addAspectInteractions(path, aspect, style);
                     svg.appendChild(path);
                 }
-                
+                 
                 // Add endpoint markers for significant conjunctions
                 if (style.width > 1) {
                     const marker1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');

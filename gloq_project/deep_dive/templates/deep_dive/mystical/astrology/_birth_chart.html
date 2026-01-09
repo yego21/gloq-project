@@ -292,23 +292,22 @@
 <div class="cosmic-border">
     <div class="mystical-card rounded-2xl p-4 sm:p-6 lg:p-8">
         
-        <!-- Header with View Details Button -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
-            <div>
-                <h4 class="font-semibold text-lg sm:text-xl text-white">Your Natal Chart</h4>
-                <p class="text-xs sm:text-sm text-slate-400 mt-1">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    <span class="hidden sm:inline">Hover or tap planets for quick info</span>
-                    <span class="sm:hidden">Tap planets for info</span>
-                </p>
-            </div>
-            <button onclick="openChartDetailsModal()" 
-                    class="mystical-btn px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm font-semibold hover:scale-105 transition-all flex items-center gap-2 w-full sm:w-auto justify-center">
-                <i class="fas fa-list-ul"></i>
-                View Full Details
-            </button>
-        </div>
-        
+       <!-- Header with View Details Button -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+    <div class="flex-1 min-w-0">
+        <h4 class="font-semibold text-lg sm:text-xl text-white">Your Natal Chart</h4>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">
+            <i class="fas fa-info-circle mr-1"></i>
+            <span class="hidden sm:inline">Hover or tap planets for quick info</span>
+            <span class="sm:hidden">Tap planets for info</span>
+        </p>
+    </div>
+    <button onclick="openChartDetailsModal()" 
+            class="mystical-btn px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm font-semibold hover:scale-105 transition-all flex items-center gap-2 shrink-0">
+        <i class="fas fa-list-ul"></i>
+        View Full Details
+    </button>
+</div>
         <!-- Chart Canvas -->
         <div class="flex justify-center overflow-x-auto">
             <div id="main-chart-wheel" class="min-w-[300px] w-full max-w-[700px]" style="aspect-ratio: 1/1; max-height: 700px;"></div>
@@ -347,7 +346,7 @@
 
 
     <!-- ========================================== -->
-    {% include 'deep_dive/mystical/astrology/chart_details_modal.html' %}
+
 
 {% endif %}
 
@@ -391,11 +390,17 @@ function toggleBirthDetails() {
 
 // Open chart details modal
 function openChartDetailsModal() {
-    const modal = document.getElementById('chart-details-modal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
+    // Use HTMX to fetch reading content into the global modal
+    htmx.ajax('GET', `/deep_dives/chart/chart_details/`, {
+        target: '#chart-details-modal',
+        swap: 'innerHTML'
+    }).then(() => {
+        // Show the global modal
+        const modal = document.getElementById('chart-details-modal');
+        if (modal) {
+            modal.classList.add('active');
+        }
+    });
 }
 
 // Initialize chart
