@@ -1,82 +1,59 @@
-
-# ============================================
-# TEMPLATE PARTIAL 2: planet_journals.html
-# Location: deep_dive/mystical/astrology/partials/planet_journals.html
-# ============================================
-"""
 {% if error %}
-<div class="text-center py-6">
-    <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-red-500/10 flex items-center justify-center">
-        <i class="fas fa-exclamation-circle text-red-400/40 text-xl"></i>
-    </div>
-    <p class="text-sm text-red-400">{{ error }}</p>
+<div class="text-center py-8">
+    <i class="fas fa-exclamation-circle text-slate-500 text-3xl mb-2"></i>
+    <p class="text-sm text-slate-400">{{ error }}</p>
 </div>
-
-{% elif journals %}
+{% elif entries %}
 <div class="space-y-3">
-    <!-- Journal Entries List -->
-    {% for journal in journals %}
-    <div class="bg-slate-800/40 rounded-lg p-3 hover:bg-slate-800/60 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30"
-         onclick="window.location.href='{% url "journal:detail" journal.id %}'">
-        <div class="flex items-start justify-between mb-2">
-            <h5 class="text-sm font-semibold text-slate-200 flex-1">
-                {{ journal.title|truncatewords:8 }}
-            </h5>
-            <span class="text-xs text-slate-500 ml-2 flex-shrink-0">
-                {{ journal.created_at|date:"M j, Y" }}
-            </span>
-        </div>
-        <p class="text-xs text-slate-400 line-clamp-2 leading-relaxed mb-2">
-            {{ journal.content|truncatewords:20|striptags }}
+    <div class="flex items-center justify-between mb-3">
+        <p class="text-xs text-purple-300">
+            <i class="fas fa-check-circle mr-1"></i>
+            {{ total_entries }} entr{{ total_entries|pluralize:"y,ies" }} during {{ planet_name }} in {{ natal_sign }}
         </p>
+    </div>
+    
+    {% for entry in entries %}
+    <div class="bg-slate-800/30 rounded-lg p-4 border border-purple-500/20 hover:border-purple-500/40 transition-colors">
+        <div class="flex items-start justify-between gap-3 mb-2">
+            <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                        {{ entry.match_context.description }}
+                    </span>
+                    <span class="text-xs text-slate-500">
+                        {{ entry.created_at|date:"M d, Y" }}
+                    </span>
+                </div>
+                <p class="text-sm text-slate-300 line-clamp-3">
+                    {{ entry.content }}
+                </p>
+            </div>
+            <a href="{% url 'journal_detail' entry.id %}" 
+               class="flex-shrink-0 text-purple-400 hover:text-purple-300 transition-colors">
+                <i class="fas fa-external-link-alt text-xs"></i>
+            </a>
+        </div>
         
-        <!-- Tags/Mood if available -->
-        {% if journal.mood %}
-        <div class="flex items-center gap-2 mt-2">
-            <span class="text-xs px-2 py-0.5 bg-purple-900/30 text-purple-300 rounded-full">
-                {{ journal.mood }}
+        {% if entry.tags.all %}
+        <div class="flex gap-1 flex-wrap mt-2">
+            {% for tag in entry.tags.all %}
+            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
+                {{ tag.name }}
             </span>
+            {% endfor %}
         </div>
         {% endif %}
     </div>
     {% endfor %}
-    
-    <!-- View All Button -->
-    {% if journals|length >= 10 %}
-    <button class="w-full text-sm text-indigo-400 hover:text-indigo-300 py-2 border border-indigo-500/20 rounded-lg hover:border-indigo-500/40 transition-all">
-        <i class="fas fa-list mr-1"></i>
-        View All Entries
-    </button>
-    {% endif %}
 </div>
-
-<!-- Create New Entry -->
-<div class="mt-4 pt-4 border-t border-indigo-500/10">
-    <button class="w-full bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 border border-purple-500/30 rounded-lg py-3 px-4 transition-all text-sm font-semibold text-purple-200 hover:text-purple-100 flex items-center justify-center gap-2">
-        <i class="fas fa-plus"></i>
-        Create New Journal Entry
-    </button>
-    <p class="text-xs text-slate-500 text-center mt-2">
-        Tagged with "{{ planet_name }} in {{ planet_sign }}"
-    </p>
-</div>
-
 {% else %}
-<!-- Empty State -->
 <div class="text-center py-8">
-    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center">
-        <i class="fas fa-book text-purple-400/40 text-2xl"></i>
+    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-purple-500/10 flex items-center justify-center">
+        <i class="fas fa-book-open text-purple-400/50 text-2xl"></i>
     </div>
-    <h5 class="text-sm font-semibold text-slate-300 mb-2">
-        No Journal Entries Yet
-    </h5>
-    <p class="text-xs text-slate-400 mb-4 max-w-xs mx-auto">
-        Start documenting your experiences with {{ planet_name }} in {{ planet_sign }} to track patterns and insights over time.
+    <p class="text-sm text-slate-400 mb-2">No journal entries found</p>
+    <p class="text-xs text-slate-500">
+        Write entries when {{ planet_name }} returns to {{ natal_sign }} to see them here
     </p>
-    <button class="bg-gradient-to-r from-purple-500/20 to-indigo-500/20 hover:from-purple-500/30 hover:to-indigo-500/30 border border-purple-500/30 rounded-lg py-2.5 px-6 transition-all text-sm font-semibold text-purple-200 hover:text-purple-100 inline-flex items-center gap-2">
-        <i class="fas fa-plus"></i>
-        Create First Entry
-    </button>
 </div>
 {% endif %}
-"""

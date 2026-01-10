@@ -6,7 +6,7 @@ from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import now
 
-from ..models import JournalEntry, Tag
+from ..models import JournalEntry, Tag, DailyPlanetarySnapshot
 from ..forms import JournalEntryForm
 
 
@@ -120,13 +120,15 @@ def submit_journal_entry(request):
         entry.user = request.user
         entry.save()
 
+
+
         # Extract tags (name + emoji + sentiment)
         extracted_tags = extract_tags(entry)
 
         for tag_data in extracted_tags:
             tag_name = tag_data.get("name")
             tag_emoji = tag_data.get("emoji")
-            tag_sentiment = tag_data.get("sentiment", 0.0)  # NEW: Get sentiment
+            tag_sentiment = tag_data.get("sentiment", 0.0)
 
             if not tag_name:
                 continue
@@ -136,7 +138,7 @@ def submit_journal_entry(request):
                 name=tag_name,
                 defaults={
                     'emoji': tag_emoji,
-                    'sentiment_score': tag_sentiment  # NEW: Set on creation
+                    'sentiment_score': tag_sentiment
                 }
             )
 
@@ -145,28 +147,27 @@ def submit_journal_entry(request):
                 tag_obj.emoji = tag_emoji
                 tag_obj.save()
 
-            # NEW: Update sentiment if tag exists but has default/stale sentiment
-            # This handles existing tags getting updated sentiment from new context
+            # Update sentiment if tag exists but has default/stale sentiment
             if not created and tag_obj.sentiment_score == 0.0 and tag_sentiment != 0.0:
                 tag_obj.sentiment_score = tag_sentiment
                 tag_obj.save()
 
             entry.tags.add(tag_obj)
 
-        # NEW: Check if we should generate commentary using the UserProfile method
+        # Check if we should generate commentary using the UserProfile method
         show_commentary = request.user.profile.can_receive_commentary(entry.content)
 
         response_data = {
             "success": True,
             "message": "Journal entry saved successfully!",
             "entry_id": entry.id,
-            "show_commentary": show_commentary  # Add this flag to response
+            "show_commentary": show_commentary,
+            "has_planetary_data": entry.planetary_snapshot is not None  # Optional: indicate if snapshot was captured
         }
 
         if show_commentary:
             # Increment the counter since we'll show commentary
             request.user.profile.increment_commentary_count()
-            # We'll add the actual commentary generation in the next step
             response_data["commentary_queued"] = True
 
         return JsonResponse(response_data)

@@ -20,7 +20,7 @@ from django.contrib.auth import views as auth_views
 from . import views
 from .views import logout_view
 import debug_toolbar
-from deep_dive.api.mystical_api import api as mystical_api
+# from deep_dive.api.mystical_api import api as mystical_api
 
 
 
@@ -36,5 +36,5 @@ urlpatterns = [
     path("deep_dives/", include("deep_dive.urls", namespace="deep_dive")),
     path('userprofile/', include('userprofile.urls')),
     path('set-timezone/', views.set_timezone, name='set-timezone'),
-    path("deep_dive_mystical_api/", mystical_api.urls),
+    # path("deep_dive_mystical_api/", mystical_api.urls),
 ]

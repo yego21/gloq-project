@@ -25,6 +25,7 @@ from userprofile.models import BirthProfile
 
 from ..services.mystical.natal_chart_svc import NatalChartService
 from ..services.mystical.pattern_analyzer_svc import UserPatternAnalyzer
+from journal.models import JournalEntry
 
 
 @login_required
@@ -537,79 +538,57 @@ def planet_meaning(request, planet_name):
 @login_required
 def planet_journals(request, planet_name):
     """
-    Returns journal entries tagged with this planetary placement.
-    Loads via HTMX into the Journal Entries section.
+    Returns journal entries that match the user's natal planet placement
+    Used in the chart modal planet cards
     """
+    from userprofile.models import BirthProfile
+
     try:
+        # Get user's natal chart
         birth_profile = BirthProfile.objects.get(user=request.user)
-        natal_chart_data = birth_profile.cached_chart_data
+        natal_chart = birth_profile.cached_chart_data
 
-        if not natal_chart_data:
-            return render(
-                request,
-                'deep_dive/mystical/astrology/partials/planet_journals.html',
-                {'journals': [], 'planet_name': planet_name, 'error': 'No chart data'}
-            )
-
-        # Find the planet to get its sign
-        planet = next(
-            (p for p in natal_chart_data.get('planets', []) if p['name'] == planet_name),
+        # Find the natal planet
+        natal_planet = next(
+            (p for p in natal_chart.get('planets', []) if p['name'] == planet_name),
             None
         )
 
-        if not planet:
-            return render(
-                request,
-                'deep_dive/mystical/astrology/partials/planet_journals.html',
-                {'journals': [], 'planet_name': planet_name}
-            )
+        if not natal_planet:
+            return render(request, 'deep_dive/mystical/partials/planet_journals.html', {
+                'entries': [],
+                'planet_name': planet_name,
+                'error': 'Planet not found in natal chart'
+            })
 
-        # Query journal entries
-        # Adjust this based on your Journal model structure
-        from journal.models import JournalEntry  # Adjust import path
+        natal_sign = natal_planet['sign']
 
-        # Example: Filter by tags or custom fields
-        # You might have tags like "Sun in Capricorn", "Venus in Aquarius", etc.
-        search_tag = f"{planet_name} in {planet['sign']}"
+        # Query entries where this planet was in the same sign
+        all_entries = JournalEntry.objects.filter(user=request.user)
+        matching_entries = []
 
-        journals = JournalEntry.objects.filter(
-            user=request.user
-        ).filter(
-            # Adjust this query based on how you store tags/placements
-            # Option 1: If you have a tags field
-            # tags__name__icontains=planet_name
-            # Option 2: If you have a placements field
-            # placements__planet=planet_name
-            # Option 3: Search in content
-            content__icontains=planet_name
-        ).order_by('-created_at')[:10]
+        for entry in all_entries:
+            if entry.matches_natal_placement(planet_name, natal_sign):
+                # Add context about the match
+                entry.match_context = {
+                    'type': 'return',
+                    'description': f'Written during {planet_name} in {natal_sign}'
+                }
+                matching_entries.append(entry)
 
-        context = {
-            'journals': journals,
+        return render(request, 'deep_dive/mystical/partials/planet_journals.html', {
+            'entries': matching_entries,
             'planet_name': planet_name,
-            'planet_sign': planet['sign'],
-            'planet_house': planet.get('house'),
-        }
-
-        return render(
-            request,
-            'deep_dive/mystical/astrology/partials/planet_journals.html',
-            context
-        )
+            'natal_sign': natal_sign,
+            'total_entries': len(matching_entries)
+        })
 
     except BirthProfile.DoesNotExist:
-        return render(
-            request,
-            'deep_dive/mystical/astrology/partials/planet_journals.html',
-            {'journals': [], 'planet_name': planet_name, 'error': 'No profile'}
-        )
-    except Exception as e:
-        return render(
-            request,
-            'deep_dive/mystical/astrology/partials/planet_journals.html',
-            {'journals': [], 'planet_name': planet_name, 'error': str(e)}
-        )
-
+        return render(request, 'deep_dive/mystical/partials/planet_journals.html', {
+            'entries': [],
+            'planet_name': planet_name,
+            'error': 'No birth profile found'
+        })
 
 
 def generate_planet_interpretation(

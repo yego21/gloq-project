@@ -625,7 +625,8 @@ class AstronomicalService:
             Complete planetary summary for that specific date
         """
         # Create cache key with the specific date
-        cache_key = f"planetary_summary_{target_datetime.date()}_{user_timezone}"
+        cache_key = f"planetary_summary_{target_datetime}_{user_timezone}"
+
         cached_data = cache.get(cache_key)
 
         if cached_data:

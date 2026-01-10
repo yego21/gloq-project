@@ -71,7 +71,7 @@
                                 </button>
                                 {% if not daily_reading.is_today %}
                                     <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"
-                                          hx-target="#ai-reading-content"
+                                          hx-target="#ai_reading_dashboard"
                                           hx-swap="innerHTML"
                                           hx-indicator="#daily-loading"
                                           class="inline">
@@ -88,7 +88,7 @@
                         </div>
                     {% else %}
                         <form hx-post="{% url 'deep_dive:generate_ai_reading' %}"
-                              hx-target="#ai-reading-content"
+                              hx-target="#ai_reading_dashboard"
                               hx-swap="innerHTML"
                               hx-indicator="#daily-loading">
                             {% csrf_token %}
