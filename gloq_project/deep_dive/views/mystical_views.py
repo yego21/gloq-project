@@ -7,7 +7,7 @@ from django.utils.timezone import now
 from ..services.mystical.astronomical_svc import get_moon_phase, get_planetary_summary
 
 
-
+from django.core.paginator import Paginator
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -535,61 +535,295 @@ def planet_meaning(request, planet_name):
         )
 
 
+def get_page_range(current_page, total_pages, window=2):
+    """
+    Generate a smart page range with ellipsis for large page counts.
+    Always shows first page, last page, current page, and 'window' pages around current.
+    """
+    if total_pages <= 7:
+        # If 7 or fewer pages, show all
+        return list(range(1, total_pages + 1))
+
+    page_range = []
+
+    # Always include first page
+    page_range.append(1)
+
+    # Calculate range around current page
+    start = max(2, current_page - window)
+    end = min(total_pages - 1, current_page + window)
+
+    # Add ellipsis after first page if needed
+    if start > 2:
+        page_range.append('...')
+
+    # Add pages around current
+    for page in range(start, end + 1):
+        page_range.append(page)
+
+    # Add ellipsis before last page if needed
+    if end < total_pages - 1:
+        page_range.append('...')
+
+    # Always include last page
+    if total_pages > 1:
+        page_range.append(total_pages)
+
+    return page_range
+
+
 @login_required
 def planet_journals(request, planet_name):
     """
-    Returns journal entries that match the user's natal planet placement
-    Used in the chart modal planet cards
+    Returns journal entries that match the user's natal planet placement.
+    Shows entries written when transiting planet was in same sign as natal.
     """
     from userprofile.models import BirthProfile
+    from journal.models import JournalEntry, DailyPlanetarySnapshot
 
     try:
         # Get user's natal chart
         birth_profile = BirthProfile.objects.get(user=request.user)
         natal_chart = birth_profile.cached_chart_data
 
+        if not natal_chart:
+            return render(request, 'deep_dive/mystical/astrology/partials/planet_journals.html', {
+                'entries': [],
+                'planet_name': planet_name,
+                'error': 'No natal chart data available'
+            })
+
         # Find the natal planet
         natal_planet = next(
-            (p for p in natal_chart.get('planets', []) if p['name'] == planet_name),
+            (p for p in natal_chart.get('planets', [])
+             if p['name'] == planet_name),
             None
         )
 
         if not natal_planet:
-            return render(request, 'deep_dive/mystical/partials/planet_journals.html', {
+            return render(request, 'deep_dive/mystical/astrology/partials/planet_journals.html', {
                 'entries': [],
                 'planet_name': planet_name,
-                'error': 'Planet not found in natal chart'
+                'error': f'{planet_name} not found in natal chart'
             })
 
         natal_sign = natal_planet['sign']
 
-        # Query entries where this planet was in the same sign
-        all_entries = JournalEntry.objects.filter(user=request.user)
-        matching_entries = []
+        # Find matching snapshot IDs
+        matching_snapshot_ids = []
+        snapshots = DailyPlanetarySnapshot.objects.all()
 
-        for entry in all_entries:
-            if entry.matches_natal_placement(planet_name, natal_sign):
-                # Add context about the match
-                entry.match_context = {
-                    'type': 'return',
-                    'description': f'Written during {planet_name} in {natal_sign}'
-                }
-                matching_entries.append(entry)
+        for snapshot in snapshots:
+            if not snapshot.planetary_data:
+                continue
 
-        return render(request, 'deep_dive/mystical/partials/planet_journals.html', {
-            'entries': matching_entries,
+            positions = snapshot.planetary_data.get('planetary_positions', [])
+
+            for planet in positions:
+                if planet.get('name') == planet_name and planet.get('sign') == natal_sign:
+                    matching_snapshot_ids.append(snapshot.id)
+                    break
+
+        # Query entries efficiently
+        all_matching_entries = JournalEntry.objects.filter(
+            user=request.user,
+            planetary_snapshot_id__in=matching_snapshot_ids
+        ).select_related('planetary_snapshot').prefetch_related('tags').order_by('-created_at')
+
+        # Pagination
+        page_number = request.GET.get('page', 1)
+        items_per_page = 5
+        paginator = Paginator(all_matching_entries, items_per_page)
+        page_obj = paginator.get_page(page_number)
+
+        # Add match context to entries
+        for entry in page_obj:
+            entry.match_context = {
+                'type': 'return',
+                'description': f'{planet_name} in {natal_sign}',
+                'natal_sign': natal_sign
+            }
+
+        # Calculate page range for display
+        page_range = get_page_range(page_obj.number, paginator.num_pages)
+
+        context = {
+            'entries': page_obj,
             'planet_name': planet_name,
             'natal_sign': natal_sign,
-            'total_entries': len(matching_entries)
-        })
+            'total_entries': paginator.count,
+            'current_page': page_obj.number,
+            'total_pages': paginator.num_pages,
+            'has_previous': page_obj.has_previous(),
+            'has_next': page_obj.has_next(),
+            'previous_page': page_obj.previous_page_number() if page_obj.has_previous() else None,
+            'next_page': page_obj.next_page_number() if page_obj.has_next() else None,
+            'page_range': page_range,
+        }
+
+        # If it's an HTMX request (pagination), return only the entries + pagination (partial)
+        # if request.headers.get('HX-Request'):
+        #     return render(
+        #         request,
+        #         'deep_dive/mystical/astrology/partials/_planet_journals_entries.html',
+        #         context
+        #     )
+
+        # Otherwise return the full template (wrapper)
+        return render(request, 'deep_dive/mystical/astrology/partials/planet_journals.html', context)
 
     except BirthProfile.DoesNotExist:
-        return render(request, 'deep_dive/mystical/partials/planet_journals.html', {
+        return render(request, 'deep_dive/mystical/astrology/partials/planet_journals.html', {
             'entries': [],
             'planet_name': planet_name,
             'error': 'No birth profile found'
         })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
 
+        return render(request, 'deep_dive/mystical/astrology/partials/planet_journals.html', {
+            'entries': [],
+            'planet_name': planet_name,
+            'error': f'Error: {str(e)}'
+        })
+
+
+@login_required
+def journal_entry_detail(request, entry_id):
+    """
+    Returns a single journal entry detail view with navigation context.
+    """
+    from journal.models import JournalEntry
+    from userprofile.models import BirthProfile
+    from journal.models import DailyPlanetarySnapshot
+
+    try:
+        entry = JournalEntry.objects.select_related(
+            'planetary_snapshot'
+        ).prefetch_related('tags').get(
+            id=entry_id,
+            user=request.user
+        )
+
+        # Get the context for navigation (planet and sign from query params)
+        planet_name = request.GET.get('planet')
+        natal_sign = request.GET.get('sign')
+
+        # Initialize navigation variables
+        current_index = None
+        total_entries = None
+        has_previous = False
+        has_next = False
+        previous_entry_id = None
+        next_entry_id = None
+
+        # Get all matching entries for pagination context
+        if planet_name and natal_sign:
+            try:
+                birth_profile = BirthProfile.objects.get(user=request.user)
+                natal_chart = birth_profile.cached_chart_data
+
+                if natal_chart:
+                    # Find matching snapshot IDs (same logic as planet_journals)
+                    matching_snapshot_ids = []
+                    snapshots = DailyPlanetarySnapshot.objects.all()
+
+                    for snapshot in snapshots:
+                        if not snapshot.planetary_data:
+                            continue
+
+                        positions = snapshot.planetary_data.get('planetary_positions', [])
+                        for planet in positions:
+                            if planet.get('name') == planet_name and planet.get('sign') == natal_sign:
+                                matching_snapshot_ids.append(snapshot.id)
+                                break
+
+                    # Get all entries in order
+                    all_entries = JournalEntry.objects.filter(
+                        user=request.user,
+                        planetary_snapshot_id__in=matching_snapshot_ids
+                    ).order_by('-created_at').values_list('id', flat=True)
+
+                    entry_ids = list(all_entries)
+
+                    # Find current position
+                    if entry_id in entry_ids:
+                        current_index = entry_ids.index(entry_id) + 1
+                        total_entries = len(entry_ids)
+
+                        # Get previous and next entry IDs
+                        has_previous = current_index > 1
+                        has_next = current_index < total_entries
+
+                        previous_entry_id = entry_ids[current_index - 2] if has_previous else None
+                        next_entry_id = entry_ids[current_index] if has_next else None
+            except BirthProfile.DoesNotExist:
+                pass  # Navigation will be disabled
+
+        context = {
+            'entry': entry,
+            'current_index': current_index,
+            'total_entries': total_entries,
+            'has_previous': has_previous,
+            'has_next': has_next,
+            'previous_entry_id': previous_entry_id,
+            'next_entry_id': next_entry_id,
+            'planet_name': planet_name,
+            'natal_sign': natal_sign,
+        }
+
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/_journal_entry_detail.html',
+            context
+        )
+
+    except JournalEntry.DoesNotExist:
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/_journal_entry_detail.html',
+            {'error': 'Journal entry not found'}
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return render(
+            request,
+            'deep_dive/mystical/astrology/partials/_journal_entry_detail.html',
+            {'error': f'Error loading entry: {str(e)}'}
+        )
+
+
+def get_page_range(current_page, total_pages, delta=2):
+    """
+    Helper function to generate smart page range for pagination.
+    Shows first page, last page, current page and delta pages around it.
+    """
+    if total_pages <= 7:
+        return list(range(1, total_pages + 1))
+
+    pages = set()
+    pages.add(1)  # Always show first page
+    pages.add(total_pages)  # Always show last page
+
+    # Add current page and delta pages around it
+    for i in range(max(1, current_page - delta), min(total_pages + 1, current_page + delta + 1)):
+        pages.add(i)
+
+    # Convert to sorted list
+    pages_list = sorted(pages)
+
+    # Add ellipsis where there are gaps
+    result = []
+    prev = 0
+    for page in pages_list:
+        if prev and page - prev > 1:
+            result.append('...')
+        result.append(page)
+        prev = page
+
+    return result
 
 def generate_planet_interpretation(
     planet_name,

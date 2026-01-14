@@ -1,0 +1,186 @@
+<!-- partials/_journal_entry_detail.html -->
+{% if error %}
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex items-center gap-2 text-red-800">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>{{ error }}</span>
+        </div>
+    </div>
+{% else %}
+    <div class="entry-detail">
+        <!-- Navigation Header -->
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-indigo-500/20">
+            <div class="text-sm text-slate-400">
+                {% if current_index and total_entries %}
+                    Entry {{ current_index }} of {{ total_entries }}
+                {% else %}
+                    Journal Entry
+                {% endif %}
+            </div>
+            <div class="flex gap-2">
+                {% if has_previous %}
+                    <button 
+                        hx-get="{% url 'deep_dive:journal_entry_detail' previous_entry_id %}?planet={{ planet_name }}&sign={{ natal_sign }}"
+                        hx-target="#entry-detail-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#entry-loading"
+                        class="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors flex items-center gap-1"
+                        title="Previous Entry">
+                        <i class="fas fa-chevron-left"></i>
+                        <span class="hidden sm:inline">Previous</span>
+                    </button>
+                {% else %}
+                    <button disabled 
+                        class="px-3 py-1.5 bg-slate-800/30 text-slate-600 rounded-lg cursor-not-allowed flex items-center gap-1">
+                        <i class="fas fa-chevron-left"></i>
+                        <span class="hidden sm:inline">Previous</span>
+                    </button>
+                {% endif %}
+                
+                {% if has_next %}
+                    <button 
+                        hx-get="{% url 'deep_dive:journal_entry_detail' next_entry_id %}?planet={{ planet_name }}&sign={{ natal_sign }}"
+                        hx-target="#entry-detail-content"
+                        hx-swap="innerHTML"
+                        hx-indicator="#entry-loading"
+                        class="px-3 py-1.5 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors flex items-center gap-1"
+                        title="Next Entry">
+                        <span class="hidden sm:inline">Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                {% else %}
+                    <button disabled 
+                        class="px-3 py-1.5 bg-slate-800/30 text-slate-600 rounded-lg cursor-not-allowed flex items-center gap-1">
+                        <span class="hidden sm:inline">Next</span>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Entry Header -->
+        <div class="entry-header mb-6">
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div>
+                    <h6 class="text-slate-300 text-base mb-2 flex items-center gap-2 font-semibold">
+                        <i class="fas fa-calendar text-indigo-400"></i> 
+                        {{ entry.created_at|date:"l, F j, Y" }}
+                    </h6>
+                    <p class="text-xs text-slate-500">
+                        {{ entry.created_at|date:"g:i A" }}
+                    </p>
+                </div>
+                {% if entry.label %}
+                    <span class="px-3 py-1 bg-slate-700/50 text-slate-300 rounded-full text-sm">
+                        {{ entry.label }}
+                    </span>
+                {% endif %}
+            </div>
+            
+            <!-- Planetary Info -->
+            {% if entry.planetary_snapshot and entry.planetary_snapshot.planetary_data %}
+                <div class="bg-blue-500/10 border-l-4 border-blue-500 rounded-lg p-4">
+                    <h6 class="font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                        <i class="fas fa-star text-blue-400"></i> 
+                        Cosmic Snapshot
+                    </h6>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <span class="text-slate-400">Date:</span>
+                            <span class="font-medium text-slate-200 ml-1">
+                                {{ entry.planetary_snapshot.date|date:"F j, Y" }}
+                            </span>
+                        </div>
+                        {% if entry.planetary_snapshot.planetary_data.dominant_element %}
+                            <div>
+                                <span class="text-slate-400">Dominant Element:</span>
+                                <span class="font-medium text-slate-200 ml-1">
+                                    {{ entry.planetary_snapshot.planetary_data.dominant_element }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Content -->
+        <div class="entry-content mb-6">
+            <div class="bg-slate-900/50 border border-indigo-500/10 rounded-lg p-4 leading-relaxed">
+                <div class="prose prose-invert max-w-none text-slate-300">
+                    {{ entry.content|linebreaks }}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tags -->
+        {% if entry.tags.all %}
+            <div class="entry-tags mb-6">
+                <h6 class="font-semibold text-slate-200 mb-3 flex items-center gap-2">
+                    <i class="fas fa-tags"></i> Tags
+                </h6>
+                <div class="flex flex-wrap gap-2">
+                    {% for tag in entry.tags.all %}
+                        <span class="px-3 py-1 bg-slate-700/50 text-slate-300 rounded-full text-sm">
+                            {{ tag.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Planetary Positions -->
+        {% if entry.planetary_snapshot and entry.planetary_snapshot.planetary_data.planetary_positions %}
+            <div class="planetary-positions">
+                <h6 class="font-semibold text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fas fa-globe"></i> Planetary Positions
+                </h6>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {% for planet in entry.planetary_snapshot.planetary_data.planetary_positions %}
+                        <div class="bg-slate-900/50 rounded-lg p-3 border border-indigo-500/10">
+                            <div class="text-sm">
+                                <span class="font-semibold text-slate-200">
+                                    {{ planet.symbol|default:"" }} {{ planet.name }}:
+                                </span>
+                                <div class="text-slate-400 mt-1">
+                                    {{ planet.sign }} {{ planet.degree }}°
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Footer Actions -->
+        <div class="mt-6 pt-4 border-t border-indigo-500/20 flex justify-between items-center">
+            <button 
+                onclick="closeEntryModal()"
+                class="text-sm text-slate-400 hover:text-slate-300 flex items-center gap-1 transition-colors">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </button>
+            <div class="flex gap-2">
+                <button 
+                    onclick="window.print()"
+                    class="px-3 py-1.5 text-sm bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg flex items-center gap-1 transition-colors">
+                    <i class="fas fa-print"></i>
+                    <span class="hidden sm:inline">Print</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="entry-loading" class="htmx-indicator absolute inset-0 bg-slate-900/90 backdrop-blur-sm flex items-center justify-center rounded-lg">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-500/30 border-t-indigo-500 mb-4"></div>
+            <p class="text-slate-400 text-sm">Loading entry...</p>
+        </div>
+    </div>
+{% endif %}
+
+<style>
+    .htmx-request #entry-loading {
+        display: flex !important;
+    }
+</style>

@@ -1,59 +1,316 @@
-{% if error %}
-<div class="text-center py-8">
-    <i class="fas fa-exclamation-circle text-slate-500 text-3xl mb-2"></i>
-    <p class="text-sm text-slate-400">{{ error }}</p>
-</div>
-{% elif entries %}
-<div class="space-y-3">
-    <div class="flex items-center justify-between mb-3">
-        <p class="text-xs text-purple-300">
-            <i class="fas fa-check-circle mr-1"></i>
-            {{ total_entries }} entr{{ total_entries|pluralize:"y,ies" }} during {{ planet_name }} in {{ natal_sign }}
-        </p>
-    </div>
-    
-    {% for entry in entries %}
-    <div class="bg-slate-800/30 rounded-lg p-4 border border-purple-500/20 hover:border-purple-500/40 transition-colors">
-        <div class="flex items-start justify-between gap-3 mb-2">
-            <div class="flex-1">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                        {{ entry.match_context.description }}
-                    </span>
-                    <span class="text-xs text-slate-500">
-                        {{ entry.created_at|date:"M d, Y" }}
-                    </span>
-                </div>
-                <p class="text-sm text-slate-300 line-clamp-3">
-                    {{ entry.content }}
-                </p>
+<!-- partials/planet_journals.html -->
+<div class="planet-journals">
+    {% if error %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 text-yellow-800">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>{{ error }}</span>
             </div>
-            <a href="{% url 'journal_detail' entry.id %}" 
-               class="flex-shrink-0 text-purple-400 hover:text-purple-300 transition-colors">
-                <i class="fas fa-external-link-alt text-xs"></i>
-            </a>
+        </div>
+    {% elif entries %}
+        
+        
+        <!-- Container that gets replaced by HTMX -->
+        <div id="journal-entries-container" class="journal-entries-wrapper">
+            <div class="mb-4">
+            <p class="text-sm text-slate-400">
+                <i class="fas fa-journal"></i>
+                Found <strong class="text-white">{{ total_entries }}</strong> journal entr{{ total_entries|pluralize:"y,ies" }} 
+                when <strong class="text-indigo-300">{{ planet_name }}</strong> was in <strong class="text-purple-300">{{ natal_sign }}</strong>
+            </p>
+        </div>
+            <!-- Journal Entries -->
+            <div class="space-y-3 mb-6">
+                {% for entry in entries %}
+                    <div class="journal-entry-card p-4 border border-indigo-500/20 rounded-lg shadow-sm hover-lift cursor-pointer transition-all" 
+                         onclick="loadEntryDetail({{ entry.id }}, '{{ planet_name }}', '{{ natal_sign }}')">
+                        
+                        <div class="flex justify-content-between items-start mb-3">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 text-sm text-slate-400 mb-1">
+                                    <i class="fas fa-calendar"></i>
+                                    <span>{{ entry.created_at|date:"F j, Y" }}</span>
+                                </div>
+                                {% if entry.label %}
+                                    <span class="inline-block px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs">
+                                        {{ entry.label }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <span class="inline-flex items-center gap-1 px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs border border-indigo-500/30">
+                                <i class="fas fa-star text-xs"></i> {{ entry.match_context.description }}
+                            </span>
+                        </div>
+                        
+                        <!-- Entry Preview -->
+                        <div class="text-slate-300 text-sm leading-relaxed mb-3">
+                            {% if entry.content|length > 150 %}
+                                {{ entry.content|truncatewords:25|linebreaks }}
+                                <span class="text-indigo-400 text-xs font-medium flex items-center gap-1 mt-2">
+                                    <i class="fas fa-arrow-right"></i> Click to read more
+                                </span>
+                            {% else %}
+                                {{ entry.content|linebreaks }}
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Tags -->
+                        {% if entry.tags.all %}
+                            <div class="flex flex-wrap gap-2 mt-2">
+                                {% for tag in entry.tags.all %}
+                                    <span class="inline-flex items-center gap-1 px-2 py-1 bg-slate-700/50 text-slate-400 rounded text-xs">
+                                        <i class="fas fa-tag text-xs"></i> {{ tag.name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+                <nav aria-label="Journal entries pagination" class="mt-6">
+                    <div class="flex items-center justify-center gap-2">
+                        <!-- Previous Button -->
+                        {% if has_previous %}
+                            <button 
+                                hx-get="{% url 'deep_dive:planet_journals' planet_name %}?page={{ previous_page }}" 
+                                hx-target="#journal-entries-container" 
+                                hx-swap="innerHTML"
+                                hx-indicator="#pagination-loading"
+                                class="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors flex items-center gap-2">
+                                <i class="fas fa-chevron-left"></i>
+                                <span class="hidden sm:inline">Previous</span>
+                            </button>
+                        {% else %}
+                            <button disabled
+                                class="px-4 py-2 bg-slate-800/30 text-slate-600 rounded-lg cursor-not-allowed flex items-center gap-2">
+                                <i class="fas fa-chevron-left"></i>
+                                <span class="hidden sm:inline">Previous</span>
+                            </button>
+                        {% endif %}
+                        
+                        <!-- Page Numbers -->
+                        <div class="flex items-center gap-1">
+                            {% for page_num in page_range %}
+                                {% if page_num == '...' %}
+                                    <span class="px-3 py-2 text-slate-500">...</span>
+                                {% else %}
+                                    {% if page_num == current_page %}
+                                        <button 
+                                            class="px-3 py-2 bg-indigo-500 text-white rounded-lg font-semibold min-w-[40px]">
+                                            {{ page_num }}
+                                        </button>
+                                    {% else %}
+                                        <button 
+                                            hx-get="{% url 'deep_dive:planet_journals' planet_name %}?page={{ page_num }}" 
+                                            hx-target="#journal-entries-container" 
+                                            hx-swap="innerHTML"
+                                            hx-indicator="#pagination-loading"
+                                            class="px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors min-w-[40px]">
+                                            {{ page_num }}
+                                        </button>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Next Button -->
+                        {% if has_next %}
+                            <button 
+                                hx-get="{% url 'deep_dive:planet_journals' planet_name %}?page={{ next_page }}" 
+                                hx-target="#journal-entries-container" 
+                                hx-swap="innerHTML"
+                                hx-indicator="#pagination-loading"
+                                class="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors flex items-center gap-2">
+                                <span class="hidden sm:inline">Next</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        {% else %}
+                            <button disabled
+                                class="px-4 py-2 bg-slate-800/30 text-slate-600 rounded-lg cursor-not-allowed flex items-center gap-2">
+                                <span class="hidden sm:inline">Next</span>
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Loading Spinner -->
+                    <div class="flex justify-center mt-4">
+                        <div id="pagination-loading" class="htmx-indicator">
+                            <div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-500/30 border-t-indigo-500"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Page Info -->
+                    <div class="text-center mt-3">
+                        <p class="text-xs text-slate-500">
+                            Page {{ current_page }} of {{ total_pages }} • Showing {{ entries|length }} of {{ total_entries }} entries
+                        </p>
+                    </div>
+                </nav>
+            {% endif %}
         </div>
         
-        {% if entry.tags.all %}
-        <div class="flex gap-1 flex-wrap mt-2">
-            {% for tag in entry.tags.all %}
-            <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
-                {{ tag.name }}
-            </span>
-            {% endfor %}
+    {% else %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center gap-2 text-blue-800 mb-2">
+                <i class="fas fa-info-circle"></i>
+                <span class="font-semibold">No journal entries found</span>
+            </div>
+            <p class="text-sm text-blue-700">
+                No journal entries found when <strong>{{ planet_name }}</strong> was in <strong>{{ natal_sign }}</strong>.
+            </p>
+            <p class="text-xs text-blue-600 mt-2">
+                Keep journaling! Entries will appear here when {{ planet_name }} returns to your natal sign.
+            </p>
         </div>
-        {% endif %}
-    </div>
-    {% endfor %}
+    {% endif %}
 </div>
-{% else %}
-<div class="text-center py-8">
-    <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-purple-500/10 flex items-center justify-center">
-        <i class="fas fa-book-open text-purple-400/50 text-2xl"></i>
+
+<!-- Entry Detail Modal -->
+<div id="entryDetailModal" 
+     class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden items-center justify-center p-4"
+     onclick="if(event.target === this) closeEntryModal()">
+    <div class="bg-slate-800 rounded-2xl border border-indigo-500/30 w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl"
+         onclick="event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-indigo-500/20">
+            <h5 class="text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-journal"></i> Journal Entry
+            </h5>
+            <button type="button" 
+                    class="w-10 h-10 rounded-full bg-slate-700/50 hover:bg-slate-600/50 flex items-center justify-center transition-colors"
+                    onclick="closeEntryModal()">
+                <i class="fas fa-times text-slate-300"></i>
+            </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-6" id="entry-detail-content">
+            <div class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500/30 border-t-indigo-500"></div>
+            </div>
+        </div>
     </div>
-    <p class="text-sm text-slate-400 mb-2">No journal entries found</p>
-    <p class="text-xs text-slate-500">
-        Write entries when {{ planet_name }} returns to {{ natal_sign }} to see them here
-    </p>
 </div>
-{% endif %}
+
+
+
+<script>
+function loadEntryDetail(entryId, planetName, natalSign) {
+    const modal = document.getElementById('entryDetailModal');
+    const contentDiv = document.getElementById('entry-detail-content');
+    
+    // Show loading spinner
+    contentDiv.innerHTML = `
+        <div class="flex items-center justify-center py-12">
+            <div class="text-center">
+                <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500/30 border-t-indigo-500 mx-auto mb-4"></div>
+                <p class="text-slate-400 text-sm">Loading entry...</p>
+            </div>
+        </div>
+    `;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Build URL with query parameters for navigation context
+    const params = new URLSearchParams({
+        planet: planetName,
+        sign: natalSign
+    });
+    
+    // Load entry detail
+    fetch(`/deep_dives/journals/entry/${entryId}/?${params.toString()}`)
+        .then(response => response.text())
+        .then(html => {
+            contentDiv.innerHTML = html;
+            
+            // Re-initialize HTMX for dynamically loaded content
+            if (typeof htmx !== 'undefined') {
+                htmx.process(contentDiv);
+            }
+        })
+        .catch(error => {
+            contentDiv.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center gap-2 text-red-800">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Error loading entry. Please try again.</span>
+                    </div>
+                </div>
+            `;
+        });
+}
+
+function closeEntryModal() {
+    const modal = document.getElementById('entryDetailModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+// Add keyboard navigation support
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('entryDetailModal');
+    if (modal && !modal.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+            closeEntryModal();
+        } else if (e.key === 'ArrowLeft') {
+            const prevBtn = modal.querySelector('[title="Previous Entry"]:not([disabled])');
+            if (prevBtn) prevBtn.click();
+        } else if (e.key === 'ArrowRight') {
+            const nextBtn = modal.querySelector('[title="Next Entry"]:not([disabled])');
+            if (nextBtn) nextBtn.click();
+        }
+    }
+});
+
+// Scroll to top when pagination loads new content
+document.body.addEventListener('htmx:afterSwap', function(evt) {
+    if (evt.detail.target.id === 'journal-entries-container') {
+        const container = document.querySelector('.planet-journals');
+        if (container) {
+            container.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+        }
+    }
+});
+</script>
+
+<style>
+.hover-lift {
+    transition: all 0.2s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+}
+
+.journal-entry-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.4) 100%);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgba(30, 41, 59, 0.3);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(99, 102, 241, 0.5);
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(99, 102, 241, 0.7);
+}
+</style>

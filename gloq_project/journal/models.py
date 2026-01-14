@@ -39,43 +39,27 @@ class DailyPlanetarySnapshot(models.Model):
         return f"Planetary snapshot for {self.date} ({self.timezone})"
 
     @classmethod
-    def get_or_create_today(cls, timezone):
-        """
-        Minimal version with basic error printing
-        """
-        from django.utils.timezone import now
-        from deep_dive.services.mystical.astronomical_svc import AstronomicalService
+    def get_snapshots_with_planet_in_sign(cls, planet_name, sign):
+        """Get all snapshot IDs where planet was in specified sign"""
+        snapshot_ids = []
 
-        today = now().date()
+        # Get all snapshots
+        snapshots = cls.objects.all()
 
-        try:
-            snapshot, created = cls.objects.get_or_create(
-                date=today,
-                timezone=timezone,
-                defaults={'planetary_data': {}}
-            )
+        for snapshot in snapshots:
+            # Check if planetary_data exists
+            if not snapshot.planetary_data:
+                continue
 
-            print(f"\n🌍 Planetary snapshot check: {today} ({timezone})")
+            positions = snapshot.planetary_data.get('planetary_positions', [])
 
-            if created or not snapshot.planetary_data:
-                print("   Fetching data from astrology service...")
-                try:
-                    astro_service = AstronomicalService()
-                    snapshot.planetary_data = astro_service.get_daily_planetary_summary(timezone)
-                    snapshot.save()
-                    print(f"   ✓ Data saved successfully")
-                except Exception as e:
-                    print(f"   ✗ ERROR: {type(e).__name__}: {str(e)}")
-                    # Print just the error without full traceback
-                    snapshot.planetary_data = {'error': str(e)}
-                    snapshot.save()
+            # Look for the planet in this snapshot
+            for planet in positions:
+                if planet.get('name') == planet_name and planet.get('sign') == sign:
+                    snapshot_ids.append(snapshot.id)
+                    break  # Found it, move to next snapshot
 
-            return snapshot
-
-        except Exception as e:
-            print(f"\n❌ FATAL ERROR in get_or_create_today:")
-            print(f"   {type(e).__name__}: {str(e)}")
-            raise
+        return snapshot_ids
 
     @classmethod
     def get_or_create_for_date(cls, target_date):
@@ -167,16 +151,6 @@ class JournalEntry(models.Model):
     tags = models.ManyToManyField(Tag, blank=True, related_name="entries")
     created_at = models.DateTimeField(default=timezone.now)
 
-    # Planetary context at time of creation
-    planetary_snapshot = models.JSONField(
-        null=True,
-        blank=True,
-        help_text="Snapshot of all planetary positions when entry was created"
-    )
-
-    def __str__(self):
-        return f"{self.user.username} - {self.created_at}"
-
     class Meta:
         ordering = ['-created_at']
 
@@ -187,6 +161,25 @@ class JournalEntry(models.Model):
         blank=True,
         related_name='journal_entries'
     )
+
+    def get_planet_position(self, planet_name):
+        """Get specific planet's position from snapshot"""
+        if not self.planetary_snapshot:
+            return None
+        positions = self.planetary_snapshot.planetary_data.get('planetary_positions', [])
+        for planet in positions:
+            if planet.get('name') == planet_name:
+                return planet
+        return None
+
+    def matches_natal_placement(self, natal_planet_name, natal_sign):
+        """Check if entry was created when planet was in natal sign"""
+        planet_pos = self.get_planet_position(natal_planet_name)
+        if planet_pos:
+            return planet_pos.get('sign') == natal_sign
+        return False
+
+
 
     def save(self, *args, **kwargs):
         """Auto-assign planetary snapshot based on entry's creation date in user's local timezone"""
@@ -213,6 +206,9 @@ class JournalEntry(models.Model):
             return local_dt.date()
         except:
             return self.created_at.date()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.created_at}"
 
 
 

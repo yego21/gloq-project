@@ -30,6 +30,7 @@ urlpatterns = [
     path('planet/<str:planet_name>/journals/',
          mystical_views.planet_journals,
          name='planet_journals'),
+    path('journals/entry/<int:entry_id>/', mystical_views.journal_entry_detail, name='journal_entry_detail'),
 
 
 

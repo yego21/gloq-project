@@ -70,7 +70,7 @@ class DailyPlanetarySnapshotAdmin(admin.ModelAdmin):
     data_preview.short_description = "Key Planets"
 
     def is_today(self, obj):
-        """Check if this is today's snapshot"""
+        # """Check if this is today's snapshot"""837
         return obj.date == now().date()
 
     is_today.boolean = True
@@ -81,13 +81,27 @@ class DailyPlanetarySnapshotAdmin(admin.ModelAdmin):
         if not obj.planetary_data:
             return format_html('<span style="color: red;">❌ Empty</span>')
 
-        planet_count = len(obj.planetary_data)
-        if planet_count >= 10:
-            return format_html('<span style="color: green;">✅ Complete ({})</span>', planet_count)
-        elif planet_count >= 5:
-            return format_html('<span style="color: orange;">⚠️ Partial ({})</span>', planet_count)
-        else:
-            return format_html('<span style="color: red;">❌ Incomplete ({})</span>', planet_count)
+        try:
+            # If planetary_data is a JSON string
+            import json
+            if isinstance(obj.planetary_data, str):
+                data = json.loads(obj.planetary_data)
+            else:
+                data = obj.planetary_data
+
+            # Count planets in planetary_positions
+            planet_count = len(data.get("planetary_positions", []))
+
+            if planet_count >= 10:
+                return format_html('<span style="color: green;">✅ Complete ({})</span>', planet_count)
+            elif planet_count >= 5:
+                return format_html('<span style="color: orange;">⚠️ Partial ({})</span>', planet_count)
+            else:
+                return format_html('<span style="color: red;">❌ Incomplete ({})</span>', planet_count)
+
+        except (json.JSONDecodeError, AttributeError, KeyError):
+            # If there's any error parsing, show as empty
+            return format_html('<span style="color: red;">❌ Error</span>')
 
     data_status.short_description = "Data Status"
 

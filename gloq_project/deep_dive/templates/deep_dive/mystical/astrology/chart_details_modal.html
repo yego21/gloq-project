@@ -1,5 +1,6 @@
 <!-- Chart Details Modal Content -->
-<div class="bg-slate-900 rounded-2xl border border-indigo-500/30 w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+<div
+    class="bg-slate-900 rounded-2xl border border-indigo-500/30 w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
 
     <!-- Modal Header (Sticky) -->
     <div class="flex-shrink-0 px-4 sm:px-6 pt-6 pb-4 bg-slate-900 border-b border-indigo-500/20">
@@ -7,14 +8,13 @@
             <div class="flex-1 min-w-0">
                 <h2 class="text-2xl sm:text-3xl font-bold text-white mb-1">
                     Complete Chart Analysis
-                   
                 </h2>
                 <p class="text-sm text-slate-400">
                     Explore each planet's placement, aspects, and related insights
                 </p>
             </div>
-            <button onclick="closeChartDetailsModal()" 
-                    class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center transition-colors">
+            <button onclick="closeChartDetailsModal()"
+                class="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-slate-800/50 hover:bg-slate-700/50 flex items-center justify-center transition-colors">
                 <i class="fas fa-times text-slate-300 text-lg"></i>
             </button>
         </div>
@@ -22,7 +22,7 @@
 
     <!-- Scrollable Content Area -->
     <div class="flex-1 overflow-y-auto custom-scrollbar px-4 sm:px-6 py-4">
-        
+
         <!-- Quick Filter Tabs -->
         <div class="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-thin">
             <button class="filter-tab active" data-filter="all">
@@ -49,84 +49,87 @@
 
         <!-- Planet Cards Container -->
         <div class="space-y-3" id="planet-cards-container">
-            
+
             <!-- Planet Card Loop -->
             {% for planet in natal_chart.planets %}
             <div class="planet-detail-card bg-gradient-to-br from-slate-800/60 to-slate-900/40 rounded-xl border border-indigo-500/20 overflow-hidden hover:border-indigo-500/30 transition-colors"
-     data-planet="{{ planet.name }}"
-     data-category="{% if planet.name == 'Sun' or planet.name == 'Moon' or planet.name == 'Mercury' or planet.name == 'Venus' or planet.name == 'Mars' %}personal{% elif planet.name == 'Jupiter' or planet.name == 'Saturn' %}social{% elif planet.name == 'Uranus' or planet.name == 'Neptune' or planet.name == 'Pluto' %}transpersonal{% elif planet.name == 'Chiron' or planet.name == 'Lilith' or planet.name == 'North Node' or planet.name == 'South Node' %}points{% else %}personal{% endif %}">
-                
+                data-planet="{{ planet.name }}"
+                data-category="{% if planet.name in 'Sun,Moon,Mercury,Venus,Mars' %}personal{% elif planet.name in 'Jupiter,Saturn' %}social{% elif planet.name in 'Uranus,Neptune,Pluto' %}transpersonal{% elif planet.name in 'Chiron,Lilith,North Node,South Node' %}points{% else %}personal{% endif %}">
+
                 <!-- Card Header (Clickable) -->
-                <div class="p-4 sm:p-5 cursor-pointer hover:bg-slate-800/30 transition-colors" 
-                     onclick="togglePlanetCard('{{ planet.name }}')">
+                <div class="p-4 sm:p-5 cursor-pointer hover:bg-slate-800/30 transition-colors"
+                    onclick="togglePlanetCard('{{ planet.name }}')">
                     <div class="flex items-center justify-between gap-3">
                         <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                            
-                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 flex-shrink-0 relative">
-    <span class="text-2xl sm:text-3xl">{{ planet.symbol }}</span>
-    {% if planet.is_currently_active %}
-    <div class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-slate-900 animate-pulse">
-        <i class="fas fa-bolt text-xs text-white"></i>
-    </div>
-    {% endif %}
-</div>
+
+                            <div
+                                class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 flex-shrink-0 relative">
+                                <span class="text-2xl sm:text-3xl">{{ planet.symbol }}</span>
+                                {% if planet.is_currently_active %}
+                                <div
+                                    class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-slate-900 animate-pulse">
+                                    <i class="fas fa-bolt text-xs text-white"></i>
+                                </div>
+                                {% endif %}
+                            </div>
 
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-lg sm:text-xl font-bold text-white mb-1 truncate">
-        {{ planet.name }} in {{ planet.sign }}
-        {% if planet.is_retrograde %}
-        <span class="text-rose-400 ml-1">℞</span>
-        {% endif %}
-        {% if planet.is_currently_active %}
-        <span class="ml-2 text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 animate-pulse">
-            Active Now
-        </span>
-        {% endif %}
-    </h3>
+                                    {{ planet.name }} in {{ planet.sign }}
+                                    {% if planet.is_retrograde %}
+                                    <span class="text-rose-400 ml-1">℞</span>
+                                    {% endif %}
+                                    {% if planet.is_currently_active %}
+                                    <span
+                                        class="ml-2 text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 animate-pulse">
+                                        Active Now
+                                    </span>
+                                    {% endif %}
+                                </h3>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <span class="text-xs px-2 py-1 rounded-full bg-indigo-900/40 text-indigo-300 border border-indigo-500/20">
+                                    <span
+                                        class="text-xs px-2 py-1 rounded-full bg-indigo-900/40 text-indigo-300 border border-indigo-500/20">
                                         {{ planet.degree }}°
                                     </span>
                                     {% if planet.house %}
-                                    <span class="text-xs px-2 py-1 rounded-full bg-purple-900/40 text-purple-300 border border-purple-500/20">
+                                    <span
+                                        class="text-xs px-2 py-1 rounded-full bg-purple-900/40 text-purple-300 border border-purple-500/20">
                                         House {{ planet.house }}
                                     </span>
                                     {% endif %}
-                                    <span class="text-xs px-2 py-1 rounded-full bg-emerald-900/40 text-emerald-300 border border-emerald-500/20">
+                                    <span
+                                        class="text-xs px-2 py-1 rounded-full bg-emerald-900/40 text-emerald-300 border border-emerald-500/20">
                                         {{ planet.element }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 planet-card-icon flex-shrink-0" 
-                           id="icon-{{ planet.name }}"></i>
+                        <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 planet-card-icon flex-shrink-0"
+                            id="icon-{{ planet.name }}"></i>
                     </div>
                 </div>
 
                 <!-- Card Content (Expandable) -->
                 <div class="planet-card-content" id="content-{{ planet.name }}">
                     <div class="px-4 sm:px-5 pb-5 pt-2 border-t border-indigo-500/10">
-                        
+
                         <!-- Action Buttons -->
                         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                            <button class="action-btn active" 
-                                    onclick="showPlanetSection('{{ planet.name }}', 'meaning')">
+                            <button class="action-btn active"
+                                onclick="showPlanetSection('{{ planet.name }}', 'meaning')">
                                 <i class="fas fa-book-open"></i>
                                 <span class="hidden sm:inline">General</span>
                                 <span class="sm:hidden">Info</span>
                             </button>
-                            <button class="action-btn" 
-                                    onclick="showPlanetSection('{{ planet.name }}', 'aspects')">
+                            <button class="action-btn" onclick="showPlanetSection('{{ planet.name }}', 'aspects')">
                                 <i class="fas fa-project-diagram"></i>
                                 <span>Aspects</span>
                             </button>
-                            <button class="action-btn" 
-                                    onclick="showPlanetSection('{{ planet.name }}', 'journal')">
+                            <button class="action-btn" onclick="showPlanetSection('{{ planet.name }}', 'journal')">
                                 <i class="fas fa-journal-whills"></i>
                                 <span>Journal</span>
                             </button>
-                            <button class="action-btn" 
-                                    onclick="showPlanetSection('{{ planet.name }}', 'notes')">
+                            <button class="action-btn" onclick="showPlanetSection('{{ planet.name }}', 'notes')">
                                 <i class="fas fa-sticky-note"></i>
                                 <span>Notes</span>
                             </button>
@@ -134,7 +137,7 @@
 
                         <!-- Content Sections -->
                         <div class="planet-sections">
-                            
+
                             <!-- General Meaning Section -->
                             <div class="planet-section active" id="section-{{ planet.name }}-meaning">
                                 <div class="bg-slate-900/50 rounded-lg p-4 border border-indigo-500/10">
@@ -144,18 +147,20 @@
                                     </h4>
                                     <div class="space-y-3 text-sm text-slate-300 leading-relaxed">
                                         <p>
-                                            <strong class="text-white">{{ planet.name }} in {{ planet.sign }}</strong> represents 
-                                            your core identity and creative self-expression through the lens of confidence and vitality.
+                                            <strong class="text-white">{{ planet.name }} in {{ planet.sign }}</strong>
+                                            represents
+                                            your core identity and creative self-expression through the lens of
+                                            confidence and vitality.
                                         </p>
                                         <p class="text-slate-400 text-xs flex items-center gap-2">
                                             <i class="fas fa-info-circle"></i>
-                                            <span>This interpretation considers the sign placement and house position.</span>
+                                            <span>This interpretation considers the sign placement and house
+                                                position.</span>
                                         </p>
                                         <!-- HTMX Placeholder -->
                                         <div class="pt-3 border-t border-indigo-500/10"
-                                             hx-get="{% url 'deep_dive:planet_meaning' planet.name %}"
-                                             hx-trigger="intersect once"
-                                             hx-swap="innerHTML">
+                                            hx-get="{% url 'deep_dive:planet_meaning' planet.name %}"
+                                            hx-trigger="intersect once" hx-swap="innerHTML">
                                             <div class="flex items-center gap-2 text-xs text-slate-500">
                                                 <div class="animate-pulse w-3 h-3 bg-indigo-500/20 rounded-full"></div>
                                                 <span>Loading detailed interpretation...</span>
@@ -165,115 +170,116 @@
                                 </div>
                             </div>
 
-                            
+
                             <!-- Aspects Section -->
-<div class="planet-section" id="section-{{ planet.name }}-aspects">
-    <div class="space-y-2">
-        <h4 class="font-semibold text-indigo-300 mb-3 flex items-center text-sm">
-            <i class="fas fa-project-diagram mr-2"></i>
-            Planetary Aspects
-        </h4>
-        {% for aspect in natal_chart.aspects %}
-            {% if aspect.planet1 == planet.name or aspect.planet2 == planet.name %}
-            {% with aspect_id=planet.name|add:"-"|add:aspect.planet1|add:"-"|add:aspect.planet2|add:"-"|add:aspect.aspect_type|slugify %}
-            <div class="aspect-unified-card bg-slate-900/50 rounded-xl border border-indigo-500/10 hover:border-indigo-500/30 transition-all overflow-hidden"
-                 data-aspect-id="{{ aspect_id }}"
-                 data-planet="{{ planet.name }}"
-                 data-planet1="{{ aspect.planet1 }}"
-                 data-planet2="{{ aspect.planet2 }}"
-                 data-aspect-type="{{ aspect.aspect_type }}">
-                
-                <!-- Clickable Header -->
-                <button class="w-full text-left p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between gap-3"
-                        onclick="toggleAspectDetail('{{ aspect_id }}', event)">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <!-- Aspect Type Badge -->
-                        <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border
-                            {% if aspect.aspect_type == 'Trine' %}bg-green-500/10 border-green-500/30
-                            {% elif aspect.aspect_type == 'Opposition' %}bg-red-500/10 border-red-500/30
-                            {% elif aspect.aspect_type == 'Square' %}bg-orange-500/10 border-orange-500/30
-                            {% elif aspect.aspect_type == 'Sextile' %}bg-blue-500/10 border-blue-500/30
-                            {% elif aspect.aspect_type == 'Conjunction' %}bg-yellow-500/10 border-yellow-500/30
-                            {% else %}bg-purple-500/10 border-purple-500/30{% endif %}">
-                            <span class="font-bold text-lg
-                                {% if aspect.aspect_type == 'Trine' %}text-green-400
-                                {% elif aspect.aspect_type == 'Opposition' %}text-red-400
-                                {% elif aspect.aspect_type == 'Square' %}text-orange-400
-                                {% elif aspect.aspect_type == 'Sextile' %}text-blue-400
-                                {% elif aspect.aspect_type == 'Conjunction' %}text-yellow-400
-                                {% else %}text-purple-400{% endif %}">
-                                {% if aspect.aspect_type == 'Trine' %}△
-                                {% elif aspect.aspect_type == 'Opposition' %}☍
-                                {% elif aspect.aspect_type == 'Square' %}□
-                                {% elif aspect.aspect_type == 'Sextile' %}⚹
-                                {% elif aspect.aspect_type == 'Conjunction' %}☌
-                                {% else %}⚹{% endif %}
-                            </span>
-                        </div>
-                        
-                        <!-- Planet Names & Type -->
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="font-bold text-base text-white">{{ aspect.planet1 }}</span>
-                                <span class="
-                                    {% if aspect.aspect_type == 'Trine' %}text-green-400
-                                    {% elif aspect.aspect_type == 'Opposition' %}text-red-400
-                                    {% elif aspect.aspect_type == 'Square' %}text-orange-400
-                                    {% elif aspect.aspect_type == 'Sextile' %}text-blue-400
-                                    {% elif aspect.aspect_type == 'Conjunction' %}text-yellow-400
-                                    {% else %}text-purple-400{% endif %}
-                                    font-bold text-xs uppercase tracking-wide">
-                                    {{ aspect.aspect_type }}
-                                </span>
-                                <span class="font-bold text-base text-white">{{ aspect.planet2 }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
-                                    Orb: {{ aspect.orb|floatformat:1 }}°
-                                </span>
-                                <span class="text-xs text-slate-500">
-                                    Click to expand
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Chevron Icon -->
-                    <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 flex-shrink-0 aspect-chevron" 
-                       id="aspect-icon-{{ aspect_id }}"></i>
-                </button>
-                
-                <!-- Expandable Content -->
-                <div class="aspect-detail-content border-t border-indigo-500/10" 
-                     id="aspect-content-{{ aspect_id }}">
-                    <div class="p-4 aspect-htmx-target"
-                         hx-get="{% url 'deep_dive:aspect_detail' aspect.planet1 aspect.planet2 aspect.aspect_type %}"
-                         hx-trigger="intersect once"
-                         hx-swap="innerHTML">
-                        <div class="flex items-center justify-center py-6">
-                            <div class="text-center">
-                                <div class="animate-pulse w-8 h-8 mx-auto mb-3 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                                    <i class="fas fa-spinner fa-spin text-indigo-400"></i>
+                            <div class="planet-section" id="section-{{ planet.name }}-aspects">
+                                <div class="space-y-2">
+                                    <h4 class="font-semibold text-indigo-300 mb-3 flex items-center text-sm">
+                                        <i class="fas fa-project-diagram mr-2"></i>
+                                        Planetary Aspects
+                                    </h4>
+                                    {% for aspect in natal_chart.aspects %}
+                                    {% if aspect.planet1 == planet.name or aspect.planet2 == planet.name %}
+                                    {% with aspect_id=planet.name|add:"-"|add:aspect.planet1|add:"-"|add:aspect.planet2|add:"-"|add:aspect.aspect_type|slugify %}
+                                    <div class="aspect-unified-card bg-slate-900/50 rounded-xl border border-indigo-500/10 hover:border-indigo-500/30 transition-all overflow-hidden"
+                                        data-aspect-id="{{ aspect_id }}" data-planet="{{ planet.name }}"
+                                        data-planet1="{{ aspect.planet1 }}" data-planet2="{{ aspect.planet2 }}"
+                                        data-aspect-type="{{ aspect.aspect_type }}">
+
+                                        <!-- Clickable Header -->
+                                        <button
+                                            class="w-full text-left p-4 hover:bg-slate-800/30 transition-colors flex items-center justify-between gap-3"
+                                            onclick="toggleAspectDetail('{{ aspect_id }}', event)">
+                                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                                <!-- Aspect Type Badge -->
+                                                <div class="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border
+                                                        {% if aspect.aspect_type == 'Trine' %}bg-green-500/10 border-green-500/30
+                                                        {% elif aspect.aspect_type == 'Opposition' %}bg-red-500/10 border-red-500/30
+                                                        {% elif aspect.aspect_type == 'Square' %}bg-orange-500/10 border-orange-500/30
+                                                        {% elif aspect.aspect_type == 'Sextile' %}bg-blue-500/10 border-blue-500/30
+                                                        {% elif aspect.aspect_type == 'Conjunction' %}bg-yellow-500/10 border-yellow-500/30
+                                                        {% else %}bg-purple-500/10 border-purple-500/30{% endif %}">
+                                                    <span class="font-bold text-lg
+                                                            {% if aspect.aspect_type == 'Trine' %}text-green-400
+                                                            {% elif aspect.aspect_type == 'Opposition' %}text-red-400
+                                                            {% elif aspect.aspect_type == 'Square' %}text-orange-400
+                                                            {% elif aspect.aspect_type == 'Sextile' %}text-blue-400
+                                                            {% elif aspect.aspect_type == 'Conjunction' %}text-yellow-400
+                                                            {% else %}text-purple-400{% endif %}">
+                                                        {% if aspect.aspect_type == 'Trine' %}△
+                                                        {% elif aspect.aspect_type == 'Opposition' %}☍
+                                                        {% elif aspect.aspect_type == 'Square' %}□
+                                                        {% elif aspect.aspect_type == 'Sextile' %}⚹
+                                                        {% elif aspect.aspect_type == 'Conjunction' %}☌
+                                                        {% else %}⚹{% endif %}
+                                                    </span>
+                                                </div>
+
+                                                <!-- Planet Names & Type -->
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="flex items-center gap-2 mb-1">
+                                                        <span class="font-bold text-base text-white">{{ aspect.planet1 }}</span>
+                                                        <span class="
+                                                                {% if aspect.aspect_type == 'Trine' %}text-green-400
+                                                                {% elif aspect.aspect_type == 'Opposition' %}text-red-400
+                                                                {% elif aspect.aspect_type == 'Square' %}text-orange-400
+                                                                {% elif aspect.aspect_type == 'Sextile' %}text-blue-400
+                                                                {% elif aspect.aspect_type == 'Conjunction' %}text-yellow-400
+                                                                {% else %}text-purple-400{% endif %}
+                                                                font-bold text-xs uppercase tracking-wide">
+                                                            {{ aspect.aspect_type }}
+                                                        </span>
+                                                        <span class="font-bold text-base text-white">{{ aspect.planet2 }}</span>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
+                                                            Orb: {{ aspect.orb|floatformat:1 }}°
+                                                        </span>
+                                                        <span class="text-xs text-slate-500">
+                                                            Click to expand
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Chevron Icon -->
+                                            <i class="fas fa-chevron-down text-slate-400 transition-transform duration-300 flex-shrink-0 aspect-chevron"
+                                                id="aspect-icon-{{ aspect_id }}"></i>
+                                        </button>
+
+                                        <!-- Expandable Content -->
+                                        <div class="aspect-detail-content border-t border-indigo-500/10"
+                                            id="aspect-content-{{ aspect_id }}">
+                                            <div class="p-4 aspect-htmx-target"
+                                                hx-get="{% url 'deep_dive:aspect_detail' aspect.planet1 aspect.planet2 aspect.aspect_type %}"
+                                                hx-trigger="intersect once" hx-swap="innerHTML">
+                                                <div class="flex items-center justify-center py-6">
+                                                    <div class="text-center">
+                                                        <div
+                                                            class="animate-pulse w-8 h-8 mx-auto mb-3 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                                            <i class="fas fa-spinner fa-spin text-indigo-400"></i>
+                                                        </div>
+                                                        <span class="text-xs text-slate-400">Loading aspect
+                                                            interpretation...</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endwith %}
+                                    {% endif %}
+                                    {% endfor %}
+                                    {% if not natal_chart.aspects %}
+                                    <div class="bg-slate-900/30 rounded-lg p-6 border border-indigo-500/10 text-center">
+                                        <i class="fas fa-circle-nodes text-slate-600 text-3xl mb-2"></i>
+                                        <p class="text-sm text-slate-400">
+                                            No major aspects found for this planet.
+                                        </p>
+                                    </div>
+                                    {% endif %}
                                 </div>
-                                <span class="text-xs text-slate-400">Loading aspect interpretation...</span>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endwith %}
-            {% endif %}
-        {% endfor %}
-        {% if not natal_chart.aspects %}
-        <div class="bg-slate-900/30 rounded-lg p-6 border border-indigo-500/10 text-center">
-            <i class="fas fa-circle-nodes text-slate-600 text-3xl mb-2"></i>
-            <p class="text-sm text-slate-400">
-                No major aspects found for this planet.
-            </p>
-        </div>
-        {% endif %}
-    </div>
-</div>
 
                             <!-- Journal Entries Section -->
                             <div class="planet-section" id="section-{{ planet.name }}-journal">
@@ -282,12 +288,16 @@
                                         <i class="fas fa-journal-whills mr-2"></i>
                                         Related Journal Entries
                                     </h4>
-                                    <div hx-get="{% url 'deep_dive:planet_journals' planet.name %}"
-                                         hx-trigger="intersect once"
-                                         hx-swap="innerHTML">
-                                        <div class="text-center py-8">
-                                            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-purple-500/10 flex items-center justify-center">
-                                                <i class="fas fa-book text-purple-400/50 text-xl"></i>
+                                    <!-- Journal container with unique ID -->
+                                    <div id="journal-container-{{ planet.name }}"
+                                        hx-get="{% url 'deep_dive:planet_journals' planet.name %}"
+                                        hx-trigger="intersect once" hx-swap="innerHTML"
+                                        hx-indicator="#journal-loading-{{ planet.name }}">
+                                        <!-- Loading State -->
+                                        <div id="journal-loading-{{ planet.name }}" class="text-center py-8">
+                                            <div
+                                                class="w-12 h-12 mx-auto mb-3 rounded-full bg-purple-500/10 flex items-center justify-center">
+                                                <i class="fas fa-spinner fa-spin text-purple-400 text-xl"></i>
                                             </div>
                                             <p class="text-sm text-slate-400">Loading journal entries...</p>
                                         </div>
@@ -302,18 +312,19 @@
                                         <i class="fas fa-sticky-note mr-2"></i>
                                         Personal Notes
                                     </h4>
-                                    <textarea class="w-full bg-slate-800/50 border border-indigo-500/20 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
-                                              rows="4"
-                                              placeholder="Add your personal notes and insights about {{ planet.name }} in {{ planet.sign }}..."
-                                              hx-post="/deep-dive/planet-notes/{{ planet.name }}/"
-                                              hx-trigger="change delay:1s"
-                                              hx-include="this"></textarea>
+                                    <textarea
+                                        class="w-full bg-slate-800/50 border border-indigo-500/20 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
+                                        rows="4"
+                                        placeholder="COMING SOON..." 
+                                        hx-post="/deep_dives/planet-meaning/{{ planet.name }}/"
+                                        hx-trigger="change delay:1s" hx-include="this"></textarea>
                                     <div class="flex items-center justify-between mt-2">
                                         <p class="text-xs text-slate-500 flex items-center gap-1">
                                             <i class="fas fa-save"></i>
                                             <span>Auto-saves as you type</span>
                                         </p>
-                                        <button class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
+                                        <button
+                                            class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
                                             <i class="fas fa-history"></i>
                                             <span>View History</span>
                                         </button>
@@ -329,462 +340,469 @@
 
         </div>
 
-       
-       <!-- Special Points Section -->
-<div class="mt-8 pt-6 border-t border-indigo-500/20" id="special-points-section">
-    <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-bold text-white flex items-center">
-            <i class="fas fa-star mr-2 text-yellow-400"></i>
-            Special Points
-        </h3>
-        <div class="text-xs text-slate-400 flex items-center gap-1">
-            <i class="fas fa-circle text-green-400 text-[0.5rem] animate-pulse"></i>
-            <span>Currently active in the sky</span>
-        </div>
-    </div>
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {% for planet in natal_chart.planets %}
-            {% if planet.name in 'Chiron,Lilith,North Node,South Node' %}
-            <div class="special-point-card bg-gradient-to-br from-slate-800/40 to-slate-900/30 rounded-lg p-4 border border-yellow-500/20 hover:border-yellow-500/30 transition-colors {% if planet.is_currently_active %}ring-2 ring-green-500/30 animate-border-pulse{% endif %}"
-                 data-category="points"
-                 data-element="{{ planet.element }}"
-                 data-house="{{ planet.house }}"
-                 data-is-active="{{ planet.is_currently_active|yesno:'true,false' }}">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 relative">
-                        <span class="text-2xl">{{ planet.symbol }}</span>
-                        {% if planet.is_currently_active %}
-                        <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-slate-900 animate-pulse">
-                            <i class="fas fa-bolt text-[0.5rem] text-white"></i>
+
+        <!-- Special Points Section -->
+        <div class="mt-8 pt-6 border-t border-indigo-500/20" id="special-points-section">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <i class="fas fa-star mr-2 text-yellow-400"></i>
+                    Special Points
+                </h3>
+                <div class="text-xs text-slate-400 flex items-center gap-1">
+                    <i class="fas fa-circle text-green-400 text-[0.5rem] animate-pulse"></i>
+                    <span>Currently active in the sky</span>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {% for planet in natal_chart.planets %}
+                {% if planet.name in 'Chiron,Lilith,North Node,South Node' %}
+                <div class="special-point-card bg-gradient-to-br from-slate-800/40 to-slate-900/30 rounded-lg p-4 border border-yellow-500/20 hover:border-yellow-500/30 transition-colors {% if planet.is_currently_active %}ring-2 ring-green-500/30 animate-border-pulse{% endif %}"
+                    data-category="points" data-element="{{ planet.element }}" data-house="{{ planet.house }}"
+                    data-is-active="{{ planet.is_currently_active|yesno:'true,false' }}">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div
+                            class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 relative">
+                            <span class="text-2xl">{{ planet.symbol }}</span>
+                            {% if planet.is_currently_active %}
+                            <div
+                                class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-slate-900 animate-pulse">
+                                <i class="fas fa-bolt text-[0.5rem] text-white"></i>
+                            </div>
+                            {% endif %}
                         </div>
-                        {% endif %}
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <h4 class="font-bold text-white text-sm">{{ planet.name }}</h4>
+                                {% if planet.is_currently_active %}
+                                <span
+                                    class="text-xs px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 flex items-center gap-1">
+                                    <i class="fas fa-circle text-[0.4rem] animate-pulse"></i>
+                                    <span>Active</span>
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-slate-400">
+                                {{ planet.sign }} • House {{ planet.house }}
+                                {% if planet.is_currently_active %}
+                                <span class="text-green-400 ml-1">(Same sign in sky now)</span>
+                                {% endif %}
+                            </p>
+                        </div>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="flex items-center gap-2 mb-1">
-                            <h4 class="font-bold text-white text-sm">{{ planet.name }}</h4>
-                            {% if planet.is_currently_active %}
-                            <span class="text-xs px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300 border border-green-500/30 flex items-center gap-1">
-                                <i class="fas fa-circle text-[0.4rem] animate-pulse"></i>
-                                <span>Active</span>
-                            </span>
-                            {% endif %}
-                        </div>
-                        <p class="text-xs text-slate-400">
-                            {{ planet.sign }} • House {{ planet.house }}
-                            {% if planet.is_currently_active %}
-                            <span class="text-green-400 ml-1">(Same sign in sky now)</span>
-                            {% endif %}
+                    <p class="text-xs text-slate-300 leading-relaxed">
+                        {% if planet.name == 'North Node' %}
+                        Your life's purpose and growth direction
+                        {% elif planet.name == 'South Node' %}
+                        Past life talents and comfort zone
+                        {% elif planet.name == 'Chiron' %}
+                        Your deepest wound and healing journey
+                        {% elif planet.name == 'Lilith' %}
+                        Shadow self and raw authenticity
+                        {% endif %}
+                    </p>
+                    {% if planet.is_currently_active %}
+                    <div class="mt-3 pt-3 border-t border-green-500/20">
+                        <p class="text-xs text-green-300 flex items-center gap-1">
+                            <i class="fas fa-sparkles text-green-400"></i>
+                            <span>This placement is energetically active in the current sky</span>
                         </p>
                     </div>
-                </div>
-                <p class="text-xs text-slate-300 leading-relaxed">
-                    {% if planet.name == 'North Node' %}
-                    Your life's purpose and growth direction
-                    {% elif planet.name == 'South Node' %}
-                    Past life talents and comfort zone
-                    {% elif planet.name == 'Chiron' %}
-                    Your deepest wound and healing journey
-                    {% elif planet.name == 'Lilith' %}
-                    Shadow self and raw authenticity
                     {% endif %}
-                </p>
-                {% if planet.is_currently_active %}
-                <div class="mt-3 pt-3 border-t border-green-500/20">
-                    <p class="text-xs text-green-300 flex items-center gap-1">
-                        <i class="fas fa-sparkles text-green-400"></i>
-                        <span>This placement is energetically active in the current sky</span>
-                    </p>
                 </div>
                 {% endif %}
+                {% endfor %}
             </div>
-            {% endif %}
-        {% endfor %}
-    </div>
-</div>
+        </div>
 
     </div>
 </div>
 
 <style>
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-}
-.custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(30, 41, 59, 0.3);
-    border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.5);
-    border-radius: 4px;
-}
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.7);
-}
-
-/* Filter Tabs */
-.filter-tab {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.4), rgba(17, 24, 39, 0.5));
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 0.75rem;
-    color: #94a3b8;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
-
-.filter-tab:hover {
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.6), rgba(17, 24, 39, 0.7));
-    border-color: rgba(139, 92, 246, 0.4);
-    color: #cbd5e1;
-}
-
-.filter-tab.active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(59, 130, 246, 0.4));
-    border-color: rgba(139, 92, 246, 0.7);
-    color: #e0e7ff;
-    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
-}
-
-/* Action Buttons */
-.action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.25rem;
-    padding: 0.5rem 0.75rem;
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.3), rgba(17, 24, 39, 0.4));
-    border: 1px solid rgba(139, 92, 246, 0.15);
-    border-radius: 0.5rem;
-    color: #94a3b8;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.action-btn:hover {
-    background: linear-gradient(145deg, rgba(30, 27, 75, 0.5), rgba(17, 24, 39, 0.6));
-    border-color: rgba(139, 92, 246, 0.3);
-    color: #cbd5e1;
-}
-
-.action-btn.active {
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.2));
-    border-color: rgba(139, 92, 246, 0.5);
-    color: #e0e7ff;
-}
-
-/* Planet Card Animation */
-.planet-card-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.planet-card-content.expanded {
-    max-height: none !important;
-    overflow: visible;
-}
-
-.planet-card-icon {
-    transition: transform 0.3s ease;
-}
-
-/* Aspect Unified Card */
-.aspect-unified-card {
-    position: relative;
-}
-
-.aspect-unified-card button:focus {
-    outline: none;
-}
-
-.aspect-unified-card:hover {
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
-}
-
-.aspect-detail-content {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.aspect-detail-content.expanded {
-    max-height: 2000px;
-}
-
-.aspect-chevron {
-    transition: transform 0.3s ease;
-}
-
-.aspect-unified-card.active {
-    background: linear-gradient(145deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
-    border-color: rgba(99, 102, 241, 0.3) !important;
-}
-
-.aspect-unified-card.active .aspect-chevron {
-    transform: rotate(180deg);
-}
-
-.custom-scrollbar {
-    scroll-behavior: smooth;
-}
-
-/* Planet Sections */
-.planet-section {
-    display: none;
-}
-
-.planet-section.active {
-    display: block;
-    animation: fadeInUp 0.3s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
+    /* Custom scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
     }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
 
-.animate-border-pulse {
-    animation: borderPulse 2s infinite;
-}
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(30, 41, 59, 0.3);
+        border-radius: 4px;
+    }
 
-@keyframes borderPulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.5);
+        border-radius: 4px;
     }
-    70% {
-        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.7);
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+
+    /* Filter Tabs */
+    .filter-tab {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(145deg, rgba(30, 27, 75, 0.4), rgba(17, 24, 39, 0.5));
+        border: 1px solid rgba(139, 92, 246, 0.2);
+        border-radius: 0.75rem;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
     }
-}
+
+    .filter-tab:hover {
+        background: linear-gradient(145deg, rgba(30, 27, 75, 0.6), rgba(17, 24, 39, 0.7));
+        border-color: rgba(139, 92, 246, 0.4);
+        color: #cbd5e1;
+    }
+
+    .filter-tab.active {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.5), rgba(59, 130, 246, 0.4));
+        border-color: rgba(139, 92, 246, 0.7);
+        color: #e0e7ff;
+        box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Action Buttons */
+    .action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.25rem;
+        padding: 0.5rem 0.75rem;
+        background: linear-gradient(145deg, rgba(30, 27, 75, 0.3), rgba(17, 24, 39, 0.4));
+        border: 1px solid rgba(139, 92, 246, 0.15);
+        border-radius: 0.5rem;
+        color: #94a3b8;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        background: linear-gradient(145deg, rgba(30, 27, 75, 0.5), rgba(17, 24, 39, 0.6));
+        border-color: rgba(139, 92, 246, 0.3);
+        color: #cbd5e1;
+    }
+
+    .action-btn.active {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.2));
+        border-color: rgba(139, 92, 246, 0.5);
+        color: #e0e7ff;
+    }
+
+    /* Planet Card Animation */
+    .planet-card-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .planet-card-content.expanded {
+        max-height: none !important;
+        overflow: visible;
+    }
+
+    .planet-card-icon {
+        transition: transform 0.3s ease;
+    }
+
+    /* Aspect Unified Card */
+    .aspect-unified-card {
+        position: relative;
+    }
+
+    .aspect-unified-card button:focus {
+        outline: none;
+    }
+
+    .aspect-unified-card:hover {
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+    }
+
+    .aspect-detail-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .aspect-detail-content.expanded {
+        max-height: 2000px;
+    }
+
+    .aspect-chevron {
+        transition: transform 0.3s ease;
+    }
+
+    .aspect-unified-card.active {
+        background: linear-gradient(145deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+        border-color: rgba(99, 102, 241, 0.3) !important;
+    }
+
+    .aspect-unified-card.active .aspect-chevron .aspect-unified-card.active .aspect-chevron {
+        transform: rotate(180deg);
+    }
+
+    .custom-scrollbar {
+        scroll-behavior: smooth;
+    }
+
+    /* Planet Sections */
+    .planet-section {
+        display: none;
+    }
+
+    .planet-section.active {
+        display: block;
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-border-pulse {
+        animation: borderPulse 2s infinite;
+    }
+
+    @keyframes borderPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        }
+    }
 </style>
 
 <script>
-// Close modal
-function closeChartDetailsModal() {
-    const modal = document.getElementById('chart-details-modal');
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('active');
-    }
-}
-
-// Toggle planet card
-function togglePlanetCard(planetName) {
-    const content = document.getElementById(`content-${planetName}`);
-    const icon = document.getElementById(`icon-${planetName}`);
-    
-    if (content.classList.contains('expanded')) {
-        content.classList.remove('expanded');
-        content.style.maxHeight = '0';
-        icon.style.transform = 'rotate(0deg)';
-    } else {
-        document.querySelectorAll('.planet-card-content').forEach(c => {
-            c.classList.remove('expanded');
-            c.style.maxHeight = '0';
-        });
-        document.querySelectorAll('.planet-card-icon').forEach(i => {
-            i.style.transform = 'rotate(0deg)';
-        });
-        
-        setTimeout(() => {
-            content.style.maxHeight = content.scrollHeight + 'px';
-            setTimeout(() => {
-                content.classList.add('expanded');
-            }, 50);
-        }, 50);
-        icon.style.transform = 'rotate(180deg)';
-    }
-}
-
-// Show planet section
-function showPlanetSection(planetName, section) {
-    const card = document.querySelector(`[data-planet="${planetName}"]`);
-    const buttons = card.querySelectorAll('.action-btn');
-    
-    buttons.forEach(btn => {
-        if (btn.onclick.toString().includes(`'${section}'`)) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
+    // Close modal
+    function closeChartDetailsModal() {
+        const modal = document.getElementById('chart-details-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('active');
         }
-    });
-    
-    const sections = card.querySelectorAll('.planet-section');
-    sections.forEach(s => {
-        if (s.id === `section-${planetName}-${section}`) {
-            s.classList.add('active');
+    }
+
+    // Toggle planet card
+    function togglePlanetCard(planetName) {
+        const content = document.getElementById(`content-${planetName}`);
+        const icon = document.getElementById(`icon-${planetName}`);
+
+        if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            content.style.maxHeight = '0';
+            icon.style.transform = 'rotate(0deg)';
         } else {
-            s.classList.remove('active');
-        }
-    });
-}
-
-// SINGLE, CLEAN FILTERING FUNCTION
-function initializeFiltering() {
-    console.log('Initializing filters...');
-    
-    const filterButtons = document.querySelectorAll('.filter-tab');
-    console.log('Found filter buttons:', filterButtons.length);
-    
-    filterButtons.forEach(button => {
-        // Remove any existing click listeners to prevent duplicates
-        button.replaceWith(button.cloneNode(true));
-    });
-    
-    // Re-select buttons after cloning
-    const freshButtons = document.querySelectorAll('.filter-tab');
-    
-    freshButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const filter = this.getAttribute('data-filter');
-            console.log('Filter clicked:', filter);
-            
-            // Update button states
-            freshButtons.forEach(btn => btn.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Filter planet cards
-            const cards = document.querySelectorAll('.planet-detail-card');
-            console.log('Filtering', cards.length, 'planet cards');
-            
-            cards.forEach(card => {
-                const category = card.getAttribute('data-category');
-                console.log(`Card ${card.getAttribute('data-planet')}: category=${category}`);
-                
-                if (filter === 'all' || category === filter) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
-                }
-            });
-            
-            // Handle Special Points section
-            const specialPointsSection = document.getElementById('special-points-section');
-            if (specialPointsSection) {
-                console.log('Special points section found, filter:', filter);
-                if (filter === 'all' || filter === 'points') {
-                    specialPointsSection.style.display = 'block';
-                    console.log('Showing special points section');
-                } else {
-                    specialPointsSection.style.display = 'none';
-                    console.log('Hiding special points section');
-                }
-            } else {
-                console.log('Special points section NOT found');
-            }
-        });
-    });
-}
-
-// Toggle aspect detail
-function toggleAspectDetail(aspectId, event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    
-    console.log('Toggle aspect detail called for:', aspectId);
-    
-    const card = document.querySelector(`[data-aspect-id="${aspectId}"]`);
-    const content = document.getElementById(`aspect-content-${aspectId}`);
-    const icon = document.getElementById(`aspect-icon-${aspectId}`);
-    
-    console.log('Found elements:', { card: !!card, content: !!content, icon: !!icon });
-    
-    if (!card || !content || !icon) {
-        console.error('Missing elements for aspect:', aspectId);
-        return;
-    }
-    
-    const isOpen = card.classList.contains('active');
-    console.log('Is currently open:', isOpen);
-    
-    const planetCard = card.closest('.planet-card-content');
-    
-    if (isOpen) {
-        card.classList.remove('active');
-        content.classList.remove('expanded');
-        console.log('Closed aspect:', aspectId);
-    } else {
-        if (planetCard) {
-            planetCard.querySelectorAll('.aspect-unified-card').forEach(c => {
-                c.classList.remove('active');
-            });
-            planetCard.querySelectorAll('.aspect-detail-content').forEach(c => {
+            document.querySelectorAll('.planet-card-content').forEach(c => {
                 c.classList.remove('expanded');
+                c.style.maxHeight = '0';
             });
-        }
-        
-        card.classList.add('active');
-        content.classList.add('expanded');
-        console.log('Opened aspect:', aspectId);
-        
-        const htmxElement = content.querySelector('[hx-get]');
-        if (htmxElement) {
-            const url = htmxElement.getAttribute('hx-get');
-            console.log('HTMX will load from:', url);
-        }
-        
-        setTimeout(() => {
-            const modalContent = card.closest('.custom-scrollbar');
-            if (modalContent) {
-                const cardRect = card.getBoundingClientRect();
-                const modalRect = modalContent.getBoundingClientRect();
-                
-                if (cardRect.top < modalRect.top || cardRect.bottom > modalRect.bottom) {
-                    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    console.log('Scrolled into view');
-                }
-            }
-        }, 100);
-    }
-}
+            document.querySelectorAll('.planet-card-icon').forEach(i => {
+                i.style.transform = 'rotate(0deg)';
+            });
 
-// Event listeners for modal
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing...');
-    
-    // Initialize filtering
-    initializeFiltering();
-    
-    // Close modal on outside click
-    document.getElementById('chart-details-modal')?.addEventListener('click', function(e) {
-        if (e.target === this) {
+            setTimeout(() => {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                setTimeout(() => {
+                    content.classList.add('expanded');
+                }, 50);
+            }, 50);
+            icon.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // Show planet section
+    function showPlanetSection(planetName, section) {
+        const card = document.querySelector(`[data-planet="${planetName}"]`);
+        const buttons = card.querySelectorAll('.action-btn');
+
+        buttons.forEach(btn => {
+            if (btn.onclick.toString().includes(`'${section}'`)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const sections = card.querySelectorAll('.planet-section');
+        sections.forEach(s => {
+            if (s.id === `section-${planetName}-${section}`) {
+                s.classList.add('active');
+            } else {
+                s.classList.remove('active');
+            }
+        });
+    }
+
+    // SINGLE, CLEAN FILTERING FUNCTION
+    function initializeFiltering() {
+        console.log('Initializing filters...');
+
+        const filterButtons = document.querySelectorAll('.filter-tab');
+        console.log('Found filter buttons:', filterButtons.length);
+
+        filterButtons.forEach(button => {
+            // Remove any existing click listeners to prevent duplicates
+            button.replaceWith(button.cloneNode(true));
+        });
+
+        // Re-select buttons after cloning
+        const freshButtons = document.querySelectorAll('.filter-tab');
+
+        freshButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                const filter = this.getAttribute('data-filter');
+                console.log('Filter clicked:', filter);
+
+                // Update button states
+                freshButtons.forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                // Filter planet cards
+                const cards = document.querySelectorAll('.planet-detail-card');
+                console.log('Filtering', cards.length, 'planet cards');
+
+                cards.forEach(card => {
+                    const category = card.getAttribute('data-category');
+                    console.log(`Card ${card.getAttribute('data-planet')}: category=${category}`);
+
+                    if (filter === 'all' || category === filter) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+
+                // Handle Special Points section
+                const specialPointsSection = document.getElementById('special-points-section');
+                if (specialPointsSection) {
+                    console.log('Special points section found, filter:', filter);
+                    if (filter === 'all' || filter === 'points') {
+                        specialPointsSection.style.display = 'block';
+                        console.log('Showing special points section');
+                    } else {
+                        specialPointsSection.style.display = 'none';
+                        console.log('Hiding special points section');
+                    }
+                } else {
+                    console.log('Special points section NOT found');
+                }
+            });
+        });
+    }
+
+    // Toggle aspect detail
+    function toggleAspectDetail(aspectId, event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        console.log('Toggle aspect detail called for:', aspectId);
+
+        const card = document.querySelector(`[data-aspect-id="${aspectId}"]`);
+        const content = document.getElementById(`aspect-content-${aspectId}`);
+        const icon = document.getElementById(`aspect-icon-${aspectId}`);
+
+        console.log('Found elements:', { card: !!card, content: !!content, icon: !!icon });
+
+        if (!card || !content || !icon) {
+            console.error('Missing elements for aspect:', aspectId);
+            return;
+        }
+
+        const isOpen = card.classList.contains('active');
+        console.log('Is currently open:', isOpen);
+
+        const planetCard = card.closest('.planet-card-content');
+
+        if (isOpen) {
+            card.classList.remove('active');
+            content.classList.remove('expanded');
+            console.log('Closed aspect:', aspectId);
+        } else {
+            if (planetCard) {
+                planetCard.querySelectorAll('.aspect-unified-card').forEach(c => {
+                    c.classList.remove('active');
+                });
+                planetCard.querySelectorAll('.aspect-detail-content').forEach(c => {
+                    c.classList.remove('expanded');
+                });
+            }
+
+            card.classList.add('active');
+            content.classList.add('expanded');
+            console.log('Opened aspect:', aspectId);
+
+            const htmxElement = content.querySelector('[hx-get]');
+            if (htmxElement) {
+                const url = htmxElement.getAttribute('hx-get');
+                console.log('HTMX will load from:', url);
+            }
+
+            setTimeout(() => {
+                const modalContent = card.closest('.custom-scrollbar');
+                if (modalContent) {
+                    const cardRect = card.getBoundingClientRect();
+                    const modalRect = modalContent.getBoundingClientRect();
+
+                    if (cardRect.top < modalRect.top || cardRect.bottom > modalRect.bottom) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                        console.log('Scrolled into view');
+                    }
+                }
+            }, 100);
+        }
+    }
+
+    // Event listeners for modal
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('DOM loaded, initializing...');
+
+        // Initialize filtering
+        initializeFiltering();
+
+        // Close modal on outside click
+        document.getElementById('chart-details-modal')?.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeChartDetailsModal();
+            }
+        });
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
             closeChartDetailsModal();
         }
     });
-});
 
-// Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeChartDetailsModal();
+    // Fallback initialization in case DOMContentLoaded already fired
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeFiltering);
+    } else {
+        // DOM already loaded, initialize immediately
+        setTimeout(initializeFiltering, 100);
     }
-});
-
-// Fallback initialization in case DOMContentLoaded already fired
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeFiltering);
-} else {
-    // DOM already loaded, initialize immediately
-    setTimeout(initializeFiltering, 100);
-}
 </script>

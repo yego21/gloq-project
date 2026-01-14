@@ -1,0 +1,140 @@
+<!-- partials/_planet_journals_entries.html -->
+<!-- This partial contains ONLY the entries and pagination, NO wrapper div -->
+<!-- Used by HTMX to replace innerHTML of #journal-entries-container -->
+
+<!-- Journal Entries -->
+<div class="space-y-3 mb-6">
+    {% for entry in entries %}
+        <div class="journal-entry-card p-4 border border-indigo-500/20 rounded-lg shadow-sm hover-lift cursor-pointer transition-all" 
+             onclick="loadEntryDetail({{ entry.id }}, '{{ planet_name }}', '{{ natal_sign }}')">
+            
+            <div class="flex justify-between items-start mb-3">
+                <div class="flex-1">
+                    <div class="flex items-center gap-2 text-sm text-slate-400 mb-1">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ entry.created_at|date:"F j, Y" }}</span>
+                    </div>
+                    {% if entry.label %}
+                        <span class="inline-block px-2 py-1 bg-slate-700/50 text-slate-300 rounded text-xs">
+                            {{ entry.label }}
+                        </span>
+                    {% endif %}
+                </div>
+                <span class="inline-flex items-center gap-1 px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs border border-indigo-500/30">
+                    <i class="fas fa-star text-xs"></i> {{ entry.match_context.description }}
+                </span>
+            </div>
+            
+            <!-- Entry Preview -->
+            <div class="text-slate-300 text-sm leading-relaxed mb-3">
+                {% if entry.content|length > 150 %}
+                    {{ entry.content|truncatewords:25|linebreaks }}
+                    <span class="text-indigo-400 text-xs font-medium flex items-center gap-1 mt-2">
+                        <i class="fas fa-arrow-right"></i> Click to read more
+                    </span>
+                {% else %}
+                    {{ entry.content|linebreaks }}
+                {% endif %}
+            </div>
+            
+            <!-- Tags -->
+            {% if entry.tags.all %}
+                <div class="flex flex-wrap gap-2 mt-2">
+                    {% for tag in entry.tags.all %}
+                        <span class="inline-flex items-center gap-1 px-2 py-1 bg-slate-700/50 text-slate-400 rounded text-xs">
+                            <i class="fas fa-tag text-xs"></i> {{ tag.name }}
+                        </span>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+    <nav aria-label="Journal entries pagination" class="mt-6">
+        <div class="flex items-center justify-center gap-2">
+            <!-- Previous Button -->
+            {% if has_previous %}
+                <button 
+                    hx-get="{% url 'deep_dive:planet_journals' planet_name %}?page={{ previous_page }}" 
+                    hx-target="#journal-entries-container" 
+                    hx-swap="innerHTML"
+                    hx-indicator="#pagination-loading"
+                    class="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors flex items-center gap-2">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="hidden sm:inline">Previous</span>
+                </button>
+            {% else %}
+                <button disabled
+                    class="px-4 py-2 bg-slate-800/30 text-slate-600 rounded-lg cursor-not-allowed flex items-center gap-2">
+                    <i class="fas fa-chevron-left"></i>
+                    <span class="hidden sm:inline">Previous</span>
+                </button>
+            {% endif %}
+            
+            <!-- Page Numbers -->
+            <div class="flex items-center gap-1">
+                {% for page_num in page_range %}
+                    {% if page_num == '...' %}
+                        <span class="px-3 py-2 text-slate-500">...</span>
+                    {% else %}
+                        {% if page_num == current_page %}
+                            <button 
+                                class="px-3 py-2 bg-indigo-500 text-white rounded-lg font-semibold min-w-[40px]">
+                                {{ page_num }}
+                            </button>
+                        {% else %}
+                            <button 
+                                hx-get="{% url 'deep_dive:planet_journals' planet_name %}?page={{ page_num }}" 
+                                hx-target="#journal-entries-container" 
+                                hx-swap="innerHTML"
+                                hx-indicator="#pagination-loading"
+                                class="px-3 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors min-w-[40px]">
+                                {{ page_num }}
+                            </button>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Next Button -->
+            {% if has_next %}
+                <button 
+                    hx-get="{% url 'deep_dive:planet_journals' planet_name %}?page={{ next_page }}" 
+                    hx-target="#journal-entries-container" 
+                    hx-swap="innerHTML"
+                    hx-indicator="#pagination-loading"
+                    class="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 rounded-lg transition-colors flex items-center gap-2">
+                    <span class="hidden sm:inline">Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            {% else %}
+                <button disabled
+                    class="px-4 py-2 bg-slate-800/30 text-slate-600 rounded-lg cursor-not-allowed flex items-center gap-2">
+                    <span class="hidden sm:inline">Next</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            {% endif %}
+        </div>
+        
+        <!-- Loading Spinner -->
+        <div class="flex justify-center mt-4">
+            <div id="pagination-loading" class="htmx-indicator">
+                <div class="animate-spin rounded-full h-8 w-8 border-4 border-indigo-500/30 border-t-indigo-500"></div>
+            </div>
+        </div>
+        
+        <!-- Page Info -->
+        <div class="text-center mt-3">
+            <p class="text-xs text-slate-500">
+                Page {{ current_page }} of {{ total_pages }} • Showing {{ entries|length }} of {{ total_entries }} entries
+            </p>
+        </div>
+    </nav>
+{% endif %}
+
+
+
+
