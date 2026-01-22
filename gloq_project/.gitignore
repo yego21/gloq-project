@@ -1,24 +1,38 @@
 # Python
 __pycache__/
 *.py[cod]
+*.pyc
+*.pyo
 *.sqlite3
 
-# Env
+# Virtual Environments
 venv/
-../.env
+env/
+gvenv/
+gloqvenv/
+
+# Environment variables
 .env
-gvenv
-../gvenv/
 
 # Django
 db.sqlite3
 *.log
+staticfiles/
+media/
 
-# VSCode / IDE
+# Database & JSON files
+*.json
+
+# IDEs
 .vscode/
 .idea/
-.env
-gloqvenv/
-.idea/
+
+# Build files
 static/css/output.css
+
+# Executables
 *.exe
+
+# OS files
+.DS_Store
+Thumbs.db
