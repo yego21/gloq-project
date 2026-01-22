@@ -964,3 +964,18 @@
 .htmx-request.htmx-indicator {
     display: flex;
 }
+
+
+
+
+/* Apply this to your icon container */
+.mystical-icon {
+    filter: grayscale(80%) brightness(0.8);
+    transition: all 0.4s ease;
+}
+
+.mystical-icon:hover {
+    filter: grayscale(0%) brightness(1.2);
+    /* Add a subtle drop-shadow glow instead of a solid background */
+    filter: drop-shadow(0 0 8px var(--accent-color));
+}

@@ -360,3 +360,7 @@ class TarotCardDraw(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.card_name} - {self.drawn_at.date()}"
+
+
+# class AIPlanetPlacementReading(models.Model):
+#     reading =

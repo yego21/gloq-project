@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}Gloq{% endblock %}</title>
   <link href="{% static 'css/output.css' %}" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://unpkg.com/htmx.org@1.9.2"></script>
   <style>
         /* Custom animations and transitions */
@@ -98,7 +99,7 @@
                 <!-- Turn username into link -->
                 <a href="" 
                    class="text-gray-700 font-medium hover:text-indigo-600 transition-colors">
-                   {{ user.username }}
+                   {{ user.username }} 
                 </a>
             </div>
 

@@ -81,36 +81,6 @@ def rhythm_dashboard(request):
         )
 
 
-# @login_required
-# def get_personal_rhythm_data(request):
-#     """
-#     API endpoint that returns personal rhythm analysis data.
-#     Used by HTMX to load rhythm section.
-#
-#     Returns JSON with insights and chart data.
-#     """
-#     try:
-#         analyzer = UserPatternAnalyzer(request.user)
-#         insights = analyzer.get_all_insights()
-#         chart_data = analyzer.get_visualization_data()
-#
-#         return JsonResponse({
-#             'success': True,
-#             'insights': insights,
-#             'chart_data': chart_data
-#         })
-#
-#     except Exception as e:
-#         import traceback
-#         print(f"Personal rhythm error: {e}")
-#         print(traceback.format_exc())
-#
-#         return JsonResponse({
-#             'success': False,
-#             'error': str(e)
-#         }, status=500)
-
-
 @login_required
 def personal_rhythm_section(request):
     """
@@ -268,88 +238,6 @@ class ReadingWrapper:
     @property
     def is_today(self):
         return self._ai_reading.is_today(self.reading_type)
-
-
-# def astro_chart_reading(request):
-#     """
-#     Returns chart preview section
-#     If user is logged in and has a birth profile, include chart data
-#     """
-#     from userprofile.models import BirthProfile
-#     natal_chart = None
-#     birth_profile = None
-#     has_birth_profile = False
-#     current_reading = None
-#     has_birth_time = False
-#
-#     # Initialize empty readings
-#     readings = {
-#         'daily_overview': None,
-#         'transit_focus': None,
-#         'element_wisdom': None,
-#     }
-#
-#     if request.user.is_authenticated:
-#         try:
-#             current_reading = AIReading.objects.get(user=request.user)
-#
-#             # Wrap each reading with is_today check
-#             if current_reading.has_reading_type('daily_overview'):
-#                 reading_data = current_reading.get_reading('daily_overview')
-#                 readings['daily_overview'] = ReadingWrapper(reading_data, 'daily_overview', current_reading)
-#
-#             if current_reading.has_reading_type('transit_focus'):
-#                 reading_data = current_reading.get_reading('transit_focus')
-#                 readings['transit_focus'] = ReadingWrapper(reading_data, 'transit_focus', current_reading)
-#
-#             if current_reading.has_reading_type('element_wisdom'):
-#                 reading_data = current_reading.get_reading('element_wisdom')
-#                 readings['element_wisdom'] = ReadingWrapper(reading_data, 'element_wisdom', current_reading)
-#
-#         except AIReading.DoesNotExist:
-#             # No readings exist for this user yet
-#             pass
-#
-#     if request.user.is_authenticated:
-#         try:
-#             birth_profile = request.user.birth_profile
-#             has_birth_profile = True
-#             has_birth_time = birth_profile.has_birth_time
-#             natal_chart = birth_profile.cached_chart_data
-#         except BirthProfile.DoesNotExist:
-#             pass
-#         except Exception as e:
-#             print(f"Error loading birth profile: {e}")
-#
-#     # Extract simple fields for template
-#     chart_context = {}
-#     if natal_chart:
-#         sun_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Sun'), None)
-#         moon_planet = next((p for p in natal_chart.get('planets', []) if p['name'] == 'Moon'), None)
-#
-#         chart_context = {
-#             'sun_sign': sun_planet['sign'] if sun_planet else 'Unknown',
-#             'moon_sign': moon_planet['sign'] if moon_planet else 'Unknown',
-#             'rising_sign': natal_chart.get('ascendant', {}).get('sign', 'N/A'),
-#             'dominant_element': natal_chart.get('dominant_element', 'Spirit'),
-#             'planet_count': len(natal_chart.get('planets', [])),
-#             'aspect_count': len(natal_chart.get('aspects', [])),
-#         }
-#
-#     return render(request, 'deep_dive/mystical/astrology/_astro_chart_reading.html', {
-#         'has_birth_profile': has_birth_profile,
-#         'has_chart': natal_chart is not None,
-#         'has_birth_time': has_birth_time,
-#         'natal_chart': json.dumps(natal_chart) if natal_chart else None,
-#         'daily_reading': readings['daily_overview'],
-#         'transit_reading': readings['transit_focus'],
-#         'element_reading': readings['element_wisdom'],
-#         'chart_info': chart_context,
-#         'birth_setup_url': reverse('userprofile:birth_profile_setup')
-#     })
-
-
-# Add this to your deep_dive/views.py file
 
 @login_required
 def birth_chart_view(request):

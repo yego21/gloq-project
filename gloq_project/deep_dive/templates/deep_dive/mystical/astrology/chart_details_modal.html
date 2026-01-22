@@ -1,6 +1,5 @@
 <!-- Chart Details Modal Content -->
-<div
-    class="bg-slate-900 rounded-2xl border border-indigo-500/30 w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+<div class="bg-slate-900 rounded-2xl border border-indigo-500/30 w-full max-w-3xl h-[85vh] flex flex-col shadow-2xl overflow-hidden">
 
     <!-- Modal Header (Sticky) -->
     <div class="flex-shrink-0 px-4 sm:px-6 pt-6 pb-4 bg-slate-900 border-b border-indigo-500/20">
@@ -63,19 +62,88 @@
                         <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
 
                             <div
-                                class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-indigo-500/30 flex-shrink-0 relative">
-                                <span class="text-2xl sm:text-3xl">{{ planet.symbol }}</span>
+                                class="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-slate-800/60 flex items-center justify-center border border-slate-700/50 flex-shrink-0 relative backdrop-blur-sm">
+                                <svg class="planet-icon" viewBox="0 0 100 100" width="28" height="28">
+                                    {% if planet.name == 'Sun' %}
+                                        <circle cx="50" cy="50" r="20" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <circle cx="50" cy="50" r="8" fill="currentColor" opacity="0.3"/>
+                                        <line x1="50" y1="10" x2="50" y2="25" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="50" y1="75" x2="50" y2="90" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="10" y1="50" x2="25" y2="50" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="75" y1="50" x2="90" y2="50" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Moon' %}
+                                        <path d="M 65 50 A 20 20 0 1 1 35 50 A 15 15 0 1 0 65 50" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Mercury' %}
+                                        <circle cx="50" cy="55" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 40 40 L 60 40" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 50 40 L 50 25" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 45 25 L 55 25 L 50 18 Z" fill="currentColor"/>
+                                        <path d="M 50 70 L 50 85" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 43 85 L 57 85" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Venus' %}
+                                        <circle cx="50" cy="40" r="18" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="50" y1="58" x2="50" y2="85" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="35" y1="75" x2="65" y2="75" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Mars' %}
+                                        <circle cx="45" cy="55" r="18" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="60" y1="40" x2="80" y2="20" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="80" y1="20" x2="80" y2="35" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="80" y1="20" x2="65" y2="20" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Jupiter' %}
+                                        <path d="M 60 30 L 60 70" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 30 50 L 50 50" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 40 30 Q 40 40 50 40" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                    {% elif planet.name == 'Saturn' %}
+                                        <path d="M 50 25 L 50 75" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 30 35 L 70 35" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 35 50 Q 35 65 50 65 Q 65 65 65 50" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                    {% elif planet.name == 'Uranus' %}
+                                        <circle cx="50" cy="65" r="12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="50" y1="53" x2="50" y2="30" stroke="currentColor" stroke-width="2.5"/>
+                                        <line x1="35" y1="30" x2="65" y2="30" stroke="currentColor" stroke-width="2.5"/>
+                                        <circle cx="35" cy="30" r="4" fill="currentColor"/>
+                                        <circle cx="65" cy="30" r="4" fill="currentColor"/>
+                                    {% elif planet.name == 'Neptune' %}
+                                        <path d="M 50 25 L 50 75" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 30 45 L 70 45" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 30 45 Q 30 60 40 65" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                        <path d="M 70 45 Q 70 60 60 65" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                        <line x1="45" y1="75" x2="55" y2="75" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Pluto' %}
+                                        <circle cx="50" cy="55" r="13" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 50 42 L 50 25" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 35 25 L 65 25" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 50 68 L 50 80" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 43 80 L 57 80" stroke="currentColor" stroke-width="2.5"/>
+                                    {% elif planet.name == 'Chiron' %}
+                                        <circle cx="50" cy="35" r="10" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 50 45 L 50 75" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 40 65 L 50 75 L 60 65" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                    {% elif planet.name == 'Lilith' %}
+                                        <path d="M 50 25 L 50 75" stroke="currentColor" stroke-width="2.5"/>
+                                        <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <path d="M 40 35 L 50 25 L 60 35" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                    {% elif 'Node' in planet.name %}
+                                        <circle cx="35" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <circle cx="65" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <rect x="45" y="45" width="10" height="10" fill="currentColor"/>
+                                    {% else %}
+                                        <circle cx="50" cy="50" r="18" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                        <circle cx="50" cy="50" r="5" fill="currentColor"/>
+                                    {% endif %}
+                                </svg>
+                                
                                 {% if planet.is_currently_active %}
                                 <div
                                     class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-slate-900 animate-pulse">
                                     <i class="fas fa-bolt text-xs text-white"></i>
                                 </div>
                                 {% endif %}
-                            </div>
+                            </div> <!-- Closing div for icon container -->
 
                             <div class="flex-1 min-w-0">
-                                <h3 class="text-lg sm:text-xl font-bold text-white mb-1 truncate">
-                                    {{ planet.name }} in {{ planet.sign }}
+                                <h3 class="text-2xl sm:text-3xl font-bold text-white mb-1 truncate">
+                                    {{ planet.name }}
                                     {% if planet.is_retrograde %}
                                     <span class="text-rose-400 ml-1">℞</span>
                                     {% endif %}
@@ -87,6 +155,10 @@
                                     {% endif %}
                                 </h3>
                                 <div class="flex flex-wrap items-center gap-2">
+                                    <span class="text-sm text-indigo-300 font-semibold">
+                                        in {{ planet.sign }}
+                                    </span>
+                                    <span class="text-slate-500">•</span>
                                     <span
                                         class="text-xs px-2 py-1 rounded-full bg-indigo-900/40 text-indigo-300 border border-indigo-500/20">
                                         {{ planet.degree }}°
@@ -113,49 +185,44 @@
                 <div class="planet-card-content" id="content-{{ planet.name }}">
                     <div class="px-4 sm:px-5 pb-5 pt-2 border-t border-indigo-500/10">
 
-                        <!-- Action Buttons -->
-                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                            <button class="action-btn active"
+                        <!-- Icon-Only Tab Buttons with Tooltips -->
+                        <div class="flex gap-2 mb-4 justify-center">
+                            <button class="tab-icon-btn active" data-tooltip="Placement Meaning"
                                 onclick="showPlanetSection('{{ planet.name }}', 'meaning')">
-                                <i class="fas fa-book-open"></i>
-                                <span class="hidden sm:inline">General</span>
-                                <span class="sm:hidden">Info</span>
+                                <i class="fas fa-compass"></i>
                             </button>
-                            <button class="action-btn" onclick="showPlanetSection('{{ planet.name }}', 'aspects')">
+                            <button class="tab-icon-btn" data-tooltip="Planetary Aspects"
+                                onclick="showPlanetSection('{{ planet.name }}', 'aspects')">
                                 <i class="fas fa-project-diagram"></i>
-                                <span>Aspects</span>
                             </button>
-                            <button class="action-btn" onclick="showPlanetSection('{{ planet.name }}', 'journal')">
-                                <i class="fas fa-journal-whills"></i>
-                                <span>Journal</span>
+                            <button class="tab-icon-btn" data-tooltip="Journal Entries"
+                                onclick="showPlanetSection('{{ planet.name }}', 'journal')">
+                                <i class="fas fa-book-open"></i>
                             </button>
-                            <button class="action-btn" onclick="showPlanetSection('{{ planet.name }}', 'notes')">
-                                <i class="fas fa-sticky-note"></i>
-                                <span>Notes</span>
+                            <button class="tab-icon-btn" data-tooltip="Insights & Patterns"
+                                onclick="showPlanetSection('{{ planet.name }}', 'insights')">
+                                <i class="fas fa-chart-line"></i>
                             </button>
                         </div>
 
                         <!-- Content Sections -->
                         <div class="planet-sections">
 
-                            <!-- General Meaning Section -->
+                            <!-- Placement Meaning Section -->
                             <div class="planet-section active" id="section-{{ planet.name }}-meaning">
                                 <div class="bg-slate-900/50 rounded-lg p-4 border border-indigo-500/10">
                                     <h4 class="font-semibold text-indigo-300 mb-3 flex items-center text-sm">
-                                        <i class="fas fa-book-open mr-2"></i>
-                                        General Interpretation
+                                        <i class="fas fa-compass mr-2"></i>
+                                        {{ planet.name }} in {{ planet.sign }}
                                     </h4>
                                     <div class="space-y-3 text-sm text-slate-300 leading-relaxed">
                                         <p>
-                                            <strong class="text-white">{{ planet.name }} in {{ planet.sign }}</strong>
-                                            represents
-                                            your core identity and creative self-expression through the lens of
-                                            confidence and vitality.
+                                            This placement represents how your <strong class="text-white">{{ planet.name }}</strong> energy
+                                            expresses itself through the lens of {{ planet.sign }}.
                                         </p>
                                         <p class="text-slate-400 text-xs flex items-center gap-2">
                                             <i class="fas fa-info-circle"></i>
-                                            <span>This interpretation considers the sign placement and house
-                                                position.</span>
+                                            <span>This interpretation considers sign, house, and aspects.</span>
                                         </p>
                                         <!-- HTMX Placeholder -->
                                         <div class="pt-3 border-t border-indigo-500/10"
@@ -170,13 +237,12 @@
                                 </div>
                             </div>
 
-
                             <!-- Aspects Section -->
                             <div class="planet-section" id="section-{{ planet.name }}-aspects">
                                 <div class="space-y-2">
                                     <h4 class="font-semibold text-indigo-300 mb-3 flex items-center text-sm">
                                         <i class="fas fa-project-diagram mr-2"></i>
-                                        Planetary Aspects
+                                        {{ planet.name }}'s Aspects
                                     </h4>
                                     {% for aspect in natal_chart.aspects %}
                                     {% if aspect.planet1 == planet.name or aspect.planet2 == planet.name %}
@@ -285,8 +351,8 @@
                             <div class="planet-section" id="section-{{ planet.name }}-journal">
                                 <div class="bg-slate-900/50 rounded-lg p-4 border border-indigo-500/10">
                                     <h4 class="font-semibold text-purple-300 mb-3 flex items-center text-sm">
-                                        <i class="fas fa-journal-whills mr-2"></i>
-                                        Related Journal Entries
+                                        <i class="fas fa-book-open mr-2"></i>
+                                        Journal Entries during {{ planet.name }} in {{ planet.sign }}
                                     </h4>
                                     <!-- Journal container with unique ID -->
                                     <div id="journal-container-{{ planet.name }}"
@@ -305,29 +371,25 @@
                                 </div>
                             </div>
 
-                            <!-- Quick Notes Section -->
-                            <div class="planet-section" id="section-{{ planet.name }}-notes">
+                            <!-- Insights & Patterns Section -->
+                            <div class="planet-section" id="section-{{ planet.name }}-insights">
                                 <div class="bg-slate-900/50 rounded-lg p-4 border border-indigo-500/10">
-                                    <h4 class="font-semibold text-yellow-300 mb-3 flex items-center text-sm">
-                                        <i class="fas fa-sticky-note mr-2"></i>
-                                        Personal Notes
+                                    <h4 class="font-semibold text-emerald-300 mb-3 flex items-center text-sm">
+                                        <i class="fas fa-chart-line mr-2"></i>
+                                        Your {{ planet.name }} Patterns
                                     </h4>
-                                    <textarea
-                                        class="w-full bg-slate-800/50 border border-indigo-500/20 rounded-lg p-3 text-sm text-slate-200 placeholder-slate-500 focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all resize-none"
-                                        rows="4"
-                                        placeholder="COMING SOON..." 
-                                        hx-post="/deep_dives/planet-meaning/{{ planet.name }}/"
-                                        hx-trigger="change delay:1s" hx-include="this"></textarea>
-                                    <div class="flex items-center justify-between mt-2">
-                                        <p class="text-xs text-slate-500 flex items-center gap-1">
-                                            <i class="fas fa-save"></i>
-                                            <span>Auto-saves as you type</span>
-                                        </p>
-                                        <button
-                                            class="text-xs text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1">
-                                            <i class="fas fa-history"></i>
-                                            <span>View History</span>
-                                        </button>
+                                    <div id="insights-container-{{ planet.name }}"
+                                        hx-get="{% url 'deep_dive:planet_journals' planet.name %}"
+                                        hx-trigger="intersect once" hx-swap="innerHTML"
+                                        hx-indicator="#insights-loading-{{ planet.name }}">
+                                        <!-- Loading State -->
+                                        <div id="insights-loading-{{ planet.name }}" class="text-center py-8">
+                                            <div
+                                                class="w-12 h-12 mx-auto mb-3 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                                                <i class="fas fa-spinner fa-spin text-emerald-400 text-xl"></i>
+                                            </div>
+                                            <p class="text-sm text-slate-400">Analyzing your patterns...</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -361,8 +423,25 @@
                     data-is-active="{{ planet.is_currently_active|yesno:'true,false' }}">
                     <div class="flex items-center gap-3 mb-2">
                         <div
-                            class="w-10 h-10 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 relative">
-                            <span class="text-2xl">{{ planet.symbol }}</span>
+                            class="w-10 h-10 rounded-lg bg-slate-800/60 flex items-center justify-center border border-slate-700/50 relative backdrop-blur-sm">
+                            <svg class="planet-icon" viewBox="0 0 100 100" width="20" height="20">
+                                {% if planet.name == 'Chiron' %}
+                                    <circle cx="50" cy="35" r="10" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                    <path d="M 50 45 L 50 75" stroke="currentColor" stroke-width="2.5"/>
+                                    <path d="M 40 65 L 50 75 L 60 65" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                {% elif planet.name == 'Lilith' %}
+                                    <path d="M 50 25 L 50 75" stroke="currentColor" stroke-width="2.5"/>
+                                    <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                    <path d="M 40 35 L 50 25 L 60 35" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                                {% elif 'Node' in planet.name %}
+                                    <circle cx="35" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                    <circle cx="65" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                    <rect x="45" y="45" width="10" height="10" fill="currentColor"/>
+                                {% else %}
+                                    <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                                    <circle cx="50" cy="50" r="5" fill="currentColor"/>
+                                {% endif %}
+                            </svg>
                             {% if planet.is_currently_active %}
                             <div
                                 class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center border-2 border-slate-900 animate-pulse">
@@ -418,6 +497,17 @@
 </div>
 
 <style>
+    /* Planet Icon Styling - Professional SVG */
+    .planet-icon {
+        color: #cbd5e1;
+        transition: all 0.3s ease;
+    }
+
+    .planet-detail-card:hover .planet-icon {
+        color: #e2e8f0;
+        transform: scale(1.05);
+    }
+
     /* Custom scrollbar */
     .custom-scrollbar::-webkit-scrollbar {
         width: 8px;
@@ -452,6 +542,7 @@
         cursor: pointer;
         transition: all 0.3s ease;
         white-space: nowrap;
+        flex-shrink: 0;
     }
 
     .filter-tab:hover {
@@ -467,33 +558,75 @@
         box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
     }
 
-    /* Action Buttons */
-    .action-btn {
+    /* Icon-Only Tab Buttons */
+    .tab-icon-btn {
+        position: relative;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.25rem;
-        padding: 0.5rem 0.75rem;
+        width: 48px;
+        height: 48px;
         background: linear-gradient(145deg, rgba(30, 27, 75, 0.3), rgba(17, 24, 39, 0.4));
         border: 1px solid rgba(139, 92, 246, 0.15);
-        border-radius: 0.5rem;
+        border-radius: 0.75rem;
         color: #94a3b8;
-        font-size: 0.75rem;
-        font-weight: 600;
+        font-size: 1.125rem;
         cursor: pointer;
         transition: all 0.2s ease;
     }
 
-    .action-btn:hover {
+    .tab-icon-btn:hover {
         background: linear-gradient(145deg, rgba(30, 27, 75, 0.5), rgba(17, 24, 39, 0.6));
         border-color: rgba(139, 92, 246, 0.3);
         color: #cbd5e1;
+        transform: translateY(-2px);
     }
 
-    .action-btn.active {
+    .tab-icon-btn.active {
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.2));
         border-color: rgba(139, 92, 246, 0.5);
         color: #e0e7ff;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+
+    /* Tooltip */
+    .tab-icon-btn::before {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 120%;
+        left: 50%;
+        transform: translateX(-50%) scale(0.8);
+        padding: 0.5rem 0.75rem;
+        background: rgba(15, 23, 42, 0.95);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 0.5rem;
+        color: #e0e7ff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        white-space: nowrap;
+        pointer-events: none;
+        opacity: 0;
+        transition: all 0.2s ease;
+        z-index: 100;
+    }
+
+    .tab-icon-btn::after {
+        content: '';
+        position: absolute;
+        bottom: 110%;
+        left: 50%;
+        transform: translateX(-50%) scale(0.8);
+        border: 6px solid transparent;
+        border-top-color: rgba(139, 92, 246, 0.3);
+        pointer-events: none;
+        opacity: 0;
+        transition: all 0.2s ease;
+    }
+
+    .tab-icon-btn:hover::before,
+    .tab-icon-btn:hover::after {
+        opacity: 1;
+        transform: translateX(-50%) scale(1);
     }
 
     /* Planet Card Animation */
@@ -518,7 +651,8 @@
     }
 
     .aspect-unified-card button:focus {
-        outline: none;
+        outline: 2px solid rgba(99, 102, 241, 0.5);
+        outline-offset: 2px;
     }
 
     .aspect-unified-card:hover {
@@ -544,7 +678,7 @@
         border-color: rgba(99, 102, 241, 0.3) !important;
     }
 
-    .aspect-unified-card.active .aspect-chevron .aspect-unified-card.active .aspect-chevron {
+    .aspect-unified-card.active .aspect-chevron {
         transform: rotate(180deg);
     }
 
@@ -600,6 +734,7 @@
         if (modal) {
             modal.classList.add('hidden');
             modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
         }
     }
 
@@ -607,6 +742,11 @@
     function togglePlanetCard(planetName) {
         const content = document.getElementById(`content-${planetName}`);
         const icon = document.getElementById(`icon-${planetName}`);
+
+        if (!content || !icon) {
+            console.error(`Elements not found for planet: ${planetName}`);
+            return;
+        }
 
         if (content.classList.contains('expanded')) {
             content.classList.remove('expanded');
@@ -621,12 +761,10 @@
                 i.style.transform = 'rotate(0deg)';
             });
 
+            content.style.maxHeight = content.scrollHeight + 'px';
             setTimeout(() => {
-                content.style.maxHeight = content.scrollHeight + 'px';
-                setTimeout(() => {
-                    content.classList.add('expanded');
-                }, 50);
-            }, 50);
+                content.classList.add('expanded');
+            }, 10);
             icon.style.transform = 'rotate(180deg)';
         }
     }
@@ -634,17 +772,23 @@
     // Show planet section
     function showPlanetSection(planetName, section) {
         const card = document.querySelector(`[data-planet="${planetName}"]`);
-        const buttons = card.querySelectorAll('.action-btn');
+        if (!card) {
+            console.error(`Card not found for planet: ${planetName}`);
+            return;
+        }
+
+        const buttons = card.querySelectorAll('.tab-icon-btn');
+        const sections = card.querySelectorAll('.planet-section');
 
         buttons.forEach(btn => {
-            if (btn.onclick.toString().includes(`'${section}'`)) {
+            const onClick = btn.getAttribute('onclick');
+            if (onClick && onClick.includes(`'${section}'`)) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
             }
         });
 
-        const sections = card.querySelectorAll('.planet-section');
         sections.forEach(s => {
             if (s.id === `section-${planetName}-${section}`) {
                 s.classList.add('active');
@@ -654,39 +798,22 @@
         });
     }
 
-    // SINGLE, CLEAN FILTERING FUNCTION
+    // Filtering function
     function initializeFiltering() {
-        console.log('Initializing filters...');
-
         const filterButtons = document.querySelectorAll('.filter-tab');
-        console.log('Found filter buttons:', filterButtons.length);
+        const planetCards = document.querySelectorAll('.planet-detail-card');
+        const specialPointsSection = document.getElementById('special-points-section');
 
         filterButtons.forEach(button => {
-            // Remove any existing click listeners to prevent duplicates
-            button.replaceWith(button.cloneNode(true));
-        });
-
-        // Re-select buttons after cloning
-        const freshButtons = document.querySelectorAll('.filter-tab');
-
-        freshButtons.forEach(button => {
             button.addEventListener('click', function (e) {
                 e.preventDefault();
                 const filter = this.getAttribute('data-filter');
-                console.log('Filter clicked:', filter);
 
-                // Update button states
-                freshButtons.forEach(btn => btn.classList.remove('active'));
+                filterButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
 
-                // Filter planet cards
-                const cards = document.querySelectorAll('.planet-detail-card');
-                console.log('Filtering', cards.length, 'planet cards');
-
-                cards.forEach(card => {
+                planetCards.forEach(card => {
                     const category = card.getAttribute('data-category');
-                    console.log(`Card ${card.getAttribute('data-planet')}: category=${category}`);
-
                     if (filter === 'all' || category === filter) {
                         card.style.display = 'block';
                     } else {
@@ -694,19 +821,12 @@
                     }
                 });
 
-                // Handle Special Points section
-                const specialPointsSection = document.getElementById('special-points-section');
                 if (specialPointsSection) {
-                    console.log('Special points section found, filter:', filter);
                     if (filter === 'all' || filter === 'points') {
                         specialPointsSection.style.display = 'block';
-                        console.log('Showing special points section');
                     } else {
                         specialPointsSection.style.display = 'none';
-                        console.log('Hiding special points section');
                     }
-                } else {
-                    console.log('Special points section NOT found');
                 }
             });
         });
@@ -719,47 +839,38 @@
             event.stopPropagation();
         }
 
-        console.log('Toggle aspect detail called for:', aspectId);
-
         const card = document.querySelector(`[data-aspect-id="${aspectId}"]`);
+        if (!card) {
+            console.error(`Aspect card not found: ${aspectId}`);
+            return;
+        }
+
         const content = document.getElementById(`aspect-content-${aspectId}`);
         const icon = document.getElementById(`aspect-icon-${aspectId}`);
 
-        console.log('Found elements:', { card: !!card, content: !!content, icon: !!icon });
-
-        if (!card || !content || !icon) {
-            console.error('Missing elements for aspect:', aspectId);
+        if (!content || !icon) {
+            console.error(`Content or icon not found for aspect: ${aspectId}`);
             return;
         }
 
         const isOpen = card.classList.contains('active');
-        console.log('Is currently open:', isOpen);
-
-        const planetCard = card.closest('.planet-card-content');
 
         if (isOpen) {
             card.classList.remove('active');
             content.classList.remove('expanded');
-            console.log('Closed aspect:', aspectId);
         } else {
-            if (planetCard) {
-                planetCard.querySelectorAll('.aspect-unified-card').forEach(c => {
+            const parentContent = card.closest('.planet-card-content');
+            if (parentContent) {
+                parentContent.querySelectorAll('.aspect-unified-card').forEach(c => {
                     c.classList.remove('active');
                 });
-                planetCard.querySelectorAll('.aspect-detail-content').forEach(c => {
+                parentContent.querySelectorAll('.aspect-detail-content').forEach(c => {
                     c.classList.remove('expanded');
                 });
             }
 
             card.classList.add('active');
             content.classList.add('expanded');
-            console.log('Opened aspect:', aspectId);
-
-            const htmxElement = content.querySelector('[hx-get]');
-            if (htmxElement) {
-                const url = htmxElement.getAttribute('hx-get');
-                console.log('HTMX will load from:', url);
-            }
 
             setTimeout(() => {
                 const modalContent = card.closest('.custom-scrollbar');
@@ -769,40 +880,36 @@
 
                     if (cardRect.top < modalRect.top || cardRect.bottom > modalRect.bottom) {
                         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                        console.log('Scrolled into view');
                     }
                 }
             }, 100);
         }
     }
 
-    // Event listeners for modal
+    // Initialize everything when DOM is ready
     document.addEventListener('DOMContentLoaded', function () {
-        console.log('DOM loaded, initializing...');
-
-        // Initialize filtering
         initializeFiltering();
 
-        // Close modal on outside click
-        document.getElementById('chart-details-modal')?.addEventListener('click', function (e) {
-            if (e.target === this) {
+        const modal = document.getElementById('chart-details-modal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeChartDetailsModal();
+                }
+            });
+        }
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
                 closeChartDetailsModal();
             }
         });
     });
 
-    // Close modal on Escape key
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            closeChartDetailsModal();
-        }
-    });
-
-    // Fallback initialization in case DOMContentLoaded already fired
+    // Fallback initialization
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initializeFiltering);
     } else {
-        // DOM already loaded, initialize immediately
         setTimeout(initializeFiltering, 100);
     }
 </script>
