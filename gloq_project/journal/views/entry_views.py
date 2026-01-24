@@ -10,6 +10,7 @@ from ..models import JournalEntry, Tag, DailyPlanetarySnapshot
 from ..forms import JournalEntryForm
 
 
+
 def extract_tags(entry):
     """
     Extract 2-3 thematic tags with emoji and sentiment from journal entry.
@@ -118,7 +119,11 @@ def submit_journal_entry(request):
     if form.is_valid():
         entry = form.save(commit=False)
         entry.user = request.user
-        entry.save()
+        entry.save()  # This triggers the snapshot assignment
+
+        # NEW: Index the coincidences immediately
+        from deep_dive.utils.mystical_utils import index_coincidences
+        index_coincidences(entry)
 
 
 

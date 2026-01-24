@@ -1,3 +1,5 @@
+from audioop import reverse
+
 from django.contrib import admin
 from .models import JournalEntry, Tag, DailyPlanetarySnapshot
 from modes.models import  Mode, DailyContent
@@ -5,7 +7,70 @@ from django.utils.html import format_html
 from django.utils.timezone import now
 from django.contrib import messages
 from django.core.cache import cache
-from .models import DailyPlanetarySnapshot
+from .models import DailyPlanetarySnapshot, JournalCosmicCoincidence
+from django.shortcuts import reverse
+
+
+class PlanetHitFilter(admin.SimpleListFilter):
+    """Custom filter to see which planets are most active."""
+    title = 'Cosmic Frequency'
+    parameter_name = 'frequency'
+
+    def lookups(self, request, model_admin):
+        return (
+            ('high', 'High Activity (>5 hits)'),
+            ('low', 'Low Activity (1-5 hits)'),
+        )
+
+    def queryset(self, request, queryset):
+        if self.value() == 'high':
+            # This logic identifies users/planets with heavy activity
+            return queryset.annotate(hit_count=Count('planet_key')).filter(hit_count__gt=5)
+        return queryset
+
+
+@admin.register(JournalCosmicCoincidence)
+class CosmicCoincidenceAdmin(admin.ModelAdmin):
+    # What columns to show
+    list_display = ('id', 'user_display', 'planet_key', 'entry_date', 'snippet_content')
+
+    # Enable sorting by clicking the headers
+    list_filter = ('user__username', 'planet_key')
+
+    # Enable search by username or journal text
+    search_fields = ('user__username', 'entry__content', 'planet_key')
+
+    # Default sorting: Newest entries first
+    ordering = ('-entry__created_at',)
+
+    # --- Performance Optimization ---
+    def get_queryset(self, request):
+        # This is CRITICAL: It fetches the user and entry in 1 query
+        # instead of 100 separate queries for the list view.
+        return super().get_queryset(request).select_related('user', 'entry')
+
+    # --- Custom Column Logic ---
+    def user_display(self, obj):
+        return obj.user.username
+
+    user_display.short_description = 'User'
+    user_display.admin_order_field = 'user__username'
+
+    def entry_date(self, obj):
+        return obj.entry.created_at.strftime('%Y-%m-%d')
+
+    entry_date.short_description = 'Date of Hit'
+    entry_date.admin_order_field = 'entry__created_at'
+
+    def snippet_content(self, obj):
+        # Shows a preview of the journal entry in the admin list
+        return obj.entry.content[:50] + "..." if len(obj.entry.content) > 50 else obj.entry.content
+    snippet_content.short_description = 'Journal Snippet'
+
+class CoincidenceInline(admin.TabularInline):
+    model = JournalCosmicCoincidence
+    extra = 0  # Prevents empty rows from showing up
+    readonly_fields = ('planet_key',)
 
 @admin.register(JournalEntry)
 class JournalEntryAdmin(admin.ModelAdmin):
@@ -13,6 +78,7 @@ class JournalEntryAdmin(admin.ModelAdmin):
     list_filter = ('user', 'label', 'created_at')
     search_fields = ('content', 'tags')
     filter_horizontal = ("tags",)
+    inlines = [CoincidenceInline]
 
     def short_content(self, obj):
         return obj.content[:50] + ('...' if len(obj.content) > 50 else '')
@@ -278,4 +344,5 @@ class DailyPlanetarySnapshotAdmin(admin.ModelAdmin):
 # @admin.register(DailyContent)
 # class DailyContentAdmin(admin.ModelAdmin):
 #     list_display = ('mode', 'date', 'content_type', 'personalization_key', 'content_data', 'created_at' )
+
 

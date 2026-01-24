@@ -15,9 +15,11 @@
                         <div class="moon-shadow" id="moon-shadow"></div>
                     </div>
                 </div>                
-                <h3 class="text-xl font-bold mb-2" style="color: #fff;">
-                    {{ moon_data.emoji|default:"🌙" }} {{ moon_data.phase|default:"Full Moon" }}
-                </h3>
+                <div class="w-full flex justify-center">
+    <h3 class="text-xl font-bold mb-2 text-white">
+        {{ moon_data.phase|default:"Full Moon" }}
+    </h3>
+</div>
                 <p class="text-slate-400 text-sm mb-4">
                     {{ moon_data.illumination|default:"100" }}% Illuminated
                 </p>

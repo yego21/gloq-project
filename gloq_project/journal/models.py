@@ -104,6 +104,30 @@ class DailyPlanetarySnapshot(models.Model):
         self.save()
         return self
 
+class JournalCosmicCoincidence(models.Model):
+    """
+    The 'Permanent Index'. Stores a record only when a transiting
+    planet matches a user's natal placement.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cosmic_indices')
+    entry = models.ForeignKey(
+        'JournalEntry',
+        on_delete=models.CASCADE,
+        related_name='coincidences'
+    )
+    # Merged context: e.g., 'Sun', 'Moon', 'Mercury'
+    planet_key = models.CharField(max_length=20)
+
+    class Meta:
+        # Prevent duplicate indexing for the same planet/entry
+        unique_together = ('entry', 'planet_key')
+        indexes = [
+            models.Index(fields=['user', 'planet_key']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.username} | {self.planet_key} Coincidence | Entry {self.entry_id}"
+
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
     emoji = models.CharField(max_length=5, blank=True, null=True)
