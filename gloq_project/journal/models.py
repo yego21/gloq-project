@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField  # if using Postgres
 from django.utils import timezone
+from django.core.cache import cache
 
 # class JournalMode(models.Model):
 #     name = models.CharField(max_length=100, unique=True)
@@ -208,6 +209,8 @@ class JournalEntry(models.Model):
     def save(self, *args, **kwargs):
         """Auto-assign planetary snapshot based on entry's creation date in user's local timezone"""
         is_new = self.pk is None
+        cache_key = f'planet_insights_{self.user.id}'
+        cache.delete(cache_key)
 
         # Save first to ensure created_at is set
         if is_new:
@@ -220,6 +223,12 @@ class JournalEntry(models.Model):
             super().save(update_fields=['planetary_snapshot'])
         elif not is_new:
             super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        user_id = self.user.id
+        super().delete(*args, **kwargs)
+        cache_key = f'planet_insights_{user_id}'
+        cache.delete(cache_key)
 
     def _get_local_date(self):
         """Get entry's creation date in user's local timezone"""

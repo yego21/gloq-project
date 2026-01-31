@@ -634,6 +634,8 @@ class AstronomicalService:
 
         try:
             tz = pytz.timezone(user_timezone)
+            if isinstance(target_datetime, date) and not isinstance(target_datetime, datetime):
+                target_datetime = datetime.combine(target_datetime, datetime.min.time())
 
             # Make sure target_datetime is timezone-aware
             if target_datetime.tzinfo is None:
@@ -726,7 +728,7 @@ class AstronomicalService:
             return planetary_data
 
         except Exception as e:
-            print(f"Historical planetary calculation error for {target_datetime.date()}: {e}")
+            print(f"Historical planetary calculation error for {target_datetime}: {e}")
             return self._fallback_planetary_data()
 
     def _get_zodiac_sign(self, longitude: float) -> str:

@@ -1,0 +1,175 @@
+{% load static %}
+
+<div class="error-card server-error">
+    <div class="error-content">
+        <div class="error-icon">💫</div>
+        <h3 class="error-title">Something Went Wrong</h3>
+        <p class="error-message">
+            {{ error_message|default:"We encountered an unexpected issue while loading your planetary insights." }}
+        </p>
+        
+        {% if planet_name %}
+            <p class="error-detail">
+                Planet: <strong>{{ planet_name }}</strong>
+            </p>
+        {% endif %}
+        
+        <div class="error-suggestions">
+            <h4>What you can try:</h4>
+            <ul>
+                <li>Refresh the page</li>
+                <li>Check your birth chart information is complete</li>
+                <li>Try viewing a different planet</li>
+                <li>Contact support if the issue persists</li>
+            </ul>
+        </div>
+        
+     
+    </div>
+</div>
+
+<style>
+.server-error {
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-content {
+    max-width: 500px;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.7;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+.error-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+}
+
+.error-message {
+    font-size: 1rem;
+    opacity: 0.95;
+    margin: 0 0 1rem 0;
+    line-height: 1.6;
+}
+
+.error-detail {
+    font-size: 0.95rem;
+    opacity: 0.85;
+    margin: 0 0 2rem 0;
+}
+
+.error-suggestions {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+    text-align: left;
+}
+
+.error-suggestions h4 {
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+    opacity: 0.9;
+    text-align: center;
+}
+
+.error-suggestions ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.error-suggestions li {
+    padding: 0.5rem 0;
+    padding-left: 2rem;
+    position: relative;
+    opacity: 0.85;
+}
+
+.error-suggestions li:before {
+    content: "→";
+    position: absolute;
+    left: 0.5rem;
+    color: #3498db;
+    font-weight: bold;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 0.875rem 1.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    border: none;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    color: white;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+    .server-error {
+        padding: 2rem 1.5rem;
+    }
+    
+    .error-actions {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
+}
+</style>

@@ -32,6 +32,9 @@ urlpatterns = [
          name='planet_journals'),
     path('journals/entry/<int:entry_id>/', mystical_views.journal_entry_detail, name='journal_entry_detail'),
 
+    path('planet/<str:planet_name>/insights/',
+             mystical_views.planet_insights, name='planet_insights'),
+
 
 
     # AI Reading endpoints

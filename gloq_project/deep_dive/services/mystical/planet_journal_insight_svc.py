@@ -1,4 +1,4 @@
-# deep_dive/services/planetary_emotion_correlator.py
+# deep_dive/services/planetary_journal_insight_svc.py
 """
 Planetary-Emotion Correlation Analyzer
 

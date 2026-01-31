@@ -1,0 +1,134 @@
+{% load static %}
+
+<div class="error-card invalid-planet">
+    <div class="error-content">
+        <div class="error-icon">⚠️</div>
+        <h3 class="error-title">Invalid Planet</h3>
+        <p class="error-message">
+            "{{ planet_name }}" is not a recognized planet in our system.
+        </p>
+        
+        <div class="valid-planets-section">
+            <h4>Available Planets:</h4>
+            <div class="planet-chips">
+                {% for planet in valid_planets %}
+                    <a href="{% url 'astrology:planet_insights' planet|lower %}" 
+                       class="planet-chip"
+                       hx-get="{% url 'astrology:planet_insights' planet|lower %}"
+                       hx-target="#planet-insight-container"
+                       hx-push-url="true">
+                        {{ planet }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="error-actions">
+            <a href="{% url 'astrology:overview' %}" class="btn-primary">
+                View All Planets
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-card {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+    border-radius: 16px;
+    padding: 3rem 2rem;
+    color: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.error-content {
+    max-width: 500px;
+}
+
+.error-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.error-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 1rem 0;
+}
+
+.error-message {
+    font-size: 1rem;
+    opacity: 0.95;
+    margin: 0 0 2rem 0;
+    line-height: 1.6;
+}
+
+.valid-planets-section {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+}
+
+.valid-planets-section h4 {
+    font-size: 1rem;
+    margin: 0 0 1rem 0;
+    opacity: 0.9;
+}
+
+.planet-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.planet-chip {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+}
+
+.planet-chip:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+
+.error-actions {
+    margin-top: 1.5rem;
+}
+
+.btn-primary {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.875rem 1.75rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+}
+
+.btn-primary:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+}
+</style>

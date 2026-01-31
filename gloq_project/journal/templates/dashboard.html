@@ -2,7 +2,7 @@
 {% load static %}
 {% block content %}
 <head>
-    
+<link rel="stylesheet" href="{% static 'css/dashboard/dashboard.css' %}">
 <link rel="stylesheet" href="{% get_static_prefix %}css/dashboard/{{ active_mode }}.css">
 <script src="{% static 'js\deep_dive\chart-renderer.js' %}"></script>
 <!-- Enhanced Styles -->
@@ -546,6 +546,12 @@
 </head>
 
 <div id="journal_container">
+    <button id="theme-toggle" 
+            class="theme-toggle-btn" 
+            aria-label="Switch to light mode"
+            title="Toggle theme">
+        <i class="fas fa-sun"></i>
+    </button>
     <!-- Floating Particles -->
     <div class="particles">
         <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
@@ -1344,6 +1350,86 @@ document.querySelectorAll('.fade-in').forEach(el => {
 });
 
 console.log('🎨 Enhanced Journal Dashboard Loaded');
+</script>
+
+<script>
+
+    // Theme Toggle System
+(function() {
+    'use strict';
+    
+    const THEME_KEY = 'gloq-theme';
+    const THEME_LIGHT = 'light';
+    const THEME_DARK = 'dark';
+    
+    function getSavedTheme() {
+        return localStorage.getItem(THEME_KEY) || THEME_DARK;
+    }
+    
+    function applyTheme(theme, withTransition = false) {
+        const body = document.body;
+        
+        if (withTransition) {
+            body.classList.add('theme-transitioning');
+        }
+        
+        if (theme === THEME_LIGHT) {
+            body.classList.add('light-theme');
+        } else {
+            body.classList.remove('light-theme');
+        }
+        
+        updateToggleIcon(theme);
+        
+        if (withTransition) {
+            setTimeout(() => body.classList.remove('theme-transitioning'), 300);
+        }
+        
+        localStorage.setItem(THEME_KEY, theme);
+    }
+    
+    function updateToggleIcon(theme) {
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (!toggleBtn) return;
+        
+        const icon = toggleBtn.querySelector('i');
+        if (!icon) return;
+        
+        if (theme === THEME_LIGHT) {
+            icon.className = 'fas fa-moon';
+            toggleBtn.setAttribute('aria-label', 'Switch to dark mode');
+        } else {
+            icon.className = 'fas fa-sun';
+            toggleBtn.setAttribute('aria-label', 'Switch to light mode');
+        }
+    }
+    
+    function toggleTheme() {
+        const currentTheme = getSavedTheme();
+        const newTheme = currentTheme === THEME_LIGHT ? THEME_DARK : THEME_LIGHT;
+        applyTheme(newTheme, true);
+    }
+    
+    function initTheme() {
+        const savedTheme = getSavedTheme();
+        applyTheme(savedTheme, false);
+        
+        const toggleBtn = document.getElementById('theme-toggle');
+        if (toggleBtn && !toggleBtn.dataset.listener) {
+            toggleBtn.addEventListener('click', toggleTheme);
+            toggleBtn.dataset.listener = 'attached';
+        }
+    }
+    
+    // Initialize
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTheme);
+    } else {
+        initTheme();
+    }
+    
+    window.toggleTheme = toggleTheme;
+})();
 </script>
 
 

@@ -27,6 +27,7 @@ from ..services.mystical.natal_chart_svc import NatalChartService
 from ..services.mystical.pattern_analyzer_svc import UserPatternAnalyzer
 from journal.models import JournalEntry
 
+from ..services.mystical.planet_insights_svc import get_planet_insight
 from ..utils.mystical_utils import get_page_range, generate_aspect_interpretation, generate_planet_interpretation
 
 
@@ -704,7 +705,53 @@ def journal_entry_detail(request, entry_id):
         )
 
 
+# @login_required
+# def planet_insights(request, planet_name):
+#     """
+#     Controller for the Planet Insights partial.
+#     Responsible only for request handling and response rendering.
+#     """
+#     # 1. Fetch the analytical data from the Service
+#     # (Assuming generate_planet_insight_data is imported from your services)
+#     insight_data = generate_planet_insight_data(request.user, planet_name)
+#
+#     # 2. Handle the "No Data" state gracefully
+#     if not insight_data:
+#         return render(request, 'deep_dive/mystical/astrology/partials/_no_insights.html', {
+#             'planet_name': planet_name
+#         })
+#
+#     # 3. Prepare the final context
+#     context = {
+#         'planet_name': planet_name,
+#         **insight_data  # Spreads out sign, house, theme, retro_percentage, etc.
+#     }
+#
+#     # 4. Return the partial
+#     return render(request, 'deep_dive/mystical/astrology/partials/planet_insights.html', context)
 
+@login_required
+def planet_insights(request, planet_name):
+    """
+    Controller for the Planet Insights partial.
+    Data is cached at service level for efficiency.
+    """
+    insight_data = get_planet_insight(request.user, planet_name)
+
+    # Handle no data state
+    if not insight_data.get('has_data'):
+        return render(request, 'deep_dive/mystical/astrology/partials/_no_insights.html', {
+            'planet_name': planet_name,
+            'message': insight_data.get('message'),
+            'entry_count': insight_data.get('entry_count', 0)
+        })
+
+    context = {
+        'planet_name': planet_name,
+        **insight_data
+    }
+
+    return render(request, 'deep_dive/mystical/astrology/partials/planet_insights.html', context)
 
 
 def astro_ai_readings(request):

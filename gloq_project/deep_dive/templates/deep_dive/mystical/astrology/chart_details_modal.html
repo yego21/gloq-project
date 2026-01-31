@@ -379,7 +379,7 @@
                                         Your {{ planet.name }} Patterns
                                     </h4>
                                     <div id="insights-container-{{ planet.name }}"
-                                        hx-get="{% url 'deep_dive:planet_journals' planet.name %}"
+                                        hx-get="{% url 'deep_dive:planet_insights' planet.name %}"
                                         hx-trigger="intersect once" hx-swap="innerHTML"
                                         hx-indicator="#insights-loading-{{ planet.name }}">
                                         <!-- Loading State -->
