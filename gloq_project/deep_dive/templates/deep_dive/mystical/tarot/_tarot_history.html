@@ -1,0 +1,339 @@
+<div class="th-wrap">
+
+    <!-- Stats Row -->
+    <div class="th-stats">
+        <div class="th-stat">
+            <div class="th-stat-value">{{ total_draws }}</div>
+            <div class="th-stat-label">Total Draws</div>
+        </div>
+        <div class="th-stat-divider"></div>
+        <div class="th-stat">
+            <div class="th-stat-value">
+                {{ current_streak }}
+                {% if current_streak > 0 %}
+                <span class="th-streak-flame">🔥</span>
+                {% endif %}
+            </div>
+            <div class="th-stat-label">Day Streak</div>
+        </div>
+        <div class="th-stat-divider"></div>
+        <div class="th-stat">
+            <div class="th-stat-value">{{ draws|length }}</div>
+            <div class="th-stat-label">Showing</div>
+        </div>
+    </div>
+
+    <!-- Draw List -->
+    {% if draws %}
+        <div class="th-list">
+            {% for draw in draws %}
+            <div class="th-item">
+
+                <!-- Card Visual -->
+                <div class="th-card-visual">
+                    <div class="th-card-emoji">{{ draw.emoji }}</div>
+                </div>
+
+                <!-- Card Info -->
+                <div class="th-card-info">
+                    <div class="th-card-top">
+                        <span class="th-card-name">{{ draw.card_name }}</span>
+                        <span class="th-card-number">{{ draw.card_number }}</span>
+                    </div>
+                    <div class="th-card-keywords">{{ draw.keywords }}</div>
+                    <div class="th-card-date">
+                        {{ draw.drawn_at|date:"M j, Y" }}
+                        <span class="th-card-time">{{ draw.drawn_at|time:"g:i A" }}</span>
+                    </div>
+                </div>
+
+                <!-- Expand toggle -->
+                <button class="th-expand-btn" onclick="toggleHistoryItem(this)">
+                    <span>▾</span>
+                </button>
+
+                <!-- Expandable reading -->
+                <div class="th-reading">
+                    <div class="th-reading-block">
+                        <div class="th-reading-label">Reading</div>
+                        <p>{{ draw.interpretation }}</p>
+                    </div>
+                    {% if draw.astro_context %}
+                    <div class="th-reading-block th-reading-block--cosmic">
+                        <div class="th-reading-label">
+                            <span>★</span> Cosmic Alignment
+                        </div>
+                        <p>{{ draw.astro_context }}</p>
+                    </div>
+                    {% endif %}
+                    {% if draw.natal_insight %}
+                    <div class="th-reading-block th-reading-block--natal">
+                        <div class="th-reading-label">
+                            <span>◎</span> Birth Chart
+                        </div>
+                        <p>{{ draw.natal_insight }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <div class="th-empty">
+            <div class="th-empty-glyph">☽</div>
+            <p>No cards drawn yet. Begin your daily practice to build your tarot journey.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+<style>
+.th-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* Stats */
+.th-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 0.85rem 1rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(51, 65, 85, 0.4);
+    border-radius: 10px;
+}
+
+.th-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+}
+
+.th-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #c4b5fd;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.th-streak-flame { font-size: 1rem; }
+
+.th-stat-label {
+    font-size: 0.62rem;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.th-stat-divider {
+    width: 1px;
+    height: 30px;
+    background: rgba(51, 65, 85, 0.6);
+}
+
+/* List */
+.th-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.th-item {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 0 0.85rem;
+    padding: 0.75rem;
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(51, 65, 85, 0.35);
+    border-radius: 10px;
+    transition: border-color 0.15s;
+}
+.th-item:hover {
+    border-color: rgba(99, 102, 241, 0.25);
+}
+
+/* Card visual */
+.th-card-visual {
+    grid-column: 1;
+    grid-row: 1;
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, #1e1b4b, #4c1d95);
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.th-card-emoji { font-size: 1.4rem; line-height: 1; }
+
+/* Card info */
+.th-card-info {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+.th-card-top {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+}
+
+.th-card-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.th-card-number {
+    font-size: 0.6rem;
+    color: #475569;
+    white-space: nowrap;
+}
+
+.th-card-keywords {
+    font-size: 0.65rem;
+    color: #6366f1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.th-card-date {
+    font-size: 0.62rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.th-card-time { color: #334155; }
+
+/* Expand button */
+.th-expand-btn {
+    grid-column: 3;
+    grid-row: 1;
+    background: none;
+    border: none;
+    color: #475569;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 0.25rem;
+    transition: all 0.2s;
+    align-self: center;
+}
+.th-expand-btn:hover { color: #94a3b8; }
+.th-expand-btn.is-open {
+    transform: rotate(180deg);
+    color: #818cf8;
+}
+
+/* Expandable reading */
+.th-reading {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease;
+    opacity: 0;
+    margin-top: 0;
+}
+
+.th-reading.is-open {
+    max-height: 400px;
+    opacity: 1;
+    margin-top: 0.75rem;
+}
+
+.th-reading-block {
+    padding: 0.65rem 0.75rem;
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(51, 65, 85, 0.4);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+.th-reading-block:last-child { margin-bottom: 0; }
+
+.th-reading-block--cosmic {
+    border-color: rgba(99, 102, 241, 0.2);
+    background: rgba(49, 46, 129, 0.12);
+}
+
+.th-reading-block--natal {
+    border-color: rgba(139, 92, 246, 0.2);
+    background: rgba(76, 29, 149, 0.1);
+}
+
+.th-reading-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #475569;
+    margin-bottom: 0.4rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.th-reading-block--cosmic .th-reading-label { color: #818cf8; }
+.th-reading-block--natal  .th-reading-label { color: #a78bfa; }
+
+.th-reading-block p {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* Empty */
+.th-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.th-empty-glyph {
+    font-size: 2rem;
+    color: #4c1d95;
+    opacity: 0.4;
+}
+
+.th-empty p {
+    font-size: 0.78rem;
+    color: #475569;
+    line-height: 1.6;
+    max-width: 280px;
+    margin: 0;
+}
+</style>
+
+<script>
+function toggleHistoryItem(btn) {
+    btn.classList.toggle('is-open');
+    const item = btn.closest('.th-item');
+    const reading = item.querySelector('.th-reading');
+    if (reading) reading.classList.toggle('is-open');
+}
+</script>

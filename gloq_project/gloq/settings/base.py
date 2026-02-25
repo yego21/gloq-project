@@ -77,6 +77,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'gloq.middleware.TimezoneMiddleware',
+    'gloq.middleware.DailyPlanetarySnapshotMiddleware',
 ]
 
 ROOT_URLCONF = 'gloq.urls'

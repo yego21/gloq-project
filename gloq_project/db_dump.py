@@ -132,7 +132,7 @@ data_json = serializers.serialize('json', all_objects, indent=4)
 data = json.loads(data_json)
 
 # Write with UTF-8 encoding
-output_file = f'db_dump_01-16-26_{django_env}.json'
+output_file = f'db_dump_02-11-26_{django_env}.json'
 print(f"💾 Writing to {output_file}...")
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(data, f, indent=4, ensure_ascii=False)

@@ -144,53 +144,26 @@
             </div>
         </div>
 
-        <!-- TAROT SECTION -->
-        <div class="mystical-main-section" id="tarot-main-section">
-            
-            <!-- Quick Actions for Tarot -->
-            <div class="mystical-quick-actions" data-section-name="✨ Tarot">
-                <button class="quick-action-card active" data-section="tarot">
-                    <div class="action-icon">🃏</div>
-                    <div class="action-content">
-                        <div class="action-title">Daily Draw</div>
-                        <div class="action-desc">Your single card for today's guidance</div>
-                    </div>
-                </button>
-                <button class="quick-action-card" data-section="tarot-spread">
-                    <div class="action-icon">🎴</div>
-                    <div class="action-content">
-                        <div class="action-title">Tarot Spread</div>
-                        <div class="action-desc">Comprehensive multi-card readings</div>
-                    </div>
-                </button>
-            </div>
 
-            <!-- Sub-sections Content Area -->
-            <div class="mystical-content-area">
-                
-                <!-- Daily Tarot Section (Default) -->
-                <div class="mystical-section active" id="tarot-section">
-                    <div hx-get="{% url 'deep_dive:interactive_mystical' %}"
-                         hx-trigger="intersect once"
-                         hx-swap="innerHTML"
-                         hx-indicator=".tarot-loading">
-                        <div class="mystical-loading tarot-loading">
-                            <div class="loading-spinner"></div>
-                            <p>Shuffling the cosmic deck...</p>
-                        </div>
-                    </div>
+
+
+
+
+<!-- TAROT SECTION -->
+<div class="mystical-main-section" id="tarot-main-section">
+    <div class="mystical-content-area">
+        <div class="mystical-section active" id="tarot-section">
+            <div hx-get="{% url 'deep_dive:tarot_main' %}"
+                 hx-trigger="intersect once"
+                 hx-swap="innerHTML">
+                <div class="mystical-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Shuffling the cosmic deck...</p>
                 </div>
-
-                <!-- Tarot Spread Section -->
-                <div class="mystical-section" id="tarot-spread-section">
-                    <div class="mystical-loading">
-                        <div class="loading-spinner"></div>
-                        <p>Laying out your spread...</p>
-                    </div>
-                </div>
-
             </div>
         </div>
+    </div>
+</div>
 
         <!-- ALCHEMY SECTION -->
         <div class="mystical-main-section" id="alchemy-main-section">
@@ -319,6 +292,19 @@
                 <i class="fas fa-wand-magic-sparkles mr-1"></i>Generate All
             </button>
         </div> -->
+    </div>
+</div>
+
+<!-- Tarot Spread Modal - Must be at root level -->
+<div class="tarot-modal-overlay tarot-modal-overlay--wide" id="spread-modal" aria-hidden="true">
+    <div class="tarot-modal tarot-modal--wide">
+        <div class="tarot-modal-header">
+            <h4>Three Card Spread</h4>
+            <button class="tarot-modal-close" onclick="closeSpreadModal()">✕</button>
+        </div>
+        <div class="tarot-modal-body" id="spread-modal-content">
+            <!-- Populated on open via fetch -->
+        </div>
     </div>
 </div>
 

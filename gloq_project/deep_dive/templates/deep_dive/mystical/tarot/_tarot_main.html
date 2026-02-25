@@ -1,0 +1,948 @@
+<div class="tarot-daily-wrap">
+
+    <!-- Header -->
+    <div class="tarot-header">
+        <div class="tarot-header-text">
+            <h3>Daily Draw</h3>
+            <p>One card, cosmically chosen for today</p>
+        </div>
+        <button class="tarot-history-btn" onclick="openCardHistory()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 .49-4.57"></path>
+            </svg>
+            History
+        </button>
+    </div>
+
+    <!-- Card Hero — centered -->
+    <div class="tarot-hero">
+        <div class="tarot-card-scene" id="tarot-card-scene">
+            <div class="tarot-card-inner {% if has_drawn_today %}is-flipped{% endif %}" id="tarot-card-inner">
+
+                <!-- Back Face -->
+                <div class="tarot-face tarot-face--back">
+                    <div class="card-back-pattern"></div>
+                    <div class="card-back-content">
+                        <div class="card-back-moon">☽</div>
+                        <div class="card-back-label">COSMIC TAROT</div>
+                        <div class="card-back-divider"></div>
+                        {% if not has_drawn_today %}
+                        <div class="card-back-hint">tap to reveal</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Front Face -->
+                <div class="tarot-face tarot-face--front">
+                    <div class="card-front-number" id="card-number">{{ card_number|default:"" }}</div>
+                    <div class="card-front-emoji" id="card-emoji">{{ card_emoji|default:"" }}</div>
+                    <div class="card-front-title" id="card-title">{{ card_title|default:"" }}</div>
+                    <div class="card-front-divider"></div>
+                    <div class="card-front-keywords" id="card-keywords">{{ card_keywords|default:"" }}</div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Draw / Drawn state sits under the card -->
+        {% if has_drawn_today %}
+            <div class="tarot-drawn-state">
+                <span class="drawn-check">✓</span>
+                <span>Drawn today</span>
+                <span class="drawn-time">{{ drawn_time_ago }} ago</span>
+            </div>
+        {% else %}
+            <button class="tarot-draw-btn" id="draw-btn"
+                hx-post="{% url 'deep_dive:draw_tarot_card' %}"
+                hx-trigger="click"
+                hx-swap="none">
+                <span class="draw-btn-icon">✦</span>
+                Draw Your Card
+            </button>
+        {% endif %}
+    </div>
+
+    <!-- Reading blocks — appear after draw -->
+    <div class="tarot-reading-col" id="tarot-reading-col">
+        {% if has_drawn_today %}
+            <div class="reading-block" id="reading-interpretation">
+                <div class="reading-block-label">Reading</div>
+                <p>{{ card_interpretation }}</p>
+            </div>
+            {% if card_astro_context %}
+            <div class="reading-block reading-block--cosmic" id="reading-astro">
+                <div class="reading-block-label">
+                    <span class="reading-block-icon">★</span> Cosmic Alignment
+                </div>
+                <p>{{ card_astro_context }}</p>
+            </div>
+            {% endif %}
+            {% if card_natal_insight %}
+            <div class="reading-block reading-block--natal" id="reading-natal">
+                <div class="reading-block-label">
+                    <span class="reading-block-icon">◎</span> Your Birth Chart
+                </div>
+                <p>{{ card_natal_insight }}</p>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- Spread CTA — bottom, clearly separated -->
+    <div class="spread-cta-wrap">
+        <div class="spread-cta-label">Want more?</div>
+        <button class="spread-cta" onclick="openSpreadModal()">
+            <span class="spread-cta-icon">⊞</span>
+            <span class="spread-cta-text">
+                <strong>3-Card Spread</strong>
+                <small>Past · Present · Future</small>
+            </span>
+            <span class="spread-cta-arrow">→</span>
+        </button>
+    </div>
+
+</div>
+
+
+<!-- ===================== CARD HISTORY MODAL ===================== -->
+<div class="tarot-modal-overlay" id="card-history-modal" aria-hidden="true">
+    <div class="tarot-modal">
+        <div class="tarot-modal-header">
+            <h4>Your Tarot Journey</h4>
+            <button class="tarot-modal-close" onclick="closeCardHistory()">✕</button>
+        </div>
+        <div class="tarot-modal-body" id="card-history-content"
+             hx-get="{% url 'deep_dive:tarot_card_history' %}"
+             hx-trigger="revealed"
+             hx-swap="innerHTML">
+            <div class="tarot-modal-loading">
+                <div class="loading-spinner"></div>
+                <p>Loading your history...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<style>
+/* ============================================================
+   TAROT DAILY — Layout
+   ============================================================ */
+
+/* Override: mystical-container overflow:hidden breaks preserve-3d for card flip */
+.mystical-container:has(.tarot-card-scene) {
+    overflow: visible;
+}
+.tarot-daily-wrap {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.tarot-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.tarot-header-text h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0 0 0.2rem;
+    letter-spacing: 0.02em;
+}
+
+.tarot-header-text p {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.tarot-history-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: #94a3b8;
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 20px;
+    padding: 0.35rem 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.tarot-history-btn:hover {
+    color: #a5b4fc;
+    border-color: rgba(99, 102, 241, 0.4);
+    background: rgba(99, 102, 241, 0.15);
+}
+
+/* ============================================================
+   CARD HERO — centered
+   ============================================================ */
+.tarot-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    padding: 0.5rem 0;
+}
+
+/* ============================================================
+   TAROT CARD — 3D Flip
+   ============================================================ */
+.tarot-card-scene {
+    width: 200px;
+    height: 310px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.tarot-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.tarot-face {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Back visible by default, front hidden */
+.tarot-face--back {
+    opacity: 1;
+    transform: rotateY(0deg);
+    z-index: 2;
+}
+
+.tarot-face--front {
+    opacity: 0;
+    transform: rotateY(90deg) scale(0.95);
+    z-index: 1;
+}
+
+/* Flipped state: hide back, show front */
+.tarot-card-inner.is-flipped .tarot-face--back {
+    opacity: 0;
+    transform: rotateY(-90deg) scale(0.95);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.tarot-card-inner.is-flipped .tarot-face--front {
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
+    z-index: 2;
+    transition-delay: 0.15s;
+}
+
+/* Back face */
+.tarot-face--back {
+    background: linear-gradient(150deg, #1e1b4b 0%, #312e81 45%, #1e1b4b 100%);
+    border: 2px solid rgba(139, 92, 246, 0.5);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-back-pattern {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(circle at 50% 50%, rgba(139,92,246,0.08) 0%, transparent 60%),
+        repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(139,92,246,0.04) 8px, rgba(139,92,246,0.04) 9px);
+}
+
+.card-back-content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-back-moon {
+    font-size: 2.2rem;
+    color: #c4b5fd;
+    line-height: 1;
+    filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.5));
+}
+
+.card-back-label {
+    font-size: 0.55rem;
+    letter-spacing: 0.18em;
+    color: #7c3aed;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.card-back-divider {
+    width: 30px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+}
+
+.card-back-hint {
+    font-size: 0.6rem;
+    color: #4c1d95;
+    letter-spacing: 0.08em;
+}
+
+/* Front face */
+.tarot-face--front {
+    background: linear-gradient(175deg, #f8fafc 0%, #eef2ff 50%, #ede9fe 100%);
+    border: 2px solid rgba(139, 92, 246, 0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0.75rem;
+    gap: 0.4rem;
+}
+
+.card-front-number {
+    font-size: 0.55rem;
+    font-weight: 700;
+    color: #5b21b6;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    align-self: flex-start;
+}
+
+.card-front-emoji {
+    font-size: 2.8rem;
+    line-height: 1;
+    margin: 0.3rem 0;
+}
+
+.card-front-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.card-front-divider {
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(109, 40, 217, 0.3), transparent);
+    margin: 0.2rem 0;
+}
+
+.card-front-keywords {
+    font-size: 0.6rem;
+    color: #5b21b6;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   DRAW BUTTON / DRAWN STATE
+   ============================================================ */
+.tarot-draw-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.4), rgba(49, 46, 129, 0.4));
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 24px;
+    padding: 0.55rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.tarot-draw-btn:hover {
+    background: linear-gradient(135deg, rgba(76, 29, 149, 0.6), rgba(49, 46, 129, 0.6));
+    border-color: rgba(139, 92, 246, 0.6);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
+}
+.tarot-draw-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+.draw-btn-icon {
+    color: #a78bfa;
+    font-size: 0.7rem;
+}
+
+.tarot-drawn-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2rem;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+.drawn-check {
+    color: #6ee7b7;
+    font-size: 1rem;
+}
+.drawn-time {
+    font-size: 0.65rem;
+    color: #475569;
+}
+
+/* ============================================================
+   READING COLUMN
+   ============================================================ */
+.tarot-reading-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.reading-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 2rem 1rem;
+    text-align: center;
+    color: #475569;
+    font-size: 0.8rem;
+    line-height: 1.6;
+}
+.reading-empty-glyph {
+    font-size: 1.5rem;
+    color: #4c1d95;
+    opacity: 0.5;
+}
+
+.reading-block {
+    background: rgba(15, 23, 42, 0.5);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    opacity: 0;
+    transform: translateY(8px);
+    animation: blockReveal 0.4s ease forwards;
+}
+.reading-block:nth-child(1) { animation-delay: 0.1s; }
+.reading-block:nth-child(2) { animation-delay: 0.25s; }
+.reading-block:nth-child(3) { animation-delay: 0.4s; }
+
+.reading-block--cosmic {
+    border-color: rgba(99, 102, 241, 0.25);
+    background: rgba(49, 46, 129, 0.15);
+}
+
+.reading-block--natal {
+    border-color: rgba(139, 92, 246, 0.25);
+    background: rgba(76, 29, 149, 0.12);
+}
+
+.reading-block-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: #64748b;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.reading-block--cosmic .reading-block-label { color: #818cf8; }
+.reading-block--natal .reading-block-label { color: #a78bfa; }
+
+.reading-block-icon {
+    opacity: 0.8;
+}
+
+.reading-block p {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    line-height: 1.65;
+    margin: 0;
+}
+
+@keyframes blockReveal {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================
+   READING COL — full width after draw
+   ============================================================ */
+.tarot-reading-col {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    width: 100%;
+}
+
+/* ============================================================
+   SPREAD CTA — bottom separator
+   ============================================================ */
+.spread-cta-wrap {
+    border-top: 1px solid rgba(30, 41, 59, 0.8);
+    padding-top: 1.25rem;
+    margin-top: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.spread-cta-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #475569;
+}
+
+.spread-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.4rem;
+    background: rgba(49, 46, 129, 0.2);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.spread-cta:hover {
+    background: rgba(49, 46, 129, 0.4);
+    border-color: rgba(99, 102, 241, 0.55);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.15);
+}
+
+.spread-cta-icon {
+    font-size: 0.85rem;
+    color: #818cf8;
+}
+
+.spread-cta-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    text-align: left;
+}
+
+.spread-cta strong {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #c7d2fe;
+    display: block;
+    line-height: 1.2;
+}
+
+.spread-cta small {
+    font-size: 0.6rem;
+    color: #64748b;
+    letter-spacing: 0.04em;
+}
+
+.spread-cta-arrow {
+    color: #6366f1;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+.tarot-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+}
+
+.tarot-modal-overlay.is-open {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.tarot-modal {
+    background: #0f172a;
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(12px);
+    transition: transform 0.25s ease;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.tarot-modal-overlay.is-open .tarot-modal {
+    transform: translateY(0);
+}
+
+.tarot-modal--wide {
+    max-width: 860px;
+}
+
+.tarot-modal-overlay--wide {
+    align-items: flex-start;
+    padding-top: 2rem;
+}
+
+.tarot-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+    flex-shrink: 0;
+}
+
+.tarot-modal-header h4 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin: 0;
+    letter-spacing: 0.03em;
+}
+
+.tarot-modal-close {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(51, 65, 85, 0.5);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    color: #94a3b8;
+    font-size: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+.tarot-modal-close:hover {
+    background: rgba(71, 85, 105, 0.6);
+    color: #e2e8f0;
+}
+
+.tarot-modal-body {
+    overflow-y: auto;
+    padding: 1.25rem;
+    flex: 1;
+}
+
+.tarot-modal-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 3rem 1rem;
+    color: #475569;
+    font-size: 0.8rem;
+}
+</style>
+
+
+
+<script>
+(function () {
+    'use strict';
+
+    function initTarotCardFlip() {
+        const scene = document.getElementById('tarot-card-scene');
+        // Guard: don't attach twice
+        if (!scene || scene.dataset.flipInit) return;
+        scene.dataset.flipInit = 'true';
+
+        // Card flip toggle (only when already drawn)
+        scene.addEventListener('click', function (e) {
+            if (e.target.closest('#draw-btn')) return;
+            const inner = document.getElementById('tarot-card-inner');
+            if (inner && inner.classList.contains('is-flipped')) {
+                inner.classList.toggle('is-flipped');
+            }
+        });
+
+        // Wire draw button directly — bypasses hx-on attribute processing issue
+        const btn = document.getElementById('draw-btn');
+        if (btn) {
+            btn.addEventListener('htmx:afterRequest', function (e) {
+                window.onCardDrawn(e);
+            });
+        }
+    }
+
+    // Primary: run after HTMX settles the partial into the DOM
+    document.addEventListener('htmx:afterSettle', function () {
+        initTarotCardFlip();
+    });
+
+    // Fallback: covers server-rendered (already drawn today) state
+    initTarotCardFlip();
+
+    // ── Handle card draw response ────────────────────────────────────
+    window.onCardDrawn = function (event) {
+        const xhr = event.detail.xhr;
+
+        if (xhr.status !== 200) {
+            try {
+                const err = JSON.parse(xhr.responseText);
+                alert(err.error || 'Unable to draw card. Please try again.');
+            } catch (e) {
+                alert('Unable to draw card. Please try again.');
+            }
+            return;
+        }
+
+        const data = JSON.parse(xhr.responseText);
+        const inner = document.getElementById('tarot-card-inner');
+
+        // Flip card
+        if (inner) inner.classList.add('is-flipped');
+
+        // Populate front face mid-flip
+        setTimeout(() => {
+            const num = document.getElementById('card-number');
+            const emoji = document.getElementById('card-emoji');
+            const title = document.getElementById('card-title');
+            const keywords = document.getElementById('card-keywords');
+            if (num) num.textContent = data.card_number;
+            if (emoji) emoji.textContent = data.emoji;
+            if (title) title.textContent = data.title;
+            if (keywords) keywords.textContent = data.keywords;
+        }, 320);
+
+        // Populate reading column after flip completes
+        setTimeout(() => {
+            const col = document.getElementById('tarot-reading-col');
+            if (!col) return;
+
+            const empty = document.getElementById('reading-empty');
+            if (empty) empty.remove();
+
+            let html = `
+                <div class="reading-block" id="reading-interpretation">
+                    <div class="reading-block-label">Reading</div>
+                    <p>${data.interpretation}</p>
+                </div>`;
+
+            if (data.astro_context) {
+                html += `
+                <div class="reading-block reading-block--cosmic" id="reading-astro">
+                    <div class="reading-block-label">
+                        <span class="reading-block-icon">★</span> Cosmic Alignment
+                    </div>
+                    <p>${data.astro_context}</p>
+                </div>`;
+            }
+
+            if (data.natal_insight) {
+                html += `
+                <div class="reading-block reading-block--natal" id="reading-natal">
+                    <div class="reading-block-label">
+                        <span class="reading-block-icon">◎</span> Your Birth Chart
+                    </div>
+                    <p>${data.natal_insight}</p>
+                </div>`;
+            }
+
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            Array.from(tempDiv.children).forEach(el => col.appendChild(el));
+
+            const btn = document.getElementById('draw-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Drawn for Today';
+            }
+
+        }, 450);
+    };
+
+    // ── History Modal ────────────────────────────────────────────────
+    window.openCardHistory = function () {
+        const modal = document.getElementById('card-history-modal');
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        htmx.trigger(document.getElementById('card-history-content'), 'revealed');
+    };
+
+    window.closeCardHistory = function () {
+        const modal = document.getElementById('card-history-modal');
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+    };
+
+    // ── Spread Modal ─────────────────────────────────────────────────
+    window.openSpreadModal = function () {
+        const modal = document.getElementById('spread-modal');
+        const modalContent = document.getElementById('spread-modal-content');
+
+        modalContent.innerHTML = '<div class="tarot-modal-loading"><div class="loading-spinner"></div><p>Preparing spread...</p></div>';
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+
+        fetch('{% url "deep_dive:tarot_spread" %}', { method: 'GET' })
+            .then(r => r.text())
+            .then(html => {
+                modalContent.innerHTML = html;
+                // Wire card clicks after template loads
+                ['past', 'present', 'future'].forEach(pos => {
+                    const card = document.getElementById(`spread-card-${pos}`);
+                    if (card) card.addEventListener('click', () => window.spreadCardClick(pos));
+                });
+            })
+            .catch(() => {
+                modalContent.innerHTML = '<p style="color:#ef4444;padding:2rem;text-align:center">Failed to load spread. Please try again.</p>';
+            });
+    };
+
+    window.closeSpreadModal = function () {
+        const modal = document.getElementById('spread-modal');
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+    };
+
+    // ── Close on backdrop click ──────────────────────────────────────
+    document.addEventListener('click', function (e) {
+        if (e.target.id === 'card-history-modal') window.closeCardHistory();
+        if (e.target.id === 'spread-modal') window.closeSpreadModal();
+    });
+
+    // ── Close on Escape ──────────────────────────────────────────────
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape') return;
+        window.closeCardHistory();
+        window.closeSpreadModal();
+    });
+
+    // ── Spread: Submit ───────────────────────────────────────────────
+    window.submitSpread = function () {
+        const btn = document.getElementById('spread-draw-btn');
+        const intention = document.getElementById('spread-intention')?.value.trim() || '';
+
+        btn.disabled = true;
+        btn.textContent = 'Drawing cards...';
+
+        const formData = new FormData();
+        formData.append('intention', intention);
+
+        fetch('{% url "deep_dive:tarot_spread" %}', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+        .then(r => {
+            if (!r.ok) throw new Error('Request failed');
+            return r.json();
+        })
+        .then(data => {
+            if (data.error) throw new Error(data.error);
+            window.populateSpread(data);
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = 'Draw Your Spread';
+            alert(err.message || 'Unable to draw spread. Please try again.');
+        });
+    };
+
+    // ── Spread: Populate cards from JSON then reveal ─────────────────
+    window.populateSpread = function (data) {
+        // Populate card fronts
+        const positions = ['past', 'present', 'future'];
+        positions.forEach(pos => {
+            const card = data[pos];
+            document.getElementById(`${pos}-number`).textContent = card.card_number;
+            document.getElementById(`${pos}-emoji`).textContent = card.emoji;
+            document.getElementById(`${pos}-title`).textContent = card.title;
+            document.getElementById(`${pos}-keywords`).textContent = card.keywords;
+            document.getElementById(`${pos}-interpretation`).textContent = card.interpretation;
+        });
+
+        // Swap intention form for summary
+        const middle = document.getElementById('spread-middle');
+        middle.innerHTML = `<div class="spread-summary">${data.reading_summary}</div>`;
+
+        // Swap action buttons
+        document.getElementById('spread-action-initial').style.display = 'none';
+        document.getElementById('spread-action-result').style.display = 'flex';
+
+        // Reveal cards sequentially
+        positions.forEach((pos, i) => {
+            setTimeout(() => {
+                document.getElementById(`spread-card-${pos}`).classList.add('is-flipped');
+            }, i * 500);
+        });
+    };
+
+    // ── Spread: Card click — first tap flips, second tap opens detail ─
+    window.spreadCardClick = function (pos) {
+        const card = document.getElementById(`spread-card-${pos}`);
+        if (!card.classList.contains('is-flipped')) {
+            card.classList.add('is-flipped');
+            return;
+        }
+        const detail = document.getElementById(`${pos}-detail`);
+        if (detail) detail.classList.toggle('is-open');
+    };
+
+    // ── Spread: Redraw — flip cards back, re-POST ────────────────────
+    window.redrawSpread = function () {
+        // Reset cards to face-down
+        ['past', 'present', 'future'].forEach(pos => {
+            document.getElementById(`spread-card-${pos}`).classList.remove('is-flipped');
+            const detail = document.getElementById(`${pos}-detail`);
+            if (detail) detail.classList.remove('is-open');
+        });
+
+        // Reset actions
+        document.getElementById('spread-action-initial').style.display = 'block';
+        document.getElementById('spread-action-result').style.display = 'none';
+
+        // Restore intention form
+        const middle = document.getElementById('spread-middle');
+        middle.innerHTML = `
+            <div class="spread-intention-wrap">
+                <label for="spread-intention">
+                    <span class="intention-icon">✦</span>
+                    Set Your Intention
+                    <span class="spread-optional">(optional)</span>
+                </label>
+                <textarea id="spread-intention" rows="2"
+                    placeholder="What guidance do you seek? Career, relationships, personal growth..."></textarea>
+            </div>`;
+
+        // Restore draw button
+        const btn = document.getElementById('spread-draw-btn');
+        btn.disabled = false;
+        btn.textContent = 'Draw Your Spread';
+    };
+
+})();
+</script>

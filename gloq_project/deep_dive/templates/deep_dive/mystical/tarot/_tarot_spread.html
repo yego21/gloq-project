@@ -1,0 +1,442 @@
+<div class="spread-wrap">
+
+    <!-- Header -->
+    <div class="spread-top">
+        <div class="spread-badge">Past · Present · Future</div>
+        <p class="spread-desc" id="spread-desc">
+            Take a moment to center yourself. Set an intention or let the cards speak freely.
+        </p>
+    </div>
+
+    <!-- Intention form / Summary area -->
+    <div class="spread-middle" id="spread-middle">
+        <div id="spread-intention-wrap" class="spread-intention-wrap">
+            <label for="spread-intention">
+                <span class="intention-icon">✦</span>
+                Set Your Intention
+                <span class="spread-optional">(optional)</span>
+            </label>
+            <textarea id="spread-intention" rows="2"
+                placeholder="What guidance do you seek? Career, relationships, personal growth..."></textarea>
+        </div>
+    </div>
+
+    <!-- Cards — always present, start face-down -->
+    <div class="spread-cards-grid">
+
+        <!-- PAST -->
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--past">Past</div>
+            <div class="spread-card" id="spread-card-past">
+                <!-- Back -->
+                <div class="sc-back sc-back--past">
+                    <div class="scb-inner">
+                        <div class="scb-glyph scb-glyph--past">☽</div>
+                        <div class="scb-label scb-label--past">COSMIC TAROT</div>
+                    </div>
+                </div>
+                <!-- Front -->
+                <div class="sc-front sc-front--past">
+                    <div class="sc-number" id="past-number"></div>
+                    <div class="sc-emoji" id="past-emoji"></div>
+                    <div class="sc-title" id="past-title"></div>
+                    <div class="sc-divider"></div>
+                    <div class="sc-keywords" id="past-keywords"></div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">What brought you here</div>
+            <div class="sc-detail" id="past-detail"><p id="past-interpretation"></p></div>
+        </div>
+
+        <!-- PRESENT -->
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--present">Present</div>
+            <div class="spread-card" id="spread-card-present">
+                <div class="sc-back sc-back--present">
+                    <div class="scb-inner">
+                        <div class="scb-glyph scb-glyph--present">☀</div>
+                        <div class="scb-label scb-label--present">COSMIC TAROT</div>
+                    </div>
+                </div>
+                <div class="sc-front sc-front--present">
+                    <div class="sc-number" id="present-number"></div>
+                    <div class="sc-emoji" id="present-emoji"></div>
+                    <div class="sc-title" id="present-title"></div>
+                    <div class="sc-divider"></div>
+                    <div class="sc-keywords" id="present-keywords"></div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">Where you are now</div>
+            <div class="sc-detail" id="present-detail"><p id="present-interpretation"></p></div>
+        </div>
+
+        <!-- FUTURE -->
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--future">Future</div>
+            <div class="spread-card" id="spread-card-future">
+                <div class="sc-back sc-back--future">
+                    <div class="scb-inner">
+                        <div class="scb-glyph scb-glyph--future">✦</div>
+                        <div class="scb-label scb-label--future">COSMIC TAROT</div>
+                    </div>
+                </div>
+                <div class="sc-front sc-front--future">
+                    <div class="sc-number" id="future-number"></div>
+                    <div class="sc-emoji" id="future-emoji"></div>
+                    <div class="sc-title" id="future-title"></div>
+                    <div class="sc-divider"></div>
+                    <div class="sc-keywords" id="future-keywords"></div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">Where you're heading</div>
+            <div class="sc-detail" id="future-detail"><p id="future-interpretation"></p></div>
+        </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="spread-actions">
+        <div id="spread-action-initial">
+            <button class="spread-draw-btn" id="spread-draw-btn" onclick="submitSpread()">
+                Draw Your Spread
+            </button>
+        </div>
+        <div id="spread-action-result" class="spread-result-actions" style="display:none">
+            <button class="spread-action-btn" onclick="redrawSpread()">↺ Draw Again</button>
+            <button class="spread-action-btn spread-action-btn--close" onclick="closeSpreadModal()">✕ Close</button>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.spread-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* Header */
+.spread-top { text-align: center; }
+
+.spread-badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #818cf8;
+    border: 1px solid rgba(99,102,241,0.3);
+    border-radius: 20px;
+    padding: 0.22rem 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.spread-desc {
+    font-size: 0.77rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* Middle area */
+.spread-middle {
+    min-height: 80px;
+    transition: all 0.3s ease;
+}
+
+/* Intention */
+.spread-intention-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.spread-intention-wrap label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.intention-icon { color: #6366f1; font-size: 0.6rem; }
+.spread-optional { font-weight: 400; color: #475569; }
+
+.spread-intention-wrap textarea {
+    background: rgba(15,23,42,0.6);
+    border: 1px solid rgba(51,65,85,0.6);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    resize: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+}
+.spread-intention-wrap textarea::placeholder { color: #334155; }
+.spread-intention-wrap textarea:focus {
+    outline: none;
+    border-color: rgba(99,102,241,0.5);
+}
+
+/* Summary (shown after draw) */
+.spread-summary {
+    background: rgba(30,27,75,0.3);
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.77rem;
+    color: #94a3b8;
+    line-height: 1.65;
+    font-style: italic;
+    opacity: 0;
+    animation: fadeIn 0.4s ease 0.2s forwards;
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+
+/* Cards grid */
+.spread-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+}
+
+.spread-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.spread-pos-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.spread-pos--past    { color: #a78bfa; }
+.spread-pos--present { color: #818cf8; }
+.spread-pos--future  { color: #f472b6; }
+
+/* Card container */
+.spread-card {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+}
+
+/* Shared face styles */
+.sc-back,
+.sc-front {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.4,0,0.2,1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Back face — visible by default */
+.sc-back {
+    opacity: 1;
+    transform: rotateY(0deg);
+    z-index: 2;
+}
+.sc-back--past    { background: linear-gradient(150deg,#1e1b4b,#4c1d95); border: 2px solid rgba(167,139,250,0.5); }
+.sc-back--present { background: linear-gradient(150deg,#1e1b4b,#312e81); border: 2px solid rgba(99,102,241,0.5); }
+.sc-back--future  { background: linear-gradient(150deg,#1e1b4b,#831843); border: 2px solid rgba(244,114,182,0.5); }
+
+.scb-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.scb-glyph {
+    font-size: 1.8rem;
+    animation: glyphPulse 3s ease-in-out infinite;
+}
+.scb-glyph--past    { color: #c4b5fd; animation-delay: 0s; }
+.scb-glyph--present { color: #a5b4fc; animation-delay: 0.4s; }
+.scb-glyph--future  { color: #f9a8d4; animation-delay: 0.8s; }
+
+@keyframes glyphPulse {
+    0%,100% { opacity: 0.4; transform: scale(1); }
+    50%      { opacity: 0.9; transform: scale(1.08); }
+}
+
+.scb-label {
+    font-size: 0.48rem;
+    letter-spacing: 0.18em;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.4;
+}
+.scb-label--past    { color: #c4b5fd; }
+.scb-label--present { color: #a5b4fc; }
+.scb-label--future  { color: #f9a8d4; }
+
+/* Front face — hidden by default */
+.sc-front {
+    opacity: 0;
+    transform: rotateY(90deg) scale(0.95);
+    z-index: 1;
+    background: linear-gradient(175deg,#f8fafc 0%,#eef2ff 50%,#ede9fe 100%);
+    padding: 0.75rem 0.6rem;
+    gap: 0.3rem;
+}
+.sc-front--past    { border: 2px solid rgba(167,139,250,0.6); }
+.sc-front--present { border: 2px solid rgba(99,102,241,0.6); }
+.sc-front--future  { border: 2px solid rgba(244,114,182,0.6); }
+
+/* Flipped state */
+.spread-card.is-flipped .sc-back {
+    opacity: 0;
+    transform: rotateY(-90deg) scale(0.95);
+    z-index: 1;
+    pointer-events: none;
+}
+.spread-card.is-flipped .sc-front {
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
+    z-index: 2;
+    transition-delay: 0.15s;
+}
+
+/* Card front content */
+.sc-number {
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: #5b21b6;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    align-self: flex-start;
+}
+.sc-emoji  { font-size: 2rem; line-height: 1; }
+.sc-title  {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+}
+.sc-divider {
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg,transparent,rgba(109,40,217,0.3),transparent);
+}
+.sc-keywords {
+    font-size: 0.55rem;
+    color: #5b21b6;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Tap hint on unflipped cards */
+.spread-card:not(.is-flipped)::after {
+    content: 'tap to reveal';
+    position: absolute;
+    bottom: 0.6rem;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.2);
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* Detail panel */
+.sc-detail {
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+.sc-detail.is-open {
+    max-height: 200px;
+    opacity: 1;
+}
+.sc-detail p {
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0.65rem 0.1rem;
+}
+
+.spread-pos-sub {
+    font-size: 0.6rem;
+    color: #475569;
+    font-style: italic;
+    text-align: center;
+}
+
+/* Actions */
+.spread-actions { text-align: center; }
+
+.spread-draw-btn {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: linear-gradient(135deg,rgba(76,29,149,0.5),rgba(49,46,129,0.4));
+    border: 1px solid rgba(139,92,246,0.45);
+    border-radius: 28px;
+    padding: 0.6rem 1.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.spread-draw-btn:hover {
+    background: linear-gradient(135deg,rgba(76,29,149,0.7),rgba(49,46,129,0.55));
+    border-color: rgba(139,92,246,0.65);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.2);
+}
+.spread-draw-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.spread-result-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.spread-action-btn {
+    font-size: 0.72rem;
+    color: #64748b;
+    background: transparent;
+    border: 1px solid rgba(51,65,85,0.5);
+    border-radius: 20px;
+    padding: 0.38rem 1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.spread-action-btn:hover {
+    color: #94a3b8;
+    border-color: rgba(99,102,241,0.4);
+    background: rgba(99,102,241,0.05);
+}
+.spread-action-btn--close:hover {
+    color: #f87171;
+    border-color: rgba(239,68,68,0.3);
+    background: rgba(239,68,68,0.05);
+}
+</style>

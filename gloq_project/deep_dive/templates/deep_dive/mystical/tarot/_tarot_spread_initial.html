@@ -1,0 +1,249 @@
+<div class="spread-wrap" id="spread-initial">
+
+    <!-- Header Area -->
+    <div class="spread-top">
+        <div class="spread-badge">Past · Present · Future</div>
+        <p class="spread-desc">Take a moment to center yourself. Set an intention or let the cards speak freely.</p>
+    </div>
+
+    <!-- Intention Input -->
+    <div class="spread-intention-wrap">
+        <label for="spread-intention">
+            <span>✦</span> Set Your Intention
+            <span class="spread-optional">(optional)</span>
+        </label>
+        <textarea id="spread-intention" rows="2"
+            placeholder="What guidance do you seek? Career, relationships, personal growth..."></textarea>
+    </div>
+
+    <!-- Face-down Cards -->
+    <div class="spread-cards-grid">
+
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--past">Past</div>
+            <div class="spread-card-back spread-back--past">
+                <div class="scb-inner">
+                    <div class="scb-glyph">☽</div>
+                    <div class="scb-label">COSMIC TAROT</div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">What brought you here</div>
+        </div>
+
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--present">Present</div>
+            <div class="spread-card-back spread-back--present">
+                <div class="scb-inner">
+                    <div class="scb-glyph">☀</div>
+                    <div class="scb-label">COSMIC TAROT</div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">Where you are now</div>
+        </div>
+
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--future">Future</div>
+            <div class="spread-card-back spread-back--future">
+                <div class="scb-inner">
+                    <div class="scb-glyph">✦</div>
+                    <div class="scb-label">COSMIC TAROT</div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">Where you're heading</div>
+        </div>
+
+    </div>
+
+    <!-- Draw Button -->
+    <div class="spread-actions">
+        <button class="spread-draw-btn" id="spread-draw-btn" onclick="submitSpread()">
+            Draw Your Spread
+        </button>
+    </div>
+
+</div>
+
+<style>
+.spread-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Header */
+.spread-top {
+    text-align: center;
+}
+
+.spread-badge {
+    display: inline-block;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #818cf8;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 20px;
+    padding: 0.22rem 0.8rem;
+    margin-bottom: 0.6rem;
+}
+
+.spread-desc {
+    font-size: 0.77rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Intention */
+.spread-intention-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.spread-intention-wrap label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.spread-intention-wrap label span:first-child { color: #6366f1; font-size: 0.6rem; }
+
+.spread-optional {
+    font-weight: 400;
+    color: #475569;
+}
+
+.spread-intention-wrap textarea {
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    border-radius: 8px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    resize: none;
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+}
+.spread-intention-wrap textarea::placeholder { color: #334155; }
+.spread-intention-wrap textarea:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.5);
+}
+
+/* Cards grid */
+.spread-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.85rem;
+}
+
+.spread-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.spread-pos-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+.spread-pos--past    { color: #a78bfa; }
+.spread-pos--present { color: #818cf8; }
+.spread-pos--future  { color: #f472b6; }
+
+.spread-card-back {
+    width: 100%;
+    aspect-ratio: 2/3;
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+.spread-card-back:hover { transform: translateY(-3px); }
+
+.spread-back--past    { background: linear-gradient(150deg, #1e1b4b, #4c1d95); border: 2px solid rgba(167,139,250,0.5); }
+.spread-back--present { background: linear-gradient(150deg, #1e1b4b, #312e81); border: 2px solid rgba(99,102,241,0.5); }
+.spread-back--future  { background: linear-gradient(150deg, #1e1b4b, #831843); border: 2px solid rgba(244,114,182,0.5); }
+
+.scb-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    position: relative;
+    z-index: 1;
+}
+
+.scb-glyph {
+    font-size: 1.8rem;
+    animation: glyphPulse 3s ease-in-out infinite;
+}
+.spread-back--past    .scb-glyph { color: #c4b5fd; animation-delay: 0s; }
+.spread-back--present .scb-glyph { color: #a5b4fc; animation-delay: 0.4s; }
+.spread-back--future  .scb-glyph { color: #f9a8d4; animation-delay: 0.8s; }
+
+@keyframes glyphPulse {
+    0%, 100% { opacity: 0.4; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.08); }
+}
+
+.scb-label {
+    font-size: 0.48rem;
+    letter-spacing: 0.18em;
+    font-weight: 600;
+    text-transform: uppercase;
+    opacity: 0.4;
+}
+.spread-back--past    .scb-label { color: #c4b5fd; }
+.spread-back--present .scb-label { color: #a5b4fc; }
+.spread-back--future  .scb-label { color: #f9a8d4; }
+
+.spread-pos-sub {
+    font-size: 0.6rem;
+    color: #475569;
+    font-style: italic;
+    text-align: center;
+}
+
+/* Actions */
+.spread-actions {
+    text-align: center;
+    padding-top: 0.25rem;
+}
+
+.spread-draw-btn {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #c4b5fd;
+    background: linear-gradient(135deg, rgba(76,29,149,0.5), rgba(49,46,129,0.4));
+    border: 1px solid rgba(139,92,246,0.45);
+    border-radius: 28px;
+    padding: 0.6rem 1.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.spread-draw-btn:hover {
+    background: linear-gradient(135deg, rgba(76,29,149,0.7), rgba(49,46,129,0.55));
+    border-color: rgba(139,92,246,0.65);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(99,102,241,0.2);
+}
+.spread-draw-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+</style>

@@ -3,7 +3,7 @@ import random
 from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.utils.timezone import now
-
+from datetime import timedelta
 from ..services.mystical.astronomical_svc import get_moon_phase, get_planetary_summary
 
 
@@ -29,6 +29,7 @@ from journal.models import JournalEntry
 
 from ..services.mystical.planet_insights_svc import get_planet_insight
 from ..utils.mystical_utils import get_page_range, generate_aspect_interpretation, generate_planet_interpretation
+from journal.models import DailyPlanetarySnapshot
 
 
 @login_required
@@ -1629,44 +1630,54 @@ from datetime import date
 import random
 
 from ..models import TarotCardDraw
-from .tarot_deck import COSMIC_TAROT_DECK
+from ..services.mystical.tarot_deck import COSMIC_TAROT_DECK
 from ..services.mystical.tarot_natal_svc import TarotNatalService, ThreeCardSpreadService
 from ..services.mystical.ai_chart_reading_svc import TransitCalculator
 from ..services.mystical.astronomical_svc import AstronomicalService
 
 
+def _get_natal_and_transits(user):
+    """
+    Shared helper: fetch natal chart + today's transits from snapshot.
+
+    Returns:
+        (natal_chart dict, transits list)
+        transits will be [] if snapshot missing or transit calc fails.
+    """
+    birth_profile = BirthProfile.objects.get(user=user)
+    natal_chart = birth_profile.cached_chart_data
+
+    if not natal_chart:
+        raise ValueError('No natal chart data found. Please generate your chart first.')
+
+    try:
+        snapshot = DailyPlanetarySnapshot.get_or_create_for_date(date.today())
+        current_positions = snapshot.planetary_data.get('planetary_positions', [])
+        transit_calc = TransitCalculator(natal_chart)
+        transits = transit_calc.calculate_transits(current_positions)
+    except Exception as e:
+        print(f"Transit calculation failed: {e}")
+        transits = []
+
+    return natal_chart, transits
+
+
+# ============================================================
+# DAILY DRAW
+# ============================================================
+
 @login_required
 def draw_tarot_card(request):
     """
-    Draw a daily tarot card based on natal chart + current transits.
-    One card per day - cached daily like AI readings.
-
-    Process:
-    1. Check if already drawn today
-    2. Get natal chart + current transits
-    3. Use TarotNatalService to select & personalize card
-    4. Save to database
-    5. Return card data as JSON
+    POST: Draw today's daily tarot card.
+    One card per day — checks DB before drawing.
+    Returns JSON for JS to update the UI.
     """
-
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
     try:
-        # ============================================
-        # 1. GET USER'S NATAL CHART
-        # ============================================
-        birth_profile = request.user.birth_profile
-        natal_chart = birth_profile.cached_chart_data
-
-        if not natal_chart:
-            return JsonResponse({
-                'error': 'No natal chart data found. Please generate your chart first.'
-            }, status=404)
-
-        # ============================================
-        # 2. CHECK IF ALREADY DRAWN TODAY
-        # ============================================
+        # 1. Check if already drawn today
         today_draw = TarotCardDraw.objects.filter(
             user=request.user,
             drawn_at__date=date.today()
@@ -1677,106 +1688,68 @@ def draw_tarot_card(request):
                 'error': 'You have already drawn your card for today. Return tomorrow for a new reading!'
             }, status=400)
 
-        # ============================================
-        # 3. GET CURRENT TRANSITS
-        # ============================================
-        try:
-            # Use your existing services
-            astro_service = AstronomicalService()
-            current_positions = astro_service.get_daily_planetary_summary()
+        # 2. Get natal chart + transits
+        natal_chart, transits = _get_natal_and_transits(request.user)
 
-            transit_calc = TransitCalculator(natal_chart)
-            transits = transit_calc.calculate_transits(
-                current_positions['planetary_positions']
-            )
-        except Exception as e:
-            print(f"Transit calculation failed: {e}")
-            transits = []  # Continue without transits
-
-        # ============================================
-        # 4. INITIALIZE TAROT SERVICE
-        # ============================================
+        # 3. Initialize service
         tarot_service = TarotNatalService(natal_chart)
-
-        # Get dominant planetary energy
         dominant_planet = tarot_service.get_dominant_planetary_energy()
 
-        # ============================================
-        # 5. SELECT CARD (transit-based if available)
-        # ============================================
+        # 4. Select card
         if transits:
             selected_card = tarot_service.select_card_by_transits(transits, COSMIC_TAROT_DECK)
         else:
-            # Fallback to element-based selection
             dominant_elem = natal_chart.get('dominant_element', 'Earth')
             elem_cards = [c for c in COSMIC_TAROT_DECK if c.get('element') == dominant_elem]
             selected_card = random.choice(elem_cards) if elem_cards else random.choice(COSMIC_TAROT_DECK)
 
-        # ============================================
-        # 6. PERSONALIZE INTERPRETATION
-        # ============================================
-        base_interpretation = selected_card['base_interpretation']
-        personalized_interpretation = tarot_service.personalize_interpretation(
-            base_interpretation,
-            dominant_planet
+        # 5. Personalize
+        interpretation = tarot_service.personalize_interpretation(
+            selected_card['base_interpretation'], dominant_planet
         )
-
-        # ============================================
-        # 7. GENERATE NATAL INSIGHT
-        # ============================================
         natal_insight = tarot_service.generate_natal_insight(selected_card)
-
-        # ============================================
-        # 8. GENERATE ASTROLOGICAL CONTEXT
-        # ============================================
         astro_context = tarot_service.generate_astro_context(selected_card, transits)
 
-        # ============================================
-        # 9. SAVE TO DATABASE
-        # ============================================
-        card_draw = TarotCardDraw.objects.create(
+        # 6. Save
+        TarotCardDraw.objects.create(
             user=request.user,
             card_number=selected_card['card_number'],
             card_name=selected_card['title'],
             emoji=selected_card['emoji'],
             keywords=selected_card['keywords'],
-            interpretation=personalized_interpretation,
+            interpretation=interpretation,
             astro_context=astro_context,
             natal_insight=natal_insight,
-            drawn_at=timezone.now()
         )
 
         print(f"✨ {request.user.username} drew: {selected_card['title']}")
 
-        # ============================================
-        # 10. RETURN CARD DATA
-        # ============================================
         return JsonResponse({
             'card_number': selected_card['card_number'],
             'title': selected_card['title'],
             'emoji': selected_card['emoji'],
             'keywords': selected_card['keywords'],
-            'interpretation': personalized_interpretation,
+            'interpretation': interpretation,
             'astro_context': astro_context,
             'natal_insight': natal_insight,
-            'can_draw_again': False
         })
 
-    except AttributeError as e:
-        return JsonResponse({
-            'error': 'No birth profile found. Please create your birth profile first.'
-        }, status=404)
-
+    except BirthProfile.DoesNotExist:
+        return JsonResponse({'error': 'No birth profile found. Please create your birth profile first.'}, status=404)
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=404)
     except Exception as e:
         import traceback
-        print(f"❌ Tarot draw error: {e}")
-        print(traceback.format_exc())
-        return JsonResponse({
-            'error': f'Failed to draw card: {str(e)}'
-        }, status=500)
+        traceback.print_exc()
+        return JsonResponse({'error': f'Failed to draw card: {str(e)}'}, status=500)
 
-from datetime import timedelta
-def calculate_current_streak(draw_dates):
+
+# ============================================================
+# CARD HISTORY
+# ============================================================
+
+def _calculate_current_streak(draw_dates):
+    """Count consecutive daily draws ending today or yesterday."""
     if not draw_dates:
         return 0
 
@@ -1789,122 +1762,390 @@ def calculate_current_streak(draw_dates):
             streak += 1
             current_day -= timedelta(days=1)
         else:
-            # streak breaks if a day is missed
             break
+
     return streak
+
 
 @login_required
 def tarot_card_history(request):
     """
-    Show user's past tarot draws with natal chart connections.
-    Returns HTML partial for modal.
+    GET: Returns history partial for the card history modal.
+    Last 30 draws + streak count.
     """
-    from django.utils.timezone import now
-
-    all_draws = TarotCardDraw.objects.filter(
-        user=request.user
-    ).order_by('-drawn_at')
-
+    all_draws = TarotCardDraw.objects.filter(user=request.user).order_by('-drawn_at')
     draw_dates = sorted({d.drawn_at.date() for d in all_draws}, reverse=True)
-    current_streak = calculate_current_streak(draw_dates)
+    current_streak = _calculate_current_streak(draw_dates)
 
-    draws = TarotCardDraw.objects.filter(
-        user=request.user
-    ).order_by('-drawn_at')[:30]  # Last 30 draws
+    draws = all_draws[:30]
 
-    return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_history.html', {
+    return render(request, 'deep_dive/mystical/tarot/_tarot_history.html', {
         'draws': draws,
-        'total_draws': draws.count(),
+        'total_draws': all_draws.count(),
         'current_streak': current_streak,
     })
 
 
+# ============================================================
+# TAROT SPREAD (modal, session-only)
+# ============================================================
+
 @login_required
-def draw_tarot_spread(request):
+def tarot_spread(request):
     """
-    Two modes:
-    1. GET: Show initial spread interface with face-down cards
-    2. POST: Generate and return the actual spread
-    """
+    GET: Returns the initial spread modal content (face-down cards + intention form).
+        Called every time the modal opens — resets state cleanly.
 
+    POST: Generates and returns the spread result partial.
+        Swapped into the same modal container.
+    """
     if request.method == 'GET':
-        return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread_initial.html')
+        return render(request, 'deep_dive/mystical/tarot/_tarot_spread.html')
 
-    # POST: Generate the spread
+    # POST — generate spread, return JSON
     try:
-        birth_profile = request.user.birth_profile
-        natal_chart = birth_profile.cached_chart_data
-
-        if not natal_chart:
-            return JsonResponse({'error': 'No natal chart found'}, status=404)
-
+        natal_chart, transits = _get_natal_and_transits(request.user)
         user_intention = request.POST.get('intention', '').strip()
 
-        # Get current transits
-        try:
-            astro_service = AstronomicalService()
-            current_positions = astro_service.get_daily_planetary_summary()
-            transit_calc = TransitCalculator(natal_chart)
-            transits = transit_calc.calculate_transits(
-                current_positions['planetary_positions']
-            )
-        except Exception as e:
-            print(f"Transit error: {e}")
-            transits = []
-
-        # Generate spread with intention
         spread_service = ThreeCardSpreadService(natal_chart, transits, user_intention)
         past_card, present_card, future_card = spread_service.generate_spread(COSMIC_TAROT_DECK)
 
-        # Personalize interpretations
         tarot_service = TarotNatalService(natal_chart)
         dominant_planet = tarot_service.get_dominant_planetary_energy()
 
-        spread_data = {
-            'past': {
-                'position': 'Past Influences',
-                'position_desc': 'What brought you here',
-                **past_card,
+        def card_data(card):
+            return {
+                'card_number': card['card_number'],
+                'title': card['title'],
+                'emoji': card['emoji'],
+                'keywords': card['keywords'],
                 'interpretation': tarot_service.personalize_interpretation(
-                    past_card['base_interpretation'],
-                    dominant_planet
-                ),
-            },
-            'present': {
-                'position': 'Present Energy',
-                'position_desc': 'Where you are now',
-                **present_card,
-                'interpretation': tarot_service.personalize_interpretation(
-                    present_card['base_interpretation'],
-                    dominant_planet
-                ),
-            },
-            'future': {
-                'position': 'Future Potential',
-                'position_desc': 'Where you\'re heading',
-                **future_card,
-                'interpretation': tarot_service.personalize_interpretation(
-                    future_card['base_interpretation'],
-                    dominant_planet
+                    card['base_interpretation'], dominant_planet
                 ),
             }
-        }
 
-        reading_summary = spread_service.generate_spread_narrative(
-            past_card, present_card, future_card
-        )
-
-        return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread_result.html', {
-            'spread': spread_data,
-            'reading_summary': reading_summary,
-            'user_intention': user_intention
+        return JsonResponse({
+            'past': card_data(past_card),
+            'present': card_data(present_card),
+            'future': card_data(future_card),
+            'reading_summary': spread_service.generate_spread_narrative(
+                past_card, present_card, future_card
+            ),
+            'user_intention': user_intention,
         })
 
+    except BirthProfile.DoesNotExist:
+        return JsonResponse({'error': 'No birth profile found.'}, status=404)
+    except ValueError as e:
+        return JsonResponse({'error': str(e)}, status=404)
     except Exception as e:
         import traceback
-        print(f"Spread error: {e}")
-        print(traceback.format_exc())
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+def tarot_main(request):
+    """
+    Renders the main Tarot tab content.
+    Checks if user has drawn today and pre-populates card data if so.
+    """
+    from datetime import date
+    from django.utils.timesince import timesince
+    from ..models import TarotCardDraw
+
+    today_card = TarotCardDraw.objects.filter(
+        user=request.user,
+        drawn_at__date=date.today()
+    ).first()
+
+    context = {
+        'has_drawn_today': bool(today_card),
+    }
+
+    if today_card:
+        context.update({
+            'card_number': today_card.card_number,
+            'card_emoji': today_card.emoji,
+            'card_title': today_card.card_name,
+            'card_keywords': today_card.keywords,
+            'card_interpretation': today_card.interpretation,
+            'card_astro_context': today_card.astro_context,
+            'card_natal_insight': today_card.natal_insight,
+            'drawn_time_ago': timesince(today_card.drawn_at),
+        })
+
+    return render(request, 'deep_dive/mystical/tarot/_tarot_main.html', context)
+
+# @login_required
+# def draw_tarot_card(request):
+#     """
+#     Draw a daily tarot card based on natal chart + current transits.
+#     One card per day - cached daily like AI readings.
+#
+#     Process:
+#     1. Check if already drawn today
+#     2. Get natal chart + current transits
+#     3. Use TarotNatalService to select & personalize card
+#     4. Save to database
+#     5. Return card data as JSON
+#     """
+#
+#     if request.method != 'POST':
+#         return JsonResponse({'error': 'POST required'}, status=405)
+#
+#     try:
+#         # ============================================
+#         # 1. GET USER'S NATAL CHART
+#         # ============================================
+#         birth_profile = request.user.birth_profile
+#         natal_chart = birth_profile.cached_chart_data
+#
+#         if not natal_chart:
+#             return JsonResponse({
+#                 'error': 'No natal chart data found. Please generate your chart first.'
+#             }, status=404)
+#
+#         # ============================================
+#         # 2. CHECK IF ALREADY DRAWN TODAY
+#         # ============================================
+#         today_draw = TarotCardDraw.objects.filter(
+#             user=request.user,
+#             drawn_at__date=date.today()
+#         ).first()
+#
+#         if today_draw:
+#             return JsonResponse({
+#                 'error': 'You have already drawn your card for today. Return tomorrow for a new reading!'
+#             }, status=400)
+#
+#         # ============================================
+#         # 3. GET CURRENT TRANSITS
+#         # ============================================
+#         try:
+#             # Use your existing services
+#             astro_service = AstronomicalService()
+#             current_positions = astro_service.get_daily_planetary_summary()
+#
+#             transit_calc = TransitCalculator(natal_chart)
+#             transits = transit_calc.calculate_transits(
+#                 current_positions['planetary_positions']
+#             )
+#         except Exception as e:
+#             print(f"Transit calculation failed: {e}")
+#             transits = []  # Continue without transits
+#
+#         # ============================================
+#         # 4. INITIALIZE TAROT SERVICE
+#         # ============================================
+#         tarot_service = TarotNatalService(natal_chart)
+#
+#         # Get dominant planetary energy
+#         dominant_planet = tarot_service.get_dominant_planetary_energy()
+#
+#         # ============================================
+#         # 5. SELECT CARD (transit-based if available)
+#         # ============================================
+#         if transits:
+#             selected_card = tarot_service.select_card_by_transits(transits, COSMIC_TAROT_DECK)
+#         else:
+#             # Fallback to element-based selection
+#             dominant_elem = natal_chart.get('dominant_element', 'Earth')
+#             elem_cards = [c for c in COSMIC_TAROT_DECK if c.get('element') == dominant_elem]
+#             selected_card = random.choice(elem_cards) if elem_cards else random.choice(COSMIC_TAROT_DECK)
+#
+#         # ============================================
+#         # 6. PERSONALIZE INTERPRETATION
+#         # ============================================
+#         base_interpretation = selected_card['base_interpretation']
+#         personalized_interpretation = tarot_service.personalize_interpretation(
+#             base_interpretation,
+#             dominant_planet
+#         )
+#
+#         # ============================================
+#         # 7. GENERATE NATAL INSIGHT
+#         # ============================================
+#         natal_insight = tarot_service.generate_natal_insight(selected_card)
+#
+#         # ============================================
+#         # 8. GENERATE ASTROLOGICAL CONTEXT
+#         # ============================================
+#         astro_context = tarot_service.generate_astro_context(selected_card, transits)
+#
+#         # ============================================
+#         # 9. SAVE TO DATABASE
+#         # ============================================
+#         card_draw = TarotCardDraw.objects.create(
+#             user=request.user,
+#             card_number=selected_card['card_number'],
+#             card_name=selected_card['title'],
+#             emoji=selected_card['emoji'],
+#             keywords=selected_card['keywords'],
+#             interpretation=personalized_interpretation,
+#             astro_context=astro_context,
+#             natal_insight=natal_insight,
+#             drawn_at=timezone.now()
+#         )
+#
+#         print(f"✨ {request.user.username} drew: {selected_card['title']}")
+#
+#         # ============================================
+#         # 10. RETURN CARD DATA
+#         # ============================================
+#         return JsonResponse({
+#             'card_number': selected_card['card_number'],
+#             'title': selected_card['title'],
+#             'emoji': selected_card['emoji'],
+#             'keywords': selected_card['keywords'],
+#             'interpretation': personalized_interpretation,
+#             'astro_context': astro_context,
+#             'natal_insight': natal_insight,
+#             'can_draw_again': False
+#         })
+#
+#     except AttributeError as e:
+#         return JsonResponse({
+#             'error': 'No birth profile found. Please create your birth profile first.'
+#         }, status=404)
+#
+#     except Exception as e:
+#         import traceback
+#         print(f"❌ Tarot draw error: {e}")
+#         print(traceback.format_exc())
+#         return JsonResponse({
+#             'error': f'Failed to draw card: {str(e)}'
+#         }, status=500)
+#
+# from datetime import timedelta
+# def calculate_current_streak(draw_dates):
+#     if not draw_dates:
+#         return 0
+#
+#     today = now().date()
+#     streak = 0
+#     current_day = today
+#
+#     for d in draw_dates:
+#         if d == current_day:
+#             streak += 1
+#             current_day -= timedelta(days=1)
+#         else:
+#             # streak breaks if a day is missed
+#             break
+#     return streak
+#
+# @login_required
+# def tarot_card_history(request):
+#     """
+#     Show user's past tarot draws with natal chart connections.
+#     Returns HTML partial for modal.
+#     """
+#     from django.utils.timezone import now
+#
+#     all_draws = TarotCardDraw.objects.filter(
+#         user=request.user
+#     ).order_by('-drawn_at')
+#
+#     draw_dates = sorted({d.drawn_at.date() for d in all_draws}, reverse=True)
+#     current_streak = calculate_current_streak(draw_dates)
+#
+#     draws = TarotCardDraw.objects.filter(
+#         user=request.user
+#     ).order_by('-drawn_at')[:30]  # Last 30 draws
+#
+#     return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_history.html', {
+#         'draws': draws,
+#         'total_draws': draws.count(),
+#         'current_streak': current_streak,
+#     })
+#
+#
+# @login_required
+# def draw_tarot_spread(request):
+#     """
+#     Two modes:
+#     1. GET: Show initial spread interface with face-down cards
+#     2. POST: Generate and return the actual spread
+#     """
+#
+#     if request.method == 'GET':
+#         return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread_initial.html')
+#
+#     # POST: Generate the spread
+#     try:
+#         birth_profile = request.user.birth_profile
+#         natal_chart = birth_profile.cached_chart_data
+#
+#         if not natal_chart:
+#             return JsonResponse({'error': 'No natal chart found'}, status=404)
+#
+#         user_intention = request.POST.get('intention', '').strip()
+#
+#         # Get current transits
+#         try:
+#             astro_service = AstronomicalService()
+#             current_positions = astro_service.get_daily_planetary_summary()
+#             transit_calc = TransitCalculator(natal_chart)
+#             transits = transit_calc.calculate_transits(
+#                 current_positions['planetary_positions']
+#             )
+#         except Exception as e:
+#             print(f"Transit error: {e}")
+#             transits = []
+#
+#         # Generate spread with intention
+#         spread_service = ThreeCardSpreadService(natal_chart, transits, user_intention)
+#         past_card, present_card, future_card = spread_service.generate_spread(COSMIC_TAROT_DECK)
+#
+#         # Personalize interpretations
+#         tarot_service = TarotNatalService(natal_chart)
+#         dominant_planet = tarot_service.get_dominant_planetary_energy()
+#
+#         spread_data = {
+#             'past': {
+#                 'position': 'Past Influences',
+#                 'position_desc': 'What brought you here',
+#                 **past_card,
+#                 'interpretation': tarot_service.personalize_interpretation(
+#                     past_card['base_interpretation'],
+#                     dominant_planet
+#                 ),
+#             },
+#             'present': {
+#                 'position': 'Present Energy',
+#                 'position_desc': 'Where you are now',
+#                 **present_card,
+#                 'interpretation': tarot_service.personalize_interpretation(
+#                     present_card['base_interpretation'],
+#                     dominant_planet
+#                 ),
+#             },
+#             'future': {
+#                 'position': 'Future Potential',
+#                 'position_desc': 'Where you\'re heading',
+#                 **future_card,
+#                 'interpretation': tarot_service.personalize_interpretation(
+#                     future_card['base_interpretation'],
+#                     dominant_planet
+#                 ),
+#             }
+#         }
+#
+#         reading_summary = spread_service.generate_spread_narrative(
+#             past_card, present_card, future_card
+#         )
+#
+#         return render(request, 'deep_dive/mystical/tarot_and_stats/tarot/_tarot_spread_result.html', {
+#             'spread': spread_data,
+#             'reading_summary': reading_summary,
+#             'user_intention': user_intention
+#         })
+#
+#     except Exception as e:
+#         import traceback
+#         print(f"Spread error: {e}")
+#         print(traceback.format_exc())
+#         return JsonResponse({'error': str(e)}, status=500)
 
 
 def generate_spread_summary(spread_data: dict, natal_chart: dict) -> str:

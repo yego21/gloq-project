@@ -17,10 +17,15 @@ urlpatterns = [
     path('planet/<str:planet_name>/', mystical_views.planet_detail, name='planet_detail'),
     path('aspect/<str:planet1>/<str:planet2>/<str:aspect_type>/', mystical_views.aspect_detail, name='aspect_detail'),
 
-    path('mystical/draw_tarot_card', mystical_views.draw_tarot_card, name='draw_tarot_card'),
+    path('tarot/', mystical_views.tarot_main, name='tarot_main'),
+    path('tarot/draw/', mystical_views.draw_tarot_card, name='draw_tarot_card'),
+    path('tarot/spread/', mystical_views.tarot_spread, name='tarot_spread'),
+    path('tarot/history/', mystical_views.tarot_card_history, name='tarot_card_history'),
+
+    # path('mystical/draw_tarot_card', mystical_views.draw_tarot_card, name='draw_tarot_card'),
     # path('mystical/generate_tarot_card_from_chart', mystical_views.generate_tarot_card_from_chart, name='generate_tarot_card_from_chart'),
-    path('mystical/tarot_card_history', mystical_views.tarot_card_history, name='tarot_card_history'),
-    path('mystical/draw_tarot_spread', mystical_views.draw_tarot_spread, name='draw_tarot_spread'),
+    # path('mystical/tarot_card_history', mystical_views.tarot_card_history, name='tarot_card_history'),
+    # path('mystical/draw_tarot_spread', mystical_views.draw_tarot_spread, name='draw_tarot_spread'),
 
     # Planet Modal Endpoints
     path('planet/<str:planet_name>/meaning/',

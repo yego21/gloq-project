@@ -1,0 +1,270 @@
+<div class="spread-wrap" id="spread-result">
+
+    <!-- Header Area — mirrors initial state structure -->
+    <div class="spread-top">
+        <div class="spread-badge">Past · Present · Future</div>
+        <p class="spread-desc">{{ reading_summary }}</p>
+    </div>
+
+    <!-- Spacer to replace intention textarea height -->
+    <div class="spread-summary-spacer">
+        {% if user_intention %}
+        <div class="spread-intention-echo">
+            <span>✦</span> "{{ user_intention }}"
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Cards — same grid as initial -->
+    <div class="spread-cards-grid">
+
+        <!-- PAST -->
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--past">Past</div>
+            <div class="spread-result-card spread-card-back spread-result--past" onclick="toggleCardDetail(this)">
+                <!-- Back face -->
+                <div class="src-back">
+                    <div class="scb-inner">
+                        <div class="scb-glyph" style="color:#c4b5fd">☽</div>
+                        <div class="scb-label" style="color:#c4b5fd">COSMIC TAROT</div>
+                    </div>
+                </div>
+                <!-- Front face -->
+                <div class="src-front">
+                    <div class="src-card-number">{{ spread.past.card_number }}</div>
+                    <div class="src-card-emoji">{{ spread.past.emoji }}</div>
+                    <div class="src-card-title">{{ spread.past.title }}</div>
+                    <div class="src-card-divider"></div>
+                    <div class="src-card-keywords">{{ spread.past.keywords }}</div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">{{ spread.past.position_desc }}</div>
+            <!-- Detail panel -->
+            <div class="src-detail" id="detail-past">
+                <p>{{ spread.past.interpretation }}</p>
+            </div>
+        </div>
+
+        <!-- PRESENT -->
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--present">Present</div>
+            <div class="spread-result-card spread-card-back spread-result--present" onclick="toggleCardDetail(this)">
+                <div class="src-back">
+                    <div class="scb-inner">
+                        <div class="scb-glyph" style="color:#a5b4fc">☀</div>
+                        <div class="scb-label" style="color:#a5b4fc">COSMIC TAROT</div>
+                    </div>
+                </div>
+                <div class="src-front">
+                    <div class="src-card-number">{{ spread.present.card_number }}</div>
+                    <div class="src-card-emoji">{{ spread.present.emoji }}</div>
+                    <div class="src-card-title">{{ spread.present.title }}</div>
+                    <div class="src-card-divider"></div>
+                    <div class="src-card-keywords">{{ spread.present.keywords }}</div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">{{ spread.present.position_desc }}</div>
+            <div class="src-detail" id="detail-present">
+                <p>{{ spread.present.interpretation }}</p>
+            </div>
+        </div>
+
+        <!-- FUTURE -->
+        <div class="spread-slot">
+            <div class="spread-pos-label spread-pos--future">Future</div>
+            <div class="spread-result-card spread-card-back spread-result--future" onclick="toggleCardDetail(this)">
+                <div class="src-back">
+                    <div class="scb-inner">
+                        <div class="scb-glyph" style="color:#f9a8d4">✦</div>
+                        <div class="scb-label" style="color:#f9a8d4">COSMIC TAROT</div>
+                    </div>
+                </div>
+                <div class="src-front">
+                    <div class="src-card-number">{{ spread.future.card_number }}</div>
+                    <div class="src-card-emoji">{{ spread.future.emoji }}</div>
+                    <div class="src-card-title">{{ spread.future.title }}</div>
+                    <div class="src-card-divider"></div>
+                    <div class="src-card-keywords">{{ spread.future.keywords }}</div>
+                </div>
+            </div>
+            <div class="spread-pos-sub">{{ spread.future.position_desc }}</div>
+            <div class="src-detail" id="detail-future">
+                <p>{{ spread.future.interpretation }}</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="spread-actions">
+        <button class="spread-action-btn" onclick="redrawSpread()">↺ Draw Again</button>
+        <button class="spread-action-btn spread-action-btn--close" onclick="closeSpreadModal()">✕ Close</button>
+    </div>
+
+</div>
+
+<style>
+/* Shared with initial — spread-wrap, spread-top, spread-badge,
+   spread-desc, spread-cards-grid, spread-slot, spread-pos-*,
+   spread-card-back, scb-*, spread-pos-sub all reuse initial CSS */
+
+.spread-summary-spacer {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spread-intention-echo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: #64748b;
+    font-style: italic;
+}
+.spread-intention-echo span { color: #6366f1; font-style: normal; font-size: 0.6rem; }
+
+/* Result card — same size as face-down, with flip */
+.spread-result-card {
+    /* Sizing comes from .spread-card-back — only override what differs */
+    cursor: pointer;
+    background: none;
+}
+
+.src-back,
+.src-front {
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Back visible initially */
+.src-back {
+    opacity: 1;
+    transform: rotateY(0deg);
+    z-index: 2;
+}
+.spread-result--past    .src-back { background: linear-gradient(150deg, #1e1b4b, #4c1d95); border: 2px solid rgba(167,139,250,0.5); }
+.spread-result--present .src-back { background: linear-gradient(150deg, #1e1b4b, #312e81); border: 2px solid rgba(99,102,241,0.5); }
+.spread-result--future  .src-back { background: linear-gradient(150deg, #1e1b4b, #831843); border: 2px solid rgba(244,114,182,0.5); }
+
+/* Front hidden initially */
+.src-front {
+    opacity: 0;
+    transform: rotateY(90deg) scale(0.95);
+    z-index: 1;
+    background: linear-gradient(175deg, #f8fafc 0%, #eef2ff 50%, #ede9fe 100%);
+    padding: 0.75rem 0.6rem;
+    gap: 0.3rem;
+}
+.spread-result--past    .src-front { border: 2px solid rgba(167,139,250,0.6); }
+.spread-result--present .src-front { border: 2px solid rgba(99,102,241,0.6); }
+.spread-result--future  .src-front { border: 2px solid rgba(244,114,182,0.6); }
+
+/* Flipped state */
+.spread-result-card.is-flipped .src-back {
+    opacity: 0;
+    transform: rotateY(-90deg) scale(0.95);
+    z-index: 1;
+    pointer-events: none;
+}
+.spread-result-card.is-flipped .src-front {
+    opacity: 1;
+    transform: rotateY(0deg) scale(1);
+    z-index: 2;
+    transition-delay: 0.15s;
+}
+
+.src-card-number {
+    font-size: 0.5rem;
+    font-weight: 700;
+    color: #5b21b6;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    align-self: flex-start;
+}
+.src-card-emoji { font-size: 2rem; line-height: 1; }
+.src-card-title {
+    font-size: 0.6rem;
+    font-weight: 700;
+    color: #1e1b4b;
+    letter-spacing: 0.06em;
+    text-align: center;
+    text-transform: uppercase;
+}
+.src-card-divider {
+    width: 80%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(109,40,217,0.3), transparent);
+}
+.src-card-keywords {
+    font-size: 0.55rem;
+    color: #5b21b6;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Detail panel — slides open below card on click */
+.src-detail {
+    width: 100%;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, opacity 0.3s ease;
+    opacity: 0;
+}
+.src-detail.is-open {
+    max-height: 200px;
+    opacity: 1;
+}
+.src-detail p {
+    font-size: 0.72rem;
+    color: #cbd5e1;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0.65rem 0.1rem;
+}
+
+/* Hint on unflipped cards */
+.spread-result-card:not(.is-flipped)::after {
+    content: 'tap to reveal';
+    position: absolute;
+    bottom: 0.6rem;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 0.52rem;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.2);
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* Actions */
+.spread-action-btn {
+    font-size: 0.72rem;
+    color: #64748b;
+    background: transparent;
+    border: 1px solid rgba(51,65,85,0.5);
+    border-radius: 20px;
+    padding: 0.38rem 1rem;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.spread-action-btn:hover {
+    color: #94a3b8;
+    border-color: rgba(99,102,241,0.4);
+    background: rgba(99,102,241,0.05);
+}
+.spread-action-btn--close:hover {
+    color: #f87171;
+    border-color: rgba(239,68,68,0.3);
+    background: rgba(239,68,68,0.05);
+}
+</style>

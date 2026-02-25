@@ -19,7 +19,7 @@ class Command(BaseCommand):
     }
 
     def handle(self, *args, **kwargs):
-        file_path = Path("prod.json")
+        file_path = Path("db_dump_02-11-26_prod.json")
 
         # Step 1 — Validate and fix encoding issues
         try:
